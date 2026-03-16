@@ -1,0 +1,34 @@
+package com.echarge.protocol.ocpp.v16.action;
+
+import com.echarge.protocol.core.session.Session;
+import com.echarge.protocol.ocpp.common.OcppAction;
+import com.echarge.protocol.ocpp.v16.Ocpp16ActionHandler;
+import com.echarge.protocol.ocpp.v16.model.MeterValuesReq;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class MeterValuesHandler implements Ocpp16ActionHandler<MeterValuesReq, Object> {
+
+    @Override
+    public String action() {
+        return OcppAction.METER_VALUES;
+    }
+
+    @Override
+    public Class<MeterValuesReq> requestType() {
+        return MeterValuesReq.class;
+    }
+
+    @Override
+    public Object handle(Session session, MeterValuesReq request) {
+        log.debug("[OCPP1.6] MeterValues from {}: connector={}, txId={}, values={}",
+                session.getChargePointId(), request.getConnectorId(),
+                request.getTransactionId(),
+                request.getMeterValue() != null ? request.getMeterValue().size() : 0);
+
+        // TODO: store meter values for billing/monitoring
+        return new Object(); // empty response per OCPP spec
+    }
+}

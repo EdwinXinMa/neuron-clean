@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuronCloud 智能充电云平台 — 架构设计 v1.0</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f8fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --code-bg: #0f172a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* Header */
+.doc-header {
+  background: linear-gradient(135deg, #0c4a6e, #0e7490);
+  color: white;
+  padding: 48px 0 40px;
+  text-align: center;
+}
+.doc-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.doc-header .sub { opacity: 0.85; font-size: 14px; margin-bottom: 20px; }
+.meta-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.meta-tag { background: rgba(255,255,255,0.18); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+
+/* Container */
+.container { max-width: 1024px; margin: 0 auto; padding: 0 24px; }
+
+/* TOC */
+.toc {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 36px;
+  margin: 32px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toc h2 { font-size: 20px; color: var(--text); font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toc ol { padding-left: 0; list-style: none; counter-reset: toc-counter; }
+.toc li { margin: 8px 0; counter-increment: toc-counter; }
+.toc li::before { content: counter(toc-counter) ". "; color: #94a3b8; font-weight: 400; margin-right: 4px; }
+.toc a { color: #475569; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+.toc a:hover { color: var(--accent); }
+@media (min-width: 1680px) {
+  .toc.toc-floating { position: fixed; left: 20px; top: 18px; width: 280px; max-height: calc(100vh - 36px); overflow-y: auto; margin: 0; padding: 18px 18px 20px; z-index: 20; box-shadow: 0 10px 26px rgba(15,23,42,0.14); }
+  .toc.toc-floating h2 { font-size: 16px; margin-bottom: 10px; }
+  .toc.toc-floating li { margin: 5px 0; }
+  .toc.toc-floating a { font-size: 12px; }
+}
+
+/* Sections */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+h2 { font-size: 22px; color: var(--primary); font-weight: 600; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 17px; color: var(--primary); margin: 22px 0 12px; font-weight: 600; }
+h4 { font-size: 15px; color: var(--accent); margin: 16px 0 10px; font-weight: 600; }
+p { margin: 10px 0; }
+
+.highlight { background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; line-height: 1.7; }
+.highlight strong { color: var(--primary); }
+.highlight-warn { background: #fef9c3; border-left: 3px solid var(--warning); border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+.highlight-blue { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+
+pre { background: var(--code-bg); color: #a5d8ff; border-radius: 10px; padding: 18px 22px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; margin: 14px 0; }
+code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: #f1f5f9; font-weight: 600; color: var(--primary); }
+tr:nth-child(even) { background: #f8fafc; }
+.table-sm { font-size: 13px; }
+.table-wrap { overflow-x: auto; }
+
+.muted-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.note { background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-top: 14px; font-size: 13px; }
+
+/* Executive Summary */
+.executive-summary { background: linear-gradient(135deg, #0c4a6e, #155e75); border-radius: 14px; padding: 32px 36px; margin: 20px 0 0; color: white; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.executive-summary h2 { color: white; border-bottom: 2px solid rgba(255,255,255,0.25); padding-bottom: 10px; margin-bottom: 18px; }
+.exec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.exec-card { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; }
+.exec-card-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.exec-list { padding-left: 16px; font-size: 13px; line-height: 1.9; }
+.exec-copy { font-size: 13px; line-height: 1.8; margin: 0; }
+
+/* Chapter Banner */
+.chapter-banner { border: 1px solid; border-radius: 12px; padding: 18px 22px; margin: 12px 0 20px; }
+.chapter-banner.product { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-banner.architecture { border-color: #bae6fd; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.chapter-banner.protocol { border-color: #c4b5fd; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-banner.delivery { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-kicker { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.6px; }
+.chapter-title { font-size: 24px; color: var(--primary); font-weight: 700; margin: 6px 0 4px; }
+.chapter-desc { font-size: 13px; color: #475569; margin: 0; }
+
+/* Module Cards */
+.module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 18px; }
+.module-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; position: relative; }
+.module-card.core { background: #f0fdf4; border-color: #86efac; }
+.module-card.support { background: #f0f9ff; border-color: #7dd3fc; }
+.module-card.future { background: #f5f3ff; border-color: #c4b5fd; }
+.module-card.planned { background: #eceff3; border: 2px dashed #b8c0cc; }
+.module-card.planned::after { content: "Phase 3-4"; position: absolute; top: 8px; right: 10px; font-size: 10px; padding: 2px 6px; border-radius: 999px; background: #dbe1ea; color: #5f6b7a; border: 1px solid #b8c0cc; }
+.module-name { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+.module-en { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.module-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+/* Architecture Diagrams */
+.diagram-shell { border: 1px solid var(--border); border-radius: 12px; background: #f8fbff; padding: 20px; margin: 18px 0; }
+.diagram-node { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin: 4px 0; }
+.diagram-node strong { color: var(--primary); display: block; margin-bottom: 2px; }
+.diagram-arrow { text-align: center; color: #64748b; font-size: 18px; margin: 4px 0; }
+.diagram-band { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin: 8px 0; color: #166534; }
+.diagram-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.layer-grid { display: grid; gap: 8px; margin: 14px 0; }
+.layer-row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
+.layer-label { font-size: 12px; font-weight: 700; color: white; padding: 8px 10px; border-radius: 6px; text-align: center; }
+.layer-label.app { background: #0891b2; }
+.layer-label.api { background: #0d9488; }
+.layer-label.biz { background: #059669; }
+.layer-label.msg { background: #d97706; }
+.layer-label.iot { background: #dc2626; }
+.layer-label.infra { background: #64748b; }
+.layer-content { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+
+/* Data Flow */
+.flow-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin: 16px 0; }
+.flow-panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; }
+.flow-panel.device { background: #f0fdf4; border-color: #86efac; }
+.flow-panel.cloud { background: #f0f9ff; border-color: #7dd3fc; }
+.flow-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.flow-arrow { font-size: 22px; color: #64748b; text-align: center; }
+
+/* Deploy Grid */
+.deploy-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin: 16px 0; }
+.deploy-panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; }
+.deploy-panel.cloud { background: #f0f9ff; border-color: #7dd3fc; }
+.deploy-panel.edge { background: #f0fdf4; border-color: #86efac; }
+.deploy-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.deploy-col { display: grid; gap: 6px; }
+.deploy-arrow { font-size: 22px; color: #64748b; text-align: center; }
+.deploy-chip { display: inline-block; background: #ecfdf5; color: #166534; border: 1px solid #86efac; border-radius: 999px; padding: 3px 10px; font-size: 12px; margin-bottom: 8px; }
+.deploy-gateway-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.deploy-gateway { border: 1px dashed #86efac; border-radius: 8px; padding: 8px; font-size: 12px; background: #fff; }
+
+/* Roadmap */
+.roadmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.roadmap-card { border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 16px; }
+.roadmap-card.active { border-color: #86efac; background: #f0fdf4; }
+.roadmap-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.roadmap-list { padding-left: 18px; font-size: 13px; line-height: 1.8; color: var(--text); }
+
+/* Guardrails */
+.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.guardrail-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; }
+.guardrail-card.must { border-color: #86efac; background: #f0fdf4; }
+.guardrail-card.ban { border-color: #fca5a5; background: #fef2f2; }
+.guardrail-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+.guardrail-list { padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
+
+/* Glossary */
+.glossary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
+.glossary-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; background: #fafcff; }
+.glossary-term { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.glossary-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* Topic Table */
+.topic-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: nowrap; }
+
+/* Priority Badge */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.p1 { background: #dcfce7; color: #166534; }
+.badge.p2 { background: #e0f2fe; color: #0369a1; }
+.badge.p3 { background: #f3e8ff; color: #7c3aed; }
+.badge.p4 { background: #f1f5f9; color: #64748b; }
+
+/* Two Column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+
+/* Footer */
+.doc-footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .exec-grid, .two-col, .deploy-grid, .flow-grid, .roadmap-grid, .guardrail-grid { grid-template-columns: 1fr; }
+  .deploy-arrow, .flow-arrow { transform: rotate(90deg); }
+  .deploy-gateway-grid { grid-template-columns: 1fr; }
+  .section { padding: 20px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="container">
+    <h1>NeuronCloud 智能充电云平台</h1>
+    <div class="sub">Architecture Design Specification — AlwaysControl Technology</div>
+
+    <div class="executive-summary" id="exec-summary">
+      <h2>Executive Summary</h2>
+      <div class="exec-grid">
+        <div class="exec-card">
+          <div class="exec-card-title">Core Decisions</div>
+          <ul class="exec-list">
+            <li><strong>Architecture:</strong> Modular Monolith, microservice-ready boundaries</li>
+            <li><strong>IoT Protocol:</strong> MQTT over WiFi (primary), private protocol (reserved)</li>
+            <li><strong>Message Pipeline:</strong> EMQX Broker + Kafka (buffer/decouple/replay)</li>
+            <li><strong>Data Strategy:</strong> MySQL (business) + TDengine (time-series) + MinIO (objects)</li>
+            <li><strong>Device Topology:</strong> Gateway-SubDevice model (N3 Lite = gateway, ATP III = sub-device)</li>
+          </ul>
+        </div>
+        <div class="exec-card">
+          <div class="exec-card-title">Delivery Strategy</div>
+          <ul class="exec-list">
+            <li><strong>Phase 1:</strong> Device online + OTA + basic monitoring (N3 Lite first)</li>
+            <li><strong>Phase 2:</strong> Charging management + energy analytics + alerts + APP</li>
+            <li><strong>Phase 3:</strong> Billing + operator management + open API</li>
+            <li><strong>Phase 4:</strong> Solar+Storage+Charging integration, V2G, analytics</li>
+            <li><strong>Principle:</strong> Ship Phase 1 first, prove the loop, then expand</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exec-card">
+        <div class="exec-card-title">Why This Architecture</div>
+        <p class="exec-copy">
+          N3 Lite is an offline-capable device today. Without cloud connectivity, every firmware bug requires on-site service, users have no visibility into charging data, and AlwaysControl has zero insight into fleet health.
+          <strong>The cloud platform transforms a one-time hardware sale into a continuous service relationship</strong> — remote diagnostics, OTA updates, usage analytics, and eventually monetizable charging services. Hardware is the entry point; the cloud platform is the moat.
+        </p>
+      </div>
+    </div>
+
+    <div class="meta-tags" style="margin-top: 20px;">
+      <span class="meta-tag">v1.0</span>
+      <span class="meta-tag">2026-03-05</span>
+      <span class="meta-tag">AlwaysControl Technology</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc toc-floating">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#exec-summary">Executive Summary</a></li>
+      <li><a href="#glossary">Glossary</a></li>
+      <li><a href="#s-product">Product Line &amp; Hardware</a></li>
+      <li><a href="#s-why">Why Cloud Platform</a></li>
+      <li><a href="#s-roles">Roles &amp; Access Model</a></li>
+      <li><a href="#s-arch">System Architecture</a></li>
+      <li><a href="#s-dataflow">Data Flow</a></li>
+      <li><a href="#s-modules">Platform Modules</a></li>
+      <li><a href="#s-tech">Technology Selection</a></li>
+      <li><a href="#s-mqtt">MQTT Protocol Design</a></li>
+      <li><a href="#s-ota">OTA Upgrade Design</a></li>
+      <li><a href="#s-deploy">Deployment Architecture</a></li>
+      <li><a href="#s-roadmap">Implementation Roadmap</a></li>
+      <li><a href="#s-principles">Design Principles</a></li>
+    </ol>
+  </div>
+
+<!-- Glossary -->
+<div class="section" id="glossary">
+  <div class="section-label">Appendix</div>
+  <h2>Glossary</h2>
+  <div class="glossary-grid">
+    <div class="glossary-card">
+      <div class="glossary-term">DLM (Dynamic Load Management)</div>
+      <div class="glossary-desc">Core algorithm running on N3/N3 Lite. CT ring measures household current; DLM dynamically adjusts charging power to prevent breaker trips while maximizing charge speed.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">CT Ring (Current Transformer)</div>
+      <div class="glossary-desc">Clip-on sensor installed on the main power line. Provides real-time current measurement to N3/N3 Lite for DLM calculations. N3 Lite supports 1-phase (100A); N3 supports 3-phase.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">PLC (Power Line Communication)</div>
+      <div class="glossary-desc">Communication between N3/N3 Lite and ATP III chargers using the existing power cable. P1901.1 standard, OFDM+FSK modulation. No additional wiring needed.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">OCPP (Open Charge Point Protocol)</div>
+      <div class="glossary-desc">Industry standard protocol for EV charger management (versions 1.6-J and 2.0.1). Used for direct charger-to-cloud connections as an alternative channel.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">Gateway-SubDevice Model</div>
+      <div class="glossary-desc">N3/N3 Lite acts as the MQTT gateway (single cloud connection). ATP III chargers are sub-devices whose data is aggregated and relayed through the gateway.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">CP Signal (Control Pilot)</div>
+      <div class="glossary-desc">IEC 61851 Mode 3 charging control signal. PWM duty cycle encodes the allowed charging current (6A-32A). ATP III adjusts output based on CP signal from N3/N3 Lite.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">EVSE (EV Supply Equipment)</div>
+      <div class="glossary-desc">The charging station hardware that supplies power to EVs. ATP III is an EVSE with AC Type 2 connector, supporting 7.7kW to 23kW output.</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">OTA (Over-The-Air Update)</div>
+      <div class="glossary-desc">Remote firmware upgrade mechanism. Both N3 Lite (ESP32 dual-partition) and ATP III support independent OTA. N3 Lite relays ATP III firmware via PLC.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Line -->
+<div class="chapter-banner product" id="s-product">
+  <div class="chapter-kicker">CHAPTER 1</div>
+  <div class="chapter-title">Product Line & Hardware</div>
+  <p class="chapter-desc">Understanding what we're connecting to the cloud: the complete AlwaysControl hardware ecosystem.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Product Overview</div>
+  <h2>Product Positioning</h2>
+
+  <div class="highlight">
+    <strong>One-line definition:</strong> N3 Lite is a home-use smart charging gateway installed in the distribution box. It controls chargers via PLC, connects to the cloud via WiFi, and solves the #1 home charging problem: <strong>"charge fast without tripping the breaker."</strong>
+  </div>
+
+  <div class="diagram-shell">
+    <div style="text-align:center; font-size:14px; line-height:2.2;">
+      <div class="diagram-node" style="display:inline-block; min-width:200px;"><strong>NeuronCloud</strong>Cloud Platform + APP</div>
+      <div class="diagram-arrow">MQTT over WiFi</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="diagram-node"><strong>ATP III</strong>EV Charger<br><span style="font-size:12px;color:#64748b;">7.7-23kW / AC Type 2</span></div>
+        <div class="diagram-node" style="background:#f0fdf4;border-color:#86efac;"><strong>N3 Lite</strong>Home Gateway<br><span style="font-size:12px;color:#64748b;">ESP32 / 1-phase CT / max 2 chargers</span></div>
+        <div class="diagram-node"><strong>N3</strong>Commercial Gateway<br><span style="font-size:12px;color:#64748b;">Linux / 3-phase CT / multi-charger</span></div>
+      </div>
+      <div class="diagram-arrow">PLC (Power Line Communication)</div>
+      <div class="diagram-node" style="display:inline-block;"><strong>ATP III Chargers</strong>Receive current allocation commands via PLC</div>
+    </div>
+  </div>
+
+  <h3>Hardware Comparison</h3>
+  <table>
+    <tr><th>Feature</th><th>N3 Lite (Home)</th><th>N3 (Commercial)</th><th>ATP III (Charger)</th></tr>
+    <tr><td>MCU/CPU</td><td>ESP32 Dual-core 240MHz</td><td>Cortex-A7 Quad + Cortex-M4</td><td>-</td></tr>
+    <tr><td>Connectivity</td><td>WiFi / BLE / PLC</td><td>WiFi / BLE / 4G / Ethernet / PLC</td><td>WiFi / BLE (via gateway)</td></tr>
+    <tr><td>CT Ring</td><td>1-phase, 100A</td><td>3-phase, 100-500A</td><td>-</td></tr>
+    <tr><td>Charger Capacity</td><td>Max 2 units</td><td>Multi-unit</td><td>-</td></tr>
+    <tr><td>Bus Interfaces</td><td>PLC only</td><td>RS485 / CAN / PLC</td><td>PLC (slave)</td></tr>
+    <tr><td>Power Output</td><td>-</td><td>-</td><td>7.7 / 11.5 / 23 kW</td></tr>
+    <tr><td>Protection</td><td>-</td><td>-</td><td>IP65 + IK10</td></tr>
+    <tr><td>Energy Metering</td><td>Voltage/Current/Power (estimated kWh)</td><td>Full metering</td><td>No built-in meter</td></tr>
+    <tr><td>Target Market</td><td>Residential (50Hz)</td><td>Commercial sites</td><td>Paired with N3/N3 Lite</td></tr>
+  </table>
+
+  <div class="highlight-warn">
+    <strong>Key limitation:</strong> ATP III has no built-in energy meter (Energy Metering: NO). Charging energy (kWh) must be estimated by N3 Lite's power monitoring via time-integration on the cloud side. Sufficient for home use, but not for commercial billing accuracy.
+  </div>
+</div>
+
+<!-- Why Cloud -->
+<div class="section" id="s-why">
+  <div class="section-label">Business Context</div>
+  <h2>Why Build This Cloud Platform</h2>
+
+  <h3>Current State (Without Cloud)</h3>
+  <table>
+    <tr><th>Problem</th><th>Impact</th></tr>
+    <tr><td>Devices are offline islands</td><td>Users cannot monitor or control charging remotely</td></tr>
+    <tr><td>No remote diagnostics</td><td>Every issue requires on-site service visit</td></tr>
+    <tr><td>No data accumulation</td><td>Users don't know monthly kWh or cost; we have zero fleet insight</td></tr>
+    <tr><td>No OTA capability</td><td>Firmware bugs require physical reflashing</td></tr>
+    <tr><td>One-time revenue model</td><td>Hardware sale ends the relationship</td></tr>
+  </table>
+
+  <h3>Future State (With Cloud)</h3>
+  <table>
+    <tr><th>Stakeholder</th><th>Value Gained</th></tr>
+    <tr><td><strong>Home Users</strong></td><td>APP monitoring, charging history, scheduled charging, cost tracking, fault alerts</td></tr>
+    <tr><td><strong>AlwaysControl</strong></td><td>Fleet management, remote diagnostics, OTA updates, usage analytics dashboard</td></tr>
+    <tr><td><strong>Commercial Operators (Future)</strong></td><td>Billing, multi-site management, open API integrations</td></tr>
+  </table>
+
+  <div class="highlight">
+    <strong>Business model transformation:</strong><br>
+    <strong>Today:</strong> Sell hardware (one-time revenue) -> delivery ends the relationship.<br>
+    <strong>Future:</strong> Hardware + Cloud service (recurring revenue) -> long-term value.<br>
+    Hardware is the entry point. The cloud platform is the moat. More devices sold = more platform value = stronger user stickiness.
+  </div>
+</div>
+
+<!-- Roles -->
+<div class="section" id="s-roles">
+  <div class="section-label">Access Model</div>
+  <h2>Roles & Permissions</h2>
+  <table>
+    <tr><th>Role</th><th>Sees</th><th>Does</th></tr>
+    <tr><td><strong>Super Admin</strong> (AlwaysControl)</td><td>All devices, all users, full platform data</td><td>System config, OTA push, product management, analytics</td></tr>
+    <tr><td><strong>Home User</strong></td><td>Own devices, own charging history</td><td>Remote control, scheduled charging, view usage, configure settings</td></tr>
+    <tr><td><strong>Commercial Operator</strong> (Future)</td><td>Managed sites and devices</td><td>Billing management, user management, revenue reports</td></tr>
+    <tr><td><strong>Installer</strong> (Future)</td><td>Installed devices</td><td>Device commissioning, maintenance tickets</td></tr>
+  </table>
+</div>
+
+<!-- Architecture -->
+<div class="chapter-banner architecture" id="s-arch">
+  <div class="chapter-kicker">CHAPTER 2</div>
+  <div class="chapter-title">System Architecture</div>
+  <p class="chapter-desc">Layered architecture design, data flow, module decomposition, and technology selection.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Architecture Overview</div>
+  <h2>Layered Architecture</h2>
+
+  <div class="diagram-shell">
+    <div class="layer-grid">
+      <div class="layer-row">
+        <div class="layer-label app">Presentation</div>
+        <div class="layer-content">User APP (Flutter/RN) | Admin Console (Vue3 + Ant Design Vue 4) | Dashboard (optional)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label api">API Layer</div>
+        <div class="layer-content">REST API (Spring Boot 3.x) | WebSocket (real-time push to APP)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label biz">Business</div>
+        <div class="layer-content">Device Mgmt | Charging Mgmt | User Mgmt | Energy Analytics | Alerts | OTA</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label msg">Message</div>
+        <div class="layer-content">Kafka: telemetry | event | billing | command (buffer / decouple / replay)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label iot">IoT Access</div>
+        <div class="layer-content">MQTT Broker (EMQX) — N3 Lite / N3 gateway | OCPP WebSocket (Netty) — direct charger</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label infra">Infrastructure</div>
+        <div class="layer-content">MySQL | Redis | TDengine (time-series) | MinIO (object storage) | Logging & Monitoring</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Flow -->
+<div class="section" id="s-dataflow">
+  <div class="section-label">Architecture Overview</div>
+  <h2>Data Flow</h2>
+
+  <h3>Uplink (Device -> Cloud)</h3>
+  <table class="table-sm">
+    <tr><th>Data Type</th><th>Path</th><th>Storage</th></tr>
+    <tr><td>Telemetry (voltage/current/power)</td><td>N3 Lite -> EMQX -> Kafka[telemetry]</td><td>TDengine (time-series)</td></tr>
+    <tr><td>Events & Alerts (fault/offline)</td><td>N3 Lite -> EMQX -> Kafka[event]</td><td>MySQL (alert records) + Push notification</td></tr>
+    <tr><td>Charging Records (session/energy)</td><td>N3 Lite -> EMQX -> Kafka[billing]</td><td>MySQL (billing/settlement)</td></tr>
+    <tr><td>Heartbeat</td><td>N3 Lite -> EMQX -> Redis TTL</td><td>Redis (online status)</td></tr>
+  </table>
+
+  <h3>Downlink (Cloud -> Device)</h3>
+  <table class="table-sm">
+    <tr><th>Data Type</th><th>Path</th><th>Source</th></tr>
+    <tr><td>Remote Control (start/stop/set current)</td><td>APP/Admin -> Kafka[command] -> EMQX -> N3 Lite</td><td>User APP / Admin Console</td></tr>
+    <tr><td>Config (DLM params / charge mode)</td><td>Config Service -> EMQX -> N3 Lite</td><td>Admin Console</td></tr>
+    <tr><td>OTA (firmware URL + MD5)</td><td>OTA Service -> EMQX -> N3 Lite</td><td>Admin Console</td></tr>
+    <tr><td>Firmware Download</td><td>N3 Lite -> MinIO (HTTP direct)</td><td>MinIO Object Storage</td></tr>
+  </table>
+
+  <div class="highlight-blue">
+    <strong>Key design point:</strong> N3 Lite is the data aggregation point. ATP III charger data is embedded as sub-device payloads within the gateway's MQTT messages. One MQTT connection per N3 Lite, not per charger.
+  </div>
+</div>
+
+<!-- Modules -->
+<div class="section" id="s-modules">
+  <div class="section-label">Module Design</div>
+  <h2>Platform Modules</h2>
+  <p class="muted-text">Modules are designed around N3 Lite capabilities, organized along three axes: Device Access -> Data Processing -> Business Application.</p>
+
+  <h3>Phase 1: Foundation — "Devices come online, data becomes visible" <span class="badge p1">Priority</span></h3>
+
+  <div class="module-grid">
+    <div class="module-card core">
+      <div class="module-name">neuron-mqtt</div>
+      <div class="module-en">MQTT Message Channel</div>
+      <div class="module-desc">MQTT connection management, message reception -> Kafka routing by type, downlink command publishing. AOP: logging, validation, throughput metrics.</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-device</div>
+      <div class="module-en">Device Management</div>
+      <div class="module-desc">Device registration (auto on first connect), device info (model/firmware/network/bound user), online status (MQTT heartbeat + Redis TTL), config management, OTA upgrade, device topology (gateway -> sub-devices).</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-protocol</div>
+      <div class="module-en">OCPP Protocol Gateway</div>
+      <div class="module-desc">Netty-based WebSocket server (port 9001). OCPP 1.6-J / 2.0.1 support for direct charger-to-cloud connections. Alternative channel to MQTT.</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-system</div>
+      <div class="module-en">System Management</div>
+      <div class="module-desc">User/Role/Permission/Tenant management. Based on Shiro 2.0.5 + JWT. Multi-tenant ready from day one.</div>
+    </div>
+  </div>
+
+  <h3>Phase 2: Core Business — "Charging is managed, data has value" <span class="badge p2">Core Value</span></h3>
+  <div class="module-grid">
+    <div class="module-card support">
+      <div class="module-name">neuron-charge</div>
+      <div class="module-en">Charging Management</div>
+      <div class="module-desc">Charging session state machine (start/in-progress/end), charging records (time/energy/max power), remote control (start/stop/set current via MQTT), scheduled charging (off-peak rates).</div>
+    </div>
+    <div class="module-card support">
+      <div class="module-name">neuron-energy</div>
+      <div class="module-en">Energy Analytics</div>
+      <div class="module-desc">Real-time monitoring (power/current/voltage -> WebSocket to APP), usage statistics (day/week/month/year), cost estimation (user-configured local rates), CT ring data (household vs. charging ratio).</div>
+    </div>
+    <div class="module-card support">
+      <div class="module-name">neuron-alert</div>
+      <div class="module-en">Alert Center</div>
+      <div class="module-desc">Alert rules (overcurrent/overvoltage/offline/charge fault), alert records with severity levels, push notifications (APP/SMS/email), alert analytics by device/type/time.</div>
+    </div>
+  </div>
+
+  <h3>Phase 3: Commercialization — "Revenue and operations" <span class="badge p3">Business</span></h3>
+  <div class="module-grid">
+    <div class="module-card planned">
+      <div class="module-name">neuron-billing</div>
+      <div class="module-en">Billing & Settlement</div>
+      <div class="module-desc">Pricing strategies (fixed/time-of-use/tiered), billing engine (charging records + pricing -> invoices), payment integration (WeChat/Alipay/wallet).</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-operator</div>
+      <div class="module-en">Operator Management</div>
+      <div class="module-desc">Site management (address/devices/hours/rates), operator onboarding (multi-tenant isolation), revenue analytics (income/cost/profit).</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-openapi</div>
+      <div class="module-en">Open Platform</div>
+      <div class="module-desc">API gateway (OAuth2 + rate limiting), device data API, control API, webhooks (charging complete / alert trigger), SDK (Java/Python/JS).</div>
+    </div>
+  </div>
+
+  <h3>Phase 4: Differentiation — "Competitive advantage" <span class="badge p4">Future</span></h3>
+  <div class="module-grid">
+    <div class="module-card planned">
+      <div class="module-name">neuron-solar</div>
+      <div class="module-en">Solar+Storage+Charging</div>
+      <div class="module-desc">PV monitoring, smart dispatch (solar surplus -> charge/store, deficit -> grid), self-consumption optimization, carbon footprint tracking.</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-grid</div>
+      <div class="module-en">Grid Interaction</div>
+      <div class="module-desc">Demand response, virtual power plant aggregation, V2G bidirectional charging. New revenue streams from electricity market participation.</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-analytics</div>
+      <div class="module-en">Data Analytics</div>
+      <div class="module-desc">BI dashboards, device profiling, predictive maintenance. Turn operational data into actionable insights.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tech Selection -->
+<div class="section" id="s-tech">
+  <div class="section-label">Technology</div>
+  <h2>Technology Selection</h2>
+
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr>
+    <tr><td>Backend</td><td>Spring Boot 3.x + JDK 17</td><td>Mature, team-familiar, production-proven</td></tr>
+    <tr><td>ORM</td><td>MyBatis-Plus</td><td>High dev productivity, code generation</td></tr>
+    <tr><td>Auth</td><td>Apache Shiro 2.0.5 + JWT</td><td>Existing framework, stateless token + Redis-cached permissions</td></tr>
+    <tr><td>Business DB</td><td>MySQL 8.x</td><td>Device info, charging records, users, billing</td></tr>
+    <tr><td>Time-series DB</td><td>TDengine</td><td>High-frequency telemetry (voltage/current/power/CT), auto-downsampling, time-range queries</td></tr>
+    <tr><td>Object Storage</td><td>MinIO</td><td>OTA firmware packages, device logs, report exports</td></tr>
+    <tr><td>Cache</td><td>Redis</td><td>Sessions, online status (TTL-based), hot data</td></tr>
+    <tr><td>Message Queue</td><td>Kafka</td><td>Device message buffering, peak shaving, multi-consumer, replay</td></tr>
+    <tr><td>IoT Broker</td><td>EMQX</td><td>MQTT device access, million-level connections</td></tr>
+    <tr><td>Protocol Gateway</td><td>Netty</td><td>OCPP WebSocket, high performance</td></tr>
+    <tr><td>Frontend</td><td>Vue3 + Ant Design Vue 4.x</td><td>Admin console (NeuronCloud branding)</td></tr>
+    <tr><td>Mobile APP</td><td>TBD (Flutter / RN / Mini Program)</td><td>User-facing APP</td></tr>
+    <tr><td>Deployment</td><td>Docker + Nginx</td><td>Containerized deployment, reverse proxy</td></tr>
+  </table>
+
+  <h3>Data Storage Strategy</h3>
+  <div class="two-col">
+    <div>
+      <h4>MySQL (Business Data)</h4>
+      <ul style="padding-left:18px; font-size:13px; line-height:1.8;">
+        <li>Device registry & topology</li>
+        <li>Charging session records</li>
+        <li>User / tenant / role data</li>
+        <li>Billing invoices</li>
+        <li>Alert records & OTA tasks</li>
+        <li>System configuration</li>
+      </ul>
+      <p class="muted-text">Relational, transactional, complex joins, low-frequency R/W.</p>
+    </div>
+    <div>
+      <h4>TDengine (Time-series Data)</h4>
+      <ul style="padding-left:18px; font-size:13px; line-height:1.8;">
+        <li>Real-time telemetry (V/I/P)</li>
+        <li>CT ring monitoring data</li>
+        <li>Charging power curves</li>
+        <li>Device uptime statistics</li>
+        <li>Environmental data (temp)</li>
+      </ul>
+      <p class="muted-text">Ultra-fast writes (1M+/sec), auto-expiry, built-in aggregation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MQTT Protocol -->
+<div class="chapter-banner protocol" id="s-mqtt">
+  <div class="chapter-kicker">CHAPTER 3</div>
+  <div class="chapter-title">MQTT Protocol Design</div>
+  <p class="chapter-desc">Device communication protocol: topic naming, message format, QoS strategy, and security.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Protocol Specification</div>
+  <h2>MQTT Communication Design</h2>
+
+  <h3>Authentication</h3>
+  <p>MQTT Username/Password authentication. Username = Device SN, Password = device-specific secret key. EMQX ACL rules enforce per-device topic access.</p>
+
+  <h3>QoS Strategy</h3>
+  <table class="table-sm">
+    <tr><th>Data Type</th><th>QoS Level</th><th>Rationale</th></tr>
+    <tr><td>Telemetry (real-time power)</td><td>QoS 0</td><td>High frequency, tolerate occasional loss</td></tr>
+    <tr><td>Heartbeat</td><td>QoS 0</td><td>Periodic, loss is detected by TTL expiry</td></tr>
+    <tr><td>Events / Alerts / Status</td><td>QoS 1</td><td>At-least-once delivery required</td></tr>
+    <tr><td>Charging Records</td><td>QoS 1 + Business ACK</td><td>Zero loss for billing data</td></tr>
+    <tr><td>Downlink Commands</td><td>QoS 1</td><td>Ensure delivery to device</td></tr>
+  </table>
+
+  <h3>Topic Specification</h3>
+  <table class="topic-table table-sm">
+    <tr><th>Direction</th><th>Topic</th><th>QoS</th><th>Description</th></tr>
+    <tr><td rowspan="5">Uplink</td><td><code>neuron/{gw}/up/telemetry</code></td><td>0</td><td>Real-time voltage / current / power / CT data / sub-device status</td></tr>
+    <tr><td><code>neuron/{gw}/up/heartbeat</code></td><td>0</td><td>Online keepalive (minute-level interval)</td></tr>
+    <tr><td><code>neuron/{gw}/up/event</code></td><td>1</td><td>Alerts, status changes, charging start/stop events</td></tr>
+    <tr><td><code>neuron/{gw}/up/billing</code></td><td>1</td><td>Charging session records, energy snapshots</td></tr>
+    <tr><td><code>neuron/{gw}/up/reply</code></td><td>1</td><td>Command execution result (response to downlink)</td></tr>
+    <tr><td rowspan="3">Downlink</td><td><code>neuron/{gw}/down/command</code></td><td>1</td><td>Start/stop charging, set current, DLM config, breaker rating, priority</td></tr>
+    <tr><td><code>neuron/{gw}/down/config</code></td><td>1</td><td>DLM parameters, charging mode, schedule</td></tr>
+    <tr><td><code>neuron/{gw}/down/ota</code></td><td>1</td><td>OTA firmware push (target: n3lite / atp3_1 / atp3_2)</td></tr>
+  </table>
+  <p class="muted-text"><code>{gw}</code> = Gateway device SN (N3 Lite or N3). ATP III data is nested as sub-device payloads.</p>
+
+  <h3>Message Envelope (Unified Format)</h3>
+<pre>{
+  "msgId": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": 1709539200000,
+  "gatewayId": "N3L-ABC123",
+  "type": "telemetry",
+  "data": {
+    "gateway": {
+      "voltage": 230.5,
+      "current": 15.2,
+      "power": 3496
+    },
+    "ct": {
+      "totalCurrent": 37.7,
+      "available": 25.3,
+      "breakerRating": 63
+    },
+    "chargers": [
+      { "id": "ATP3-001", "status": "Charging", "current": 22.5, "power": 5175 },
+      { "id": "ATP3-002", "status": "Available", "current": 0, "power": 0 }
+    ]
+  }
+}</pre>
+
+  <h3>LWT (Last Will and Testament)</h3>
+  <p>Each N3 Lite registers an LWT message on <code>neuron/{gw}/up/event</code> with payload <code>{"type":"offline"}</code>. When the device disconnects unexpectedly, EMQX publishes this message automatically, triggering the cloud-side offline alert workflow.</p>
+</div>
+
+<!-- OTA -->
+<div class="section" id="s-ota">
+  <div class="section-label">OTA Design</div>
+  <h2>OTA Remote Upgrade</h2>
+
+  <p>N3 Lite (ESP32) natively supports dual-partition OTA. The cloud platform provides firmware management and upgrade orchestration. ATP III firmware is relayed through N3 Lite via PLC.</p>
+
+  <h3>OTA Flow</h3>
+  <div class="diagram-shell">
+    <div style="font-size:13px; line-height:2;">
+      <div class="diagram-node"><strong>1. Upload Firmware</strong> Admin uploads .bin to cloud -> stored in MinIO -> returns URL + MD5</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>2. Create Upgrade Task</strong> Select firmware version + target devices (single / batch / grayscale)</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>3. MQTT Push OTA Command</strong> Cloud publishes to <code>neuron/{gw}/down/ota</code> (QoS 1)</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>4. Device Downloads Firmware</strong> N3 Lite fetches .bin from MinIO via HTTP(S)</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>5. Verify & Install</strong> MD5 check -> write to OTA partition -> reboot</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>6. Report Result</strong> Post-reboot heartbeat carries new firmware version -> cloud marks upgrade success</div>
+    </div>
+    <div class="diagram-note">ATP III OTA: N3 Lite downloads firmware, then relays to specific charger via PLC. Target device specified by <code>"target": "atp3_1"</code> in OTA command.</div>
+  </div>
+
+  <h3>OTA Command Message</h3>
+<pre>// Downlink: neuron/{gw}/down/ota
+{
+  "msgId": "ota-uuid-001",
+  "action": "upgrade",
+  "data": {
+    "target": "n3lite",           // "n3lite" | "atp3_1" | "atp3_2"
+    "version": "1.2.0",
+    "url": "https://minio.xxx/firmware/n3lite-v1.2.0.bin",
+    "md5": "a1b2c3d4e5f6...",
+    "size": 1048576,
+    "releaseNote": "Fix DLM precision issue",
+    "forceUpgrade": false
+  }
+}
+
+// Uplink progress: neuron/{gw}/up/reply
+{
+  "msgId": "ota-uuid-001",
+  "type": "ota_progress",
+  "data": {
+    "target": "n3lite",
+    "status": "downloading",      // downloading -> verifying -> installing -> rebooting -> success | failed
+    "progress": 65,
+    "version": "1.2.0",
+    "error": null
+  }
+}</pre>
+
+  <h3>Security Measures</h3>
+  <table class="table-sm">
+    <tr><th>Aspect</th><th>Measure</th></tr>
+    <tr><td>Transport</td><td>MinIO internal access, or HTTPS + temporary signed URL (30-min expiry)</td></tr>
+    <tr><td>Integrity</td><td>MD5/SHA256 checksum; discard on mismatch</td></tr>
+    <tr><td>Rollback</td><td>ESP32 dual OTA partition; auto-rollback on boot failure</td></tr>
+    <tr><td>Anti-tamper</td><td>Firmware signature verification (optional, prevent unofficial firmware)</td></tr>
+    <tr><td>Concurrency</td><td>Batch upgrade rate limiting to prevent MinIO/network overload</td></tr>
+  </table>
+
+  <h3>Cloud OTA Management Features</h3>
+  <div class="module-grid">
+    <div class="module-card">
+      <div class="module-name">Firmware Management</div>
+      <div class="module-desc">Upload, version list (test/release/deprecated), changelog, device type targeting.</div>
+    </div>
+    <div class="module-card">
+      <div class="module-name">Upgrade Tasks</div>
+      <div class="module-desc">Create task (select version + devices), grayscale strategy (10% -> observe 24h -> full rollout), task dashboard, retry/rollback.</div>
+    </div>
+    <div class="module-card">
+      <div class="module-name">Upgrade History</div>
+      <div class="module-desc">Per-device upgrade timeline, version distribution chart, failure analysis (timeout/checksum/space).</div>
+    </div>
+  </div>
+</div>
+
+<!-- Deployment -->
+<div class="section" id="s-deploy">
+  <div class="section-label">Infrastructure</div>
+  <h2>Deployment Architecture</h2>
+
+  <div class="diagram-shell">
+    <div class="deploy-grid">
+      <div class="deploy-panel cloud">
+        <div class="deploy-title">Cloud (Single JVM Process)</div>
+        <div class="deploy-col">
+          <div class="diagram-node"><strong>neuron-system-start</strong>Spring Boot 3.x entry point</div>
+          <div class="diagram-node"><strong>Business Modules</strong>neuron-system / neuron-mqtt / neuron-device / neuron-charge / neuron-energy / neuron-alert</div>
+          <div class="diagram-node"><strong>External Services</strong>EMQX (MQTT) | Kafka | MySQL | TDengine | Redis | MinIO</div>
+        </div>
+      </div>
+
+      <div class="deploy-arrow">MQTT<br>over<br>WiFi</div>
+
+      <div class="deploy-panel edge">
+        <div class="deploy-title">Edge (Field Devices)</div>
+        <div class="deploy-chip">N gateways, each with MQTT client</div>
+        <div class="deploy-gateway-grid">
+          <div class="deploy-gateway"><strong>N3 Lite #1</strong><br>DLM + PLC + WiFi<br>-> 2x ATP III</div>
+          <div class="deploy-gateway"><strong>N3 Lite #2</strong><br>DLM + PLC + WiFi<br>-> 1x ATP III</div>
+          <div class="deploy-gateway"><strong>N3 #1</strong><br>DLM + Multi-protocol<br>-> Nx chargers</div>
+        </div>
+        <div class="diagram-note">DLM runs locally on the gateway. Cloud disconnection does NOT affect local charging safety.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Monolith-to-Microservice Evolution</h3>
+  <div class="guardrail-grid">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">Current: Modular Monolith</div>
+      <ul class="guardrail-list">
+        <li>All modules share one JVM process, one DB connection pool</li>
+        <li>Module boundaries enforced by Maven module structure</li>
+        <li>Inter-module calls via Spring Bean injection</li>
+        <li>Simple deployment, single Docker container</li>
+      </ul>
+    </div>
+    <div class="guardrail-card must">
+      <div class="guardrail-title">Future: Microservice (When Needed)</div>
+      <ul class="guardrail-list">
+        <li>Add @SpringBootApplication per module + standalone config</li>
+        <li>Register with Nacos (config already exists in project)</li>
+        <li>Replace @Autowired with @FeignClient for cross-module calls</li>
+        <li>Add Spring Cloud Gateway for unified API routing</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <strong>When to split:</strong> Stay monolith when team <= 5, devices <= thousands, single-machine performance is sufficient. Consider splitting when teams block each other, a specific module needs independent scaling (e.g., MQTT access spikes), or device count reaches 10K+.
+  </div>
+</div>
+
+<!-- Roadmap -->
+<div class="chapter-banner delivery" id="s-roadmap">
+  <div class="chapter-kicker">CHAPTER 4</div>
+  <div class="chapter-title">Implementation Roadmap</div>
+  <p class="chapter-desc">Phased delivery plan: ship the minimum viable loop first, then expand.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Delivery Plan</div>
+  <h2>Implementation Phases</h2>
+
+  <div class="roadmap-grid">
+    <div class="roadmap-card active">
+      <div class="roadmap-title">Phase 1 — Foundation <span class="badge p1">NOW</span></div>
+      <ul class="roadmap-list">
+        <li>Project framework (Spring Boot 3.x, neuron-* modules)</li>
+        <li>MQTT + Kafka message channel (neuron-mqtt)</li>
+        <li>Device management + OTA (neuron-device)</li>
+        <li>OCPP direct channel (neuron-protocol) <em style="color:#64748b;">done</em></li>
+        <li><strong>N3 Lite first cloud connection & validation</strong></li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">Deliverable: N3 Lite online, admin can see device status, OTA works remotely.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 2 — Core Business <span class="badge p2">NEXT</span></div>
+      <ul class="roadmap-list">
+        <li>Charging management (neuron-charge)</li>
+        <li>Energy analytics (neuron-energy)</li>
+        <li>Alert center (neuron-alert)</li>
+        <li>User APP (basic version)</li>
+        <li>Admin console pages (device/charging/energy)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">Deliverable: Users can monitor and control charging via APP.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 3 — Commercialization <span class="badge p3">LATER</span></div>
+      <ul class="roadmap-list">
+        <li>Billing module (neuron-billing)</li>
+        <li>Operator management (neuron-operator)</li>
+        <li>Open API platform (neuron-openapi)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">Deliverable: Platform can generate revenue from charging services.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 4 — Differentiation <span class="badge p4">FUTURE</span></div>
+      <ul class="roadmap-list">
+        <li>Solar+Storage+Charging (neuron-solar)</li>
+        <li>Grid interaction / V2G (neuron-grid)</li>
+        <li>Data analytics platform (neuron-analytics)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">Deliverable: Competitive differentiation through advanced energy management.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Principles -->
+<div class="section" id="s-principles">
+  <div class="section-label">Guiding Rules</div>
+  <h2>Design Principles</h2>
+
+  <table>
+    <tr><th>#</th><th>Principle</th><th>Description</th></tr>
+    <tr><td>1</td><td><strong>Device-Centric</strong></td><td>Every feature starts from N3 Lite's actual hardware capabilities. Don't build what the device can't support.</td></tr>
+    <tr><td>2</td><td><strong>Offline-First</strong></td><td>N3 Lite's DLM and local charging must work without cloud. Data syncs when connectivity resumes.</td></tr>
+    <tr><td>3</td><td><strong>Data Reliability</strong></td><td>Billing-related data: zero loss. QoS 1 + local persistence + business ACK + reconciliation (reserved design).</td></tr>
+    <tr><td>4</td><td><strong>Horizontal Scalability</strong></td><td>MQTT/Kafka architecture supports 100 to 100K devices. Monolith can evolve to microservices.</td></tr>
+    <tr><td>5</td><td><strong>Multi-Tenant Ready</strong></td><td>Tenant isolation considered from day one. Future operator onboarding is configuration, not code change.</td></tr>
+    <tr><td>6</td><td><strong>Protocol Coexistence</strong></td><td>MQTT (N3 gateways) + OCPP (direct chargers) dual channels, unified data model internally.</td></tr>
+    <tr><td>7</td><td><strong>Monolith First</strong></td><td>Clear module boundaries, dev efficiency first. Split to microservices only when growth demands it.</td></tr>
+  </table>
+
+  <div class="guardrail-grid" style="margin-top:20px;">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">Must Maintain</div>
+      <ul class="guardrail-list">
+        <li>DLM algorithm runs on device, NOT on cloud (latency + offline safety)</li>
+        <li>Cloud only sends configuration, never real-time control loop signals</li>
+        <li>One MQTT connection per gateway (not per charger)</li>
+        <li>Module boundaries == future microservice boundaries</li>
+      </ul>
+    </div>
+    <div class="guardrail-card ban">
+      <div class="guardrail-title">Must Avoid</div>
+      <ul class="guardrail-list">
+        <li>Building features that assume always-online connectivity</li>
+        <li>Splitting into microservices prematurely (distributed monolith trap)</li>
+        <li>Mixing MQTT message types in a single Kafka topic</li>
+        <li>Tight coupling between device protocol layer and business logic</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- container -->
+
+<div class="doc-footer">
+  <p>NeuronCloud Platform Architecture v1.0 | AlwaysControl Technology Co., Ltd.</p>
+  <p>Shenzhen, China | www.alwayscontrol.com.cn</p>
+</div>
+
+</body>
+</html>

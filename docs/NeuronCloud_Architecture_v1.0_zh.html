@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuronCloud 智能充电云平台 — 架构设计 v1.0</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f8fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --code-bg: #0f172a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* Header */
+.doc-header {
+  background: linear-gradient(135deg, #0c4a6e, #0e7490);
+  color: white;
+  padding: 48px 0 40px;
+  text-align: center;
+}
+.doc-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.doc-header .sub { opacity: 0.85; font-size: 14px; margin-bottom: 20px; }
+.meta-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.meta-tag { background: rgba(255,255,255,0.18); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+
+/* Container */
+.container { max-width: 1024px; margin: 0 auto; padding: 0 24px; }
+
+/* TOC */
+.toc {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 36px;
+  margin: 32px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toc h2 { font-size: 20px; color: var(--text); font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toc ol { padding-left: 0; list-style: none; counter-reset: toc-counter; }
+.toc li { margin: 8px 0; counter-increment: toc-counter; }
+.toc li::before { content: counter(toc-counter) ". "; color: #94a3b8; font-weight: 400; margin-right: 4px; }
+.toc a { color: #475569; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+.toc a:hover { color: var(--accent); }
+@media (min-width: 1680px) {
+  .toc.toc-floating { position: fixed; left: 20px; top: 18px; width: 280px; max-height: calc(100vh - 36px); overflow-y: auto; margin: 0; padding: 18px 18px 20px; z-index: 20; box-shadow: 0 10px 26px rgba(15,23,42,0.14); }
+  .toc.toc-floating h2 { font-size: 16px; margin-bottom: 10px; }
+  .toc.toc-floating li { margin: 5px 0; }
+  .toc.toc-floating a { font-size: 12px; }
+}
+
+/* Sections */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px; }
+
+h2 { font-size: 22px; color: var(--primary); font-weight: 600; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 17px; color: var(--primary); margin: 22px 0 12px; font-weight: 600; }
+h4 { font-size: 15px; color: var(--accent); margin: 16px 0 10px; font-weight: 600; }
+p { margin: 10px 0; }
+
+.highlight { background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; line-height: 1.7; }
+.highlight strong { color: var(--primary); }
+.highlight-warn { background: #fef9c3; border-left: 3px solid var(--warning); border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+.highlight-blue { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+
+pre { background: var(--code-bg); color: #a5d8ff; border-radius: 10px; padding: 18px 22px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; margin: 14px 0; }
+code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: #f1f5f9; font-weight: 600; color: var(--primary); }
+tr:nth-child(even) { background: #f8fafc; }
+.table-sm { font-size: 13px; }
+.table-wrap { overflow-x: auto; }
+
+.muted-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.note { background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-top: 14px; font-size: 13px; }
+
+/* Executive Summary */
+.executive-summary { background: linear-gradient(135deg, #0c4a6e, #155e75); border-radius: 14px; padding: 32px 36px; margin: 20px 0 0; color: white; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.executive-summary h2 { color: white; border-bottom: 2px solid rgba(255,255,255,0.25); padding-bottom: 10px; margin-bottom: 18px; }
+.exec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.exec-card { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; }
+.exec-card-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.exec-list { padding-left: 16px; font-size: 13px; line-height: 1.9; }
+.exec-copy { font-size: 13px; line-height: 1.8; margin: 0; }
+
+/* Chapter Banner */
+.chapter-banner { border: 1px solid; border-radius: 12px; padding: 18px 22px; margin: 12px 0 20px; }
+.chapter-banner.product { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-banner.architecture { border-color: #bae6fd; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.chapter-banner.protocol { border-color: #c4b5fd; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-banner.delivery { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-kicker { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.6px; }
+.chapter-title { font-size: 24px; color: var(--primary); font-weight: 700; margin: 6px 0 4px; }
+.chapter-desc { font-size: 13px; color: #475569; margin: 0; }
+
+/* Module Cards */
+.module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 18px; }
+.module-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; position: relative; }
+.module-card.core { background: #f0fdf4; border-color: #86efac; }
+.module-card.support { background: #f0f9ff; border-color: #7dd3fc; }
+.module-card.future { background: #f5f3ff; border-color: #c4b5fd; }
+.module-card.planned { background: #eceff3; border: 2px dashed #b8c0cc; }
+.module-card.planned::after { content: "Phase 3-4"; position: absolute; top: 8px; right: 10px; font-size: 10px; padding: 2px 6px; border-radius: 999px; background: #dbe1ea; color: #5f6b7a; border: 1px solid #b8c0cc; }
+.module-name { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+.module-en { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.module-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+/* Architecture Diagrams */
+.diagram-shell { border: 1px solid var(--border); border-radius: 12px; background: #f8fbff; padding: 20px; margin: 18px 0; }
+.diagram-node { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin: 4px 0; }
+.diagram-node strong { color: var(--primary); display: block; margin-bottom: 2px; }
+.diagram-arrow { text-align: center; color: #64748b; font-size: 18px; margin: 4px 0; }
+.diagram-band { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin: 8px 0; color: #166534; }
+.diagram-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.layer-grid { display: grid; gap: 8px; margin: 14px 0; }
+.layer-row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
+.layer-label { font-size: 12px; font-weight: 700; color: white; padding: 8px 10px; border-radius: 6px; text-align: center; }
+.layer-label.app { background: #0891b2; }
+.layer-label.api { background: #0d9488; }
+.layer-label.biz { background: #059669; }
+.layer-label.msg { background: #d97706; }
+.layer-label.iot { background: #dc2626; }
+.layer-label.infra { background: #64748b; }
+.layer-content { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+
+/* Data Flow */
+.flow-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin: 16px 0; }
+.flow-panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; }
+.flow-panel.device { background: #f0fdf4; border-color: #86efac; }
+.flow-panel.cloud { background: #f0f9ff; border-color: #7dd3fc; }
+.flow-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.flow-arrow { font-size: 22px; color: #64748b; text-align: center; }
+
+/* Deploy Grid */
+.deploy-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin: 16px 0; }
+.deploy-panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; }
+.deploy-panel.cloud { background: #f0f9ff; border-color: #7dd3fc; }
+.deploy-panel.edge { background: #f0fdf4; border-color: #86efac; }
+.deploy-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.deploy-col { display: grid; gap: 6px; }
+.deploy-arrow { font-size: 22px; color: #64748b; text-align: center; }
+.deploy-chip { display: inline-block; background: #ecfdf5; color: #166534; border: 1px solid #86efac; border-radius: 999px; padding: 3px 10px; font-size: 12px; margin-bottom: 8px; }
+.deploy-gateway-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.deploy-gateway { border: 1px dashed #86efac; border-radius: 8px; padding: 8px; font-size: 12px; background: #fff; }
+
+/* Roadmap */
+.roadmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.roadmap-card { border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 16px; }
+.roadmap-card.active { border-color: #86efac; background: #f0fdf4; }
+.roadmap-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.roadmap-list { padding-left: 18px; font-size: 13px; line-height: 1.8; color: var(--text); }
+
+/* Guardrails */
+.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.guardrail-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; }
+.guardrail-card.must { border-color: #86efac; background: #f0fdf4; }
+.guardrail-card.ban { border-color: #fca5a5; background: #fef2f2; }
+.guardrail-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+.guardrail-list { padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
+
+/* Glossary */
+.glossary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
+.glossary-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; background: #fafcff; }
+.glossary-term { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.glossary-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* Topic Table */
+.topic-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; white-space: nowrap; }
+
+/* Priority Badge */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.p1 { background: #dcfce7; color: #166534; }
+.badge.p2 { background: #e0f2fe; color: #0369a1; }
+.badge.p3 { background: #f3e8ff; color: #7c3aed; }
+.badge.p4 { background: #f1f5f9; color: #64748b; }
+
+/* Two Column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+
+/* Footer */
+.doc-footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .exec-grid, .two-col, .deploy-grid, .flow-grid, .roadmap-grid, .guardrail-grid { grid-template-columns: 1fr; }
+  .deploy-arrow, .flow-arrow { transform: rotate(90deg); }
+  .deploy-gateway-grid { grid-template-columns: 1fr; }
+  .section { padding: 20px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="container">
+    <h1>NeuronCloud 智能充电云平台</h1>
+    <div class="sub">架构设计规格说明书 — 旭衡电子(深圳) AlwaysControl Technology</div>
+
+    <div class="executive-summary" id="exec-summary">
+      <h2>概要总览</h2>
+      <div class="exec-grid">
+        <div class="exec-card">
+          <div class="exec-card-title">核心决策</div>
+          <ul class="exec-list">
+            <li><strong>架构模式:</strong> 模块化单体，预留微服务拆分边界</li>
+            <li><strong>IoT协议:</strong> MQTT over WiFi (主通道)，私有协议 (预留)</li>
+            <li><strong>消息管道:</strong> EMQX Broker + Kafka (缓冲/解耦/可重放)</li>
+            <li><strong>数据策略:</strong> MySQL (业务) + TDengine (时序) + MinIO (对象)</li>
+            <li><strong>设备拓扑:</strong> 网关-子设备模型 (N3 Lite = 网关, ATP III = 子设备)</li>
+          </ul>
+        </div>
+        <div class="exec-card">
+          <div class="exec-card-title">交付策略</div>
+          <ul class="exec-list">
+            <li><strong>Phase 1:</strong> 设备上线 + OTA + 基础监控 (N3 Lite 优先)</li>
+            <li><strong>Phase 2:</strong> 充电管理 + 能耗分析 + 告警 + APP</li>
+            <li><strong>Phase 3:</strong> 计费结算 + 运营商管理 + 开放API</li>
+            <li><strong>Phase 4:</strong> 光储充一体化, V2G, 数据分析</li>
+            <li><strong>原则:</strong> Phase 1 先跑通闭环，验证后再扩展</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exec-card">
+        <div class="exec-card-title">为什么做这个架构</div>
+        <p class="exec-copy">
+          N3 Lite 目前是一台离线设备。没有云平台，每次固件Bug都需要上门刷机，用户看不到充电数据，AlwaysControl对设备运行状态一无所知。
+          <strong>云平台将一次性硬件销售转变为持续的服务关系</strong> — 远程诊断、OTA升级、使用分析，最终实现可盈利的充电服务。硬件是入口，云平台是护城河。
+        </p>
+      </div>
+    </div>
+
+    <div class="meta-tags" style="margin-top: 20px;">
+      <span class="meta-tag">v1.0</span>
+      <span class="meta-tag">2026-03-05</span>
+      <span class="meta-tag">旭衡电子 AlwaysControl Technology</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc toc-floating">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#exec-summary">概要总览</a></li>
+      <li><a href="#glossary">术语表</a></li>
+      <li><a href="#s-product">产品线与硬件</a></li>
+      <li><a href="#s-why">为什么要做云平台</a></li>
+      <li><a href="#s-roles">角色与权限模型</a></li>
+      <li><a href="#s-arch">系统架构</a></li>
+      <li><a href="#s-dataflow">数据流转</a></li>
+      <li><a href="#s-modules">平台模块设计</a></li>
+      <li><a href="#s-tech">技术选型</a></li>
+      <li><a href="#s-mqtt">MQTT协议设计</a></li>
+      <li><a href="#s-ota">OTA升级设计</a></li>
+      <li><a href="#s-deploy">部署架构</a></li>
+      <li><a href="#s-roadmap">实施路线图</a></li>
+      <li><a href="#s-principles">设计原则</a></li>
+    </ol>
+  </div>
+
+<!-- 术语表 -->
+<div class="section" id="glossary">
+  <div class="section-label">附录</div>
+  <h2>术语表</h2>
+  <div class="glossary-grid">
+    <div class="glossary-card">
+      <div class="glossary-term">DLM (动态负载管理)</div>
+      <div class="glossary-desc">运行在 N3/N3 Lite 上的核心算法。CT环测量家庭总电流，DLM 动态调节充电功率，防止空开跳闸同时最大化充电速度。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">CT环 (电流互感器)</div>
+      <div class="glossary-desc">安装在入户主线上的钳式传感器，为 N3/N3 Lite 提供实时电流测量数据用于 DLM 计算。N3 Lite 支持单相(100A)；N3 支持三相。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">PLC (电力线通信)</div>
+      <div class="glossary-desc">N3/N3 Lite 与 ATP III 充电桩之间的通信方式，复用现有充电电源线。P1901.1 标准，OFDM+FSK 调制，无需额外布线。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">OCPP (开放充电协议)</div>
+      <div class="glossary-desc">充电桩管理的行业标准协议 (1.6-J / 2.0.1 版本)。用于充电桩直连云平台的备选通道。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">网关-子设备模型</div>
+      <div class="glossary-desc">N3/N3 Lite 作为 MQTT 网关（单一云端连接），ATP III 充电桩作为子设备，数据通过网关聚合上报。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">CP信号 (控制导引)</div>
+      <div class="glossary-desc">IEC 61851 Mode 3 充电控制信号。PWM 占空比编码允许的充电电流 (6A-32A)。ATP III 根据 N3/N3 Lite 发出的 CP 信号调整输出。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">EVSE (电动汽车供电设备)</div>
+      <div class="glossary-desc">为电动车供电的充电站硬件。ATP III 即为 EVSE，配备 AC Type 2 接口，支持 7.7kW 至 23kW 输出。</div>
+    </div>
+    <div class="glossary-card">
+      <div class="glossary-term">OTA (空中升级)</div>
+      <div class="glossary-desc">远程固件升级机制。N3 Lite (ESP32 双分区) 和 ATP III 均支持独立 OTA。N3 Lite 通过 PLC 中转 ATP III 的固件。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 产品线 -->
+<div class="chapter-banner product" id="s-product">
+  <div class="chapter-kicker">第一章</div>
+  <div class="chapter-title">产品线与硬件</div>
+  <p class="chapter-desc">了解我们要连接上云的设备：AlwaysControl 完整硬件生态。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">产品概览</div>
+  <h2>产品定位</h2>
+
+  <div class="highlight">
+    <strong>一句话定义:</strong> N3 Lite 是一台面向家庭用户的智能充电网关，安装在配电箱内，通过 PLC 控制充电桩，通过 WiFi 连接云平台，核心解决家庭充电的 #1 问题: <strong>"快速充电不跳闸"</strong>。
+  </div>
+
+  <div class="diagram-shell">
+    <div style="text-align:center; font-size:14px; line-height:2.2;">
+      <div class="diagram-node" style="display:inline-block; min-width:200px;"><strong>NeuronCloud</strong>云平台 + APP</div>
+      <div class="diagram-arrow">MQTT over WiFi</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div class="diagram-node"><strong>ATP III</strong>充电桩<br><span style="font-size:12px;color:#64748b;">7.7-23kW / AC Type 2</span></div>
+        <div class="diagram-node" style="background:#f0fdf4;border-color:#86efac;"><strong>N3 Lite</strong>家庭网关<br><span style="font-size:12px;color:#64748b;">ESP32 / 单相CT / 最多2台桩</span></div>
+        <div class="diagram-node"><strong>N3</strong>商用网关<br><span style="font-size:12px;color:#64748b;">Linux / 三相CT / 多桩管理</span></div>
+      </div>
+      <div class="diagram-arrow">PLC (电力线通信)</div>
+      <div class="diagram-node" style="display:inline-block;"><strong>ATP III 充电桩</strong>通过 PLC 接收电流分配指令</div>
+    </div>
+  </div>
+
+  <h3>硬件对比</h3>
+  <table>
+    <tr><th>特性</th><th>N3 Lite (家庭)</th><th>N3 (商业)</th><th>ATP III (充电桩)</th></tr>
+    <tr><td>MCU/CPU</td><td>ESP32 双核 240MHz</td><td>Cortex-A7 四核 + Cortex-M4</td><td>-</td></tr>
+    <tr><td>通信方式</td><td>WiFi / BLE / PLC</td><td>WiFi / BLE / 4G / 以太网 / PLC</td><td>WiFi / BLE (通过网关)</td></tr>
+    <tr><td>CT环</td><td>单相, 100A</td><td>三相, 100-500A</td><td>-</td></tr>
+    <tr><td>管桩数量</td><td>最多2台</td><td>多台</td><td>-</td></tr>
+    <tr><td>总线接口</td><td>仅PLC</td><td>RS485 / CAN / PLC</td><td>PLC (从站)</td></tr>
+    <tr><td>充电功率</td><td>-</td><td>-</td><td>7.7 / 11.5 / 23 kW</td></tr>
+    <tr><td>防护等级</td><td>-</td><td>-</td><td>IP65 + IK10</td></tr>
+    <tr><td>电能计量</td><td>电压/电流/功率 (估算kWh)</td><td>完整计量</td><td>无内置电表</td></tr>
+    <tr><td>目标市场</td><td>家庭用户 (50Hz)</td><td>商业充电站</td><td>配合N3/N3 Lite使用</td></tr>
+  </table>
+
+  <div class="highlight-warn">
+    <strong>关键限制:</strong> ATP III 没有内置电能表 (Energy Metering: NO)。充电电量 (kWh) 需要通过 N3 Lite 的功率监测数据在云端进行时间积分来估算。家庭使用足够，但不满足商业计费精度要求。
+  </div>
+</div>
+
+<!-- 为什么做云平台 -->
+<div class="section" id="s-why">
+  <div class="section-label">业务背景</div>
+  <h2>为什么要做这个云平台</h2>
+
+  <h3>现状 (没有云平台)</h3>
+  <table>
+    <tr><th>问题</th><th>影响</th></tr>
+    <tr><td>设备是离线孤岛</td><td>用户无法远程监控或控制充电</td></tr>
+    <tr><td>无法远程诊断</td><td>每个问题都需要上门服务</td></tr>
+    <tr><td>没有数据沉淀</td><td>用户不知道每月充了多少度电、花了多少钱；我们对设备状态一无所知</td></tr>
+    <tr><td>没有OTA能力</td><td>固件Bug必须上门刷机</td></tr>
+    <tr><td>一次性收入模式</td><td>硬件卖出即结束关系</td></tr>
+  </table>
+
+  <h3>未来 (有了云平台)</h3>
+  <table>
+    <tr><th>角色</th><th>获得的价值</th></tr>
+    <tr><td><strong>家庭用户</strong></td><td>APP监控、充电记录、预约充电、电费追踪、故障告警</td></tr>
+    <tr><td><strong>AlwaysControl (我们)</strong></td><td>设备全生命周期管理、远程诊断、OTA升级、运营数据大盘</td></tr>
+    <tr><td><strong>商业运营商 (未来)</strong></td><td>计费结算、多站点管理、开放API对接</td></tr>
+  </table>
+
+  <div class="highlight">
+    <strong>商业模式转变:</strong><br>
+    <strong>现在:</strong> 卖硬件 (一次性收入) -> 交付即结束。<br>
+    <strong>未来:</strong> 硬件 + 云服务 (持续收入) -> 长期价值。<br>
+    硬件是入口，云平台是护城河。设备卖得越多，平台价值越大，用户粘性越强。
+  </div>
+</div>
+
+<!-- 角色 -->
+<div class="section" id="s-roles">
+  <div class="section-label">访问模型</div>
+  <h2>角色与权限</h2>
+  <table>
+    <tr><th>角色</th><th>可见范围</th><th>可执行操作</th></tr>
+    <tr><td><strong>超级管理员</strong> (AlwaysControl)</td><td>所有设备、所有用户、全部平台数据</td><td>系统配置、OTA推送、产品管理、数据分析</td></tr>
+    <tr><td><strong>家庭用户</strong></td><td>自己的设备、自己的充电记录</td><td>远程控制、预约充电、查看用量、配置设置</td></tr>
+    <tr><td><strong>商业运营商</strong> (未来)</td><td>管辖的站点和设备</td><td>计费管理、用户管理、收入报表</td></tr>
+    <tr><td><strong>安装服务商</strong> (未来)</td><td>已安装的设备</td><td>设备调试、维护工单</td></tr>
+  </table>
+</div>
+
+<!-- 系统架构 -->
+<div class="chapter-banner architecture" id="s-arch">
+  <div class="chapter-kicker">第二章</div>
+  <div class="chapter-title">系统架构</div>
+  <p class="chapter-desc">分层架构设计、数据流转、模块分解与技术选型。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">架构概览</div>
+  <h2>分层架构</h2>
+
+  <div class="diagram-shell">
+    <div class="layer-grid">
+      <div class="layer-row">
+        <div class="layer-label app">展示层</div>
+        <div class="layer-content">用户APP (Flutter/RN) | 管理后台 (Vue3 + Ant Design Vue 4) | 数据大屏 (可选)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label api">接口层</div>
+        <div class="layer-content">REST API (Spring Boot 3.x) | WebSocket (实时推送至APP)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label biz">业务层</div>
+        <div class="layer-content">设备管理 | 充电管理 | 用户管理 | 能耗分析 | 告警中心 | OTA升级</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label msg">消息层</div>
+        <div class="layer-content">Kafka: telemetry | event | billing | command (缓冲 / 解耦 / 可重放)</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label iot">IoT接入层</div>
+        <div class="layer-content">MQTT Broker (EMQX) — N3 Lite / N3 网关接入 | OCPP WebSocket (Netty) — 充电桩直连</div>
+      </div>
+      <div class="layer-row">
+        <div class="layer-label infra">基础设施层</div>
+        <div class="layer-content">MySQL | Redis | TDengine (时序库) | MinIO (对象存储) | 日志与监控</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 数据流转 -->
+<div class="section" id="s-dataflow">
+  <div class="section-label">架构概览</div>
+  <h2>数据流转</h2>
+
+  <h3>上行 (设备 -> 云端)</h3>
+  <table class="table-sm">
+    <tr><th>数据类型</th><th>流转路径</th><th>存储位置</th></tr>
+    <tr><td>遥测数据 (电压/电流/功率)</td><td>N3 Lite -> EMQX -> Kafka[telemetry]</td><td>TDengine (时序库)</td></tr>
+    <tr><td>事件与告警 (故障/离线)</td><td>N3 Lite -> EMQX -> Kafka[event]</td><td>MySQL (告警记录) + 推送通知</td></tr>
+    <tr><td>充电记录 (会话/电量)</td><td>N3 Lite -> EMQX -> Kafka[billing]</td><td>MySQL (计费/结算)</td></tr>
+    <tr><td>心跳</td><td>N3 Lite -> EMQX -> Redis TTL</td><td>Redis (在线状态)</td></tr>
+  </table>
+
+  <h3>下行 (云端 -> 设备)</h3>
+  <table class="table-sm">
+    <tr><th>数据类型</th><th>流转路径</th><th>来源</th></tr>
+    <tr><td>远程控制 (启/停/设电流)</td><td>APP/管理台 -> Kafka[command] -> EMQX -> N3 Lite</td><td>用户APP / 管理后台</td></tr>
+    <tr><td>配置下发 (DLM参数 / 充电模式)</td><td>配置服务 -> EMQX -> N3 Lite</td><td>管理后台</td></tr>
+    <tr><td>OTA升级 (固件URL + MD5)</td><td>OTA服务 -> EMQX -> N3 Lite</td><td>管理后台</td></tr>
+    <tr><td>固件下载</td><td>N3 Lite -> MinIO (HTTP直连)</td><td>MinIO 对象存储</td></tr>
+  </table>
+
+  <div class="highlight-blue">
+    <strong>关键设计点:</strong> N3 Lite 是数据汇聚点。ATP III 充电桩的数据作为子设备负载嵌套在网关的 MQTT 消息中。每台 N3 Lite 一个 MQTT 连接，而非每台充电桩一个连接。
+  </div>
+</div>
+
+<!-- 模块设计 -->
+<div class="section" id="s-modules">
+  <div class="section-label">模块设计</div>
+  <h2>平台模块</h2>
+  <p class="muted-text">模块围绕 N3 Lite 能力设计，沿三条轴线组织: 设备接入 -> 数据处理 -> 业务应用。</p>
+
+  <h3>Phase 1: 基础 — "设备上线, 数据可见" <span class="badge p1">优先</span></h3>
+
+  <div class="module-grid">
+    <div class="module-card core">
+      <div class="module-name">neuron-mqtt</div>
+      <div class="module-en">MQTT消息通道</div>
+      <div class="module-desc">MQTT连接管理，消息接收 -> 按类型路由至Kafka，下行指令发布。AOP: 日志、校验、吞吐量指标。</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-device</div>
+      <div class="module-en">设备管理</div>
+      <div class="module-desc">设备注册(首次连接自动注册)、设备信息(型号/固件/网络/绑定用户)、在线状态(MQTT心跳+Redis TTL)、配置管理、OTA升级、设备拓扑(网关->子设备)。</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-protocol</div>
+      <div class="module-en">OCPP协议网关</div>
+      <div class="module-desc">基于Netty的WebSocket服务(端口9001)。支持OCPP 1.6-J / 2.0.1，用于充电桩直连云平台。MQTT之外的备选通道。</div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">neuron-system</div>
+      <div class="module-en">系统管理</div>
+      <div class="module-desc">用户/角色/权限/租户管理。基于 Shiro 2.0.5 + JWT。从第一天起支持多租户。</div>
+    </div>
+  </div>
+
+  <h3>Phase 2: 核心业务 — "充电可管, 数据有价值" <span class="badge p2">核心价值</span></h3>
+  <div class="module-grid">
+    <div class="module-card support">
+      <div class="module-name">neuron-charge</div>
+      <div class="module-en">充电管理</div>
+      <div class="module-desc">充电会话状态机(启动/进行/结束)、充电记录(时间/电量/最大功率)、远程控制(启/停/设电流, MQTT下发)、预约充电(低谷电价)。</div>
+    </div>
+    <div class="module-card support">
+      <div class="module-name">neuron-energy</div>
+      <div class="module-en">能耗分析</div>
+      <div class="module-desc">实时监测(功率/电流/电压 -> WebSocket推送至APP)、用量统计(日/周/月/年)、费用估算(用户配置本地电价)、CT环数据(家庭用电与充电占比)。</div>
+    </div>
+    <div class="module-card support">
+      <div class="module-name">neuron-alert</div>
+      <div class="module-en">告警中心</div>
+      <div class="module-desc">告警规则(过流/过压/离线/充电故障)、告警记录(分级)、推送通知(APP/短信/邮件)、告警分析(按设备/类型/时间)。</div>
+    </div>
+  </div>
+
+  <h3>Phase 3: 商业化 — "收入与运营" <span class="badge p3">商业</span></h3>
+  <div class="module-grid">
+    <div class="module-card planned">
+      <div class="module-name">neuron-billing</div>
+      <div class="module-en">计费结算</div>
+      <div class="module-desc">计价策略(固定/分时/阶梯)、计费引擎(充电记录+费率->账单)、支付对接(微信/支付宝/钱包)。</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-operator</div>
+      <div class="module-en">运营商管理</div>
+      <div class="module-desc">站点管理(地址/设备/运营时间/费率)、运营商入驻(多租户隔离)、收入分析(收入/成本/利润)。</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-openapi</div>
+      <div class="module-en">开放平台</div>
+      <div class="module-desc">API网关(OAuth2+限流)、设备数据API、控制API、Webhooks(充电完成/告警触发)、SDK(Java/Python/JS)。</div>
+    </div>
+  </div>
+
+  <h3>Phase 4: 差异化 — "竞争壁垒" <span class="badge p4">远期</span></h3>
+  <div class="module-grid">
+    <div class="module-card planned">
+      <div class="module-name">neuron-solar</div>
+      <div class="module-en">光储充一体化</div>
+      <div class="module-desc">光伏监测、智能调度(光伏余电->充电/储能, 不足->电网)、自发自用优化、碳足迹追踪。</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-grid</div>
+      <div class="module-en">电网互动</div>
+      <div class="module-desc">需求响应、虚拟电厂聚合、V2G双向充电。通过参与电力市场开辟新收入来源。</div>
+    </div>
+    <div class="module-card planned">
+      <div class="module-name">neuron-analytics</div>
+      <div class="module-en">数据分析</div>
+      <div class="module-desc">BI仪表盘、设备画像、预测性维护。将运营数据转化为可执行的洞察。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 技术选型 -->
+<div class="section" id="s-tech">
+  <div class="section-label">技术选型</div>
+  <h2>技术选型</h2>
+
+  <table>
+    <tr><th>层级</th><th>技术</th><th>选型理由</th></tr>
+    <tr><td>后端框架</td><td>Spring Boot 3.x + JDK 17</td><td>成熟稳定, 团队熟悉, 生产验证</td></tr>
+    <tr><td>ORM</td><td>MyBatis-Plus</td><td>开发效率高, 支持代码生成</td></tr>
+    <tr><td>认证授权</td><td>Apache Shiro 2.0.5 + JWT</td><td>现有框架, 无状态Token + Redis缓存权限</td></tr>
+    <tr><td>业务数据库</td><td>MySQL 8.x</td><td>设备信息、充电记录、用户、计费</td></tr>
+    <tr><td>时序数据库</td><td>TDengine</td><td>高频遥测数据(电压/电流/功率/CT), 自动降采样, 时间范围查询</td></tr>
+    <tr><td>对象存储</td><td>MinIO</td><td>OTA固件包、设备日志、报表导出</td></tr>
+    <tr><td>缓存</td><td>Redis</td><td>会话、在线状态(TTL机制)、热点数据</td></tr>
+    <tr><td>消息队列</td><td>Kafka</td><td>设备消息缓冲, 削峰, 多消费者, 可重放</td></tr>
+    <tr><td>IoT Broker</td><td>EMQX</td><td>MQTT设备接入, 百万级连接</td></tr>
+    <tr><td>协议网关</td><td>Netty</td><td>OCPP WebSocket, 高性能</td></tr>
+    <tr><td>前端</td><td>Vue3 + Ant Design Vue 4.x</td><td>管理后台 (NeuronCloud 品牌化)</td></tr>
+    <tr><td>移动APP</td><td>待定 (Flutter / RN / 小程序)</td><td>面向终端用户的APP</td></tr>
+    <tr><td>部署</td><td>Docker + Nginx</td><td>容器化部署, 反向代理</td></tr>
+  </table>
+
+  <h3>数据存储策略</h3>
+  <div class="two-col">
+    <div>
+      <h4>MySQL (业务数据)</h4>
+      <ul style="padding-left:18px; font-size:13px; line-height:1.8;">
+        <li>设备注册与拓扑关系</li>
+        <li>充电会话记录</li>
+        <li>用户 / 租户 / 角色</li>
+        <li>计费账单</li>
+        <li>告警记录与OTA任务</li>
+        <li>系统配置</li>
+      </ul>
+      <p class="muted-text">关系型, 事务性, 复杂关联, 低频读写。</p>
+    </div>
+    <div>
+      <h4>TDengine (时序数据)</h4>
+      <ul style="padding-left:18px; font-size:13px; line-height:1.8;">
+        <li>实时遥测 (电压/电流/功率)</li>
+        <li>CT环监测数据</li>
+        <li>充电功率曲线</li>
+        <li>设备在线时长统计</li>
+        <li>环境数据 (温度)</li>
+      </ul>
+      <p class="muted-text">超高写入 (100万+/秒), 自动过期, 内置聚合函数。</p>
+    </div>
+  </div>
+</div>
+
+<!-- MQTT协议设计 -->
+<div class="chapter-banner protocol" id="s-mqtt">
+  <div class="chapter-kicker">第三章</div>
+  <div class="chapter-title">MQTT协议设计</div>
+  <p class="chapter-desc">设备通信协议: Topic命名、消息格式、QoS策略与安全机制。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">协议规格</div>
+  <h2>MQTT通信设计</h2>
+
+  <h3>认证方式</h3>
+  <p>MQTT 用户名/密码认证。用户名 = 设备SN, 密码 = 设备专属密钥。EMQX ACL 规则实现按设备的 Topic 访问控制。</p>
+
+  <h3>QoS策略</h3>
+  <table class="table-sm">
+    <tr><th>数据类型</th><th>QoS等级</th><th>理由</th></tr>
+    <tr><td>遥测数据 (实时功率)</td><td>QoS 0</td><td>高频上报, 偶尔丢失可接受</td></tr>
+    <tr><td>心跳</td><td>QoS 0</td><td>周期性上报, 丢失通过TTL过期检测</td></tr>
+    <tr><td>事件 / 告警 / 状态</td><td>QoS 1</td><td>需保证至少送达一次</td></tr>
+    <tr><td>充电记录</td><td>QoS 1 + 业务ACK</td><td>计费数据零丢失</td></tr>
+    <tr><td>下行指令</td><td>QoS 1</td><td>确保送达设备</td></tr>
+  </table>
+
+  <h3>Topic规格</h3>
+  <table class="topic-table table-sm">
+    <tr><th>方向</th><th>Topic</th><th>QoS</th><th>说明</th></tr>
+    <tr><td rowspan="5">上行</td><td><code>neuron/{gw}/up/telemetry</code></td><td>0</td><td>实时电压/电流/功率/CT数据/子设备状态</td></tr>
+    <tr><td><code>neuron/{gw}/up/heartbeat</code></td><td>0</td><td>在线保活 (分钟级间隔)</td></tr>
+    <tr><td><code>neuron/{gw}/up/event</code></td><td>1</td><td>告警、状态变更、充电启停事件</td></tr>
+    <tr><td><code>neuron/{gw}/up/billing</code></td><td>1</td><td>充电会话记录、电量快照</td></tr>
+    <tr><td><code>neuron/{gw}/up/reply</code></td><td>1</td><td>指令执行结果 (响应下行指令)</td></tr>
+    <tr><td rowspan="3">下行</td><td><code>neuron/{gw}/down/command</code></td><td>1</td><td>启/停充电、设电流、DLM配置、断路器档位、优先级</td></tr>
+    <tr><td><code>neuron/{gw}/down/config</code></td><td>1</td><td>DLM参数、充电模式、预约计划</td></tr>
+    <tr><td><code>neuron/{gw}/down/ota</code></td><td>1</td><td>OTA固件推送 (目标: n3lite / atp3_1 / atp3_2)</td></tr>
+  </table>
+  <p class="muted-text"><code>{gw}</code> = 网关设备SN (N3 Lite 或 N3)。ATP III 数据作为子设备负载嵌套在网关消息中。</p>
+
+  <h3>消息信封 (统一格式)</h3>
+<pre>{
+  "msgId": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": 1709539200000,
+  "gatewayId": "N3L-ABC123",
+  "type": "telemetry",
+  "data": {
+    "gateway": {
+      "voltage": 230.5,
+      "current": 15.2,
+      "power": 3496
+    },
+    "ct": {
+      "totalCurrent": 37.7,
+      "available": 25.3,
+      "breakerRating": 63
+    },
+    "chargers": [
+      { "id": "ATP3-001", "status": "Charging", "current": 22.5, "power": 5175 },
+      { "id": "ATP3-002", "status": "Available", "current": 0, "power": 0 }
+    ]
+  }
+}</pre>
+
+  <h3>遗嘱消息 (LWT)</h3>
+  <p>每台 N3 Lite 连接时注册一条遗嘱消息到 <code>neuron/{gw}/up/event</code>，负载为 <code>{"type":"offline"}</code>。设备意外断连时，EMQX 自动发布此消息，触发云端离线告警流程。</p>
+</div>
+
+<!-- OTA升级设计 -->
+<div class="section" id="s-ota">
+  <div class="section-label">OTA设计</div>
+  <h2>OTA远程升级</h2>
+
+  <p>N3 Lite (ESP32) 原生支持双分区OTA。云平台提供固件管理与升级编排。ATP III 固件通过 N3 Lite 经 PLC 中转。</p>
+
+  <h3>OTA流程</h3>
+  <div class="diagram-shell">
+    <div style="font-size:13px; line-height:2;">
+      <div class="diagram-node"><strong>1. 上传固件</strong> 管理员上传 .bin 至云端 -> 存入 MinIO -> 返回 URL + MD5</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>2. 创建升级任务</strong> 选择固件版本 + 目标设备 (单台 / 批量 / 灰度)</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>3. MQTT推送OTA指令</strong> 云端发布到 <code>neuron/{gw}/down/ota</code> (QoS 1)</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>4. 设备下载固件</strong> N3 Lite 通过 HTTP(S) 从 MinIO 获取 .bin</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>5. 校验与安装</strong> MD5 校验 -> 写入OTA分区 -> 重启</div>
+      <div class="diagram-arrow">|</div>
+      <div class="diagram-node"><strong>6. 上报结果</strong> 重启后心跳携带新固件版本 -> 云端标记升级成功</div>
+    </div>
+    <div class="diagram-note">ATP III OTA: N3 Lite 下载固件后通过 PLC 中转至指定充电桩。OTA指令中通过 <code>"target": "atp3_1"</code> 指定目标设备。</div>
+  </div>
+
+  <h3>OTA指令消息</h3>
+<pre>// 下行: neuron/{gw}/down/ota
+{
+  "msgId": "ota-uuid-001",
+  "action": "upgrade",
+  "data": {
+    "target": "n3lite",           // "n3lite" | "atp3_1" | "atp3_2"
+    "version": "1.2.0",
+    "url": "https://minio.xxx/firmware/n3lite-v1.2.0.bin",
+    "md5": "a1b2c3d4e5f6...",
+    "size": 1048576,
+    "releaseNote": "修复DLM精度问题",
+    "forceUpgrade": false
+  }
+}
+
+// 上行进度: neuron/{gw}/up/reply
+{
+  "msgId": "ota-uuid-001",
+  "type": "ota_progress",
+  "data": {
+    "target": "n3lite",
+    "status": "downloading",      // downloading -> verifying -> installing -> rebooting -> success | failed
+    "progress": 65,
+    "version": "1.2.0",
+    "error": null
+  }
+}</pre>
+
+  <h3>安全措施</h3>
+  <table class="table-sm">
+    <tr><th>方面</th><th>措施</th></tr>
+    <tr><td>传输安全</td><td>MinIO 内网访问, 或 HTTPS + 临时签名URL (30分钟过期)</td></tr>
+    <tr><td>完整性校验</td><td>MD5/SHA256 校验和; 不匹配则丢弃</td></tr>
+    <tr><td>回滚机制</td><td>ESP32 双OTA分区; 启动失败自动回滚</td></tr>
+    <tr><td>防篡改</td><td>固件签名验证 (可选, 防止非官方固件)</td></tr>
+    <tr><td>并发控制</td><td>批量升级限流, 防止 MinIO/网络过载</td></tr>
+  </table>
+
+  <h3>云端OTA管理功能</h3>
+  <div class="module-grid">
+    <div class="module-card">
+      <div class="module-name">固件管理</div>
+      <div class="module-desc">上传、版本列表(测试/正式/已废弃)、变更日志、设备类型定向。</div>
+    </div>
+    <div class="module-card">
+      <div class="module-name">升级任务</div>
+      <div class="module-desc">创建任务(选版本+设备)、灰度策略(10% -> 观察24h -> 全量推送)、任务看板、重试/回滚。</div>
+    </div>
+    <div class="module-card">
+      <div class="module-name">升级历史</div>
+      <div class="module-desc">单设备升级时间线、版本分布图、失败分析(超时/校验失败/空间不足)。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 部署架构 -->
+<div class="section" id="s-deploy">
+  <div class="section-label">基础设施</div>
+  <h2>部署架构</h2>
+
+  <div class="diagram-shell">
+    <div class="deploy-grid">
+      <div class="deploy-panel cloud">
+        <div class="deploy-title">云端 (单JVM进程)</div>
+        <div class="deploy-col">
+          <div class="diagram-node"><strong>neuron-system-start</strong>Spring Boot 3.x 启动入口</div>
+          <div class="diagram-node"><strong>业务模块</strong>neuron-system / neuron-mqtt / neuron-device / neuron-charge / neuron-energy / neuron-alert</div>
+          <div class="diagram-node"><strong>外部服务</strong>EMQX (MQTT) | Kafka | MySQL | TDengine | Redis | MinIO</div>
+        </div>
+      </div>
+
+      <div class="deploy-arrow">MQTT<br>over<br>WiFi</div>
+
+      <div class="deploy-panel edge">
+        <div class="deploy-title">边缘端 (现场设备)</div>
+        <div class="deploy-chip">N 台网关, 每台运行 MQTT 客户端</div>
+        <div class="deploy-gateway-grid">
+          <div class="deploy-gateway"><strong>N3 Lite #1</strong><br>DLM + PLC + WiFi<br>-> 2x ATP III</div>
+          <div class="deploy-gateway"><strong>N3 Lite #2</strong><br>DLM + PLC + WiFi<br>-> 1x ATP III</div>
+          <div class="deploy-gateway"><strong>N3 #1</strong><br>DLM + 多协议<br>-> Nx 充电桩</div>
+        </div>
+        <div class="diagram-note">DLM 算法在网关本地运行。云端断连不影响本地充电安全。</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>单体到微服务演进</h3>
+  <div class="guardrail-grid">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">当前: 模块化单体</div>
+      <ul class="guardrail-list">
+        <li>所有模块共享一个JVM进程, 一个数据库连接池</li>
+        <li>模块边界通过 Maven 模块结构强制</li>
+        <li>模块间通过 Spring Bean 注入调用</li>
+        <li>部署简单, 单个 Docker 容器</li>
+      </ul>
+    </div>
+    <div class="guardrail-card must">
+      <div class="guardrail-title">未来: 微服务 (按需拆分)</div>
+      <ul class="guardrail-list">
+        <li>每个模块加 @SpringBootApplication + 独立配置</li>
+        <li>注册到 Nacos (项目中已有配置)</li>
+        <li>@Autowired 替换为 @FeignClient 跨模块调用</li>
+        <li>引入 Spring Cloud Gateway 统一API路由</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <strong>何时拆分:</strong> 团队 <= 5人、设备 <= 数千台、单机性能足够时保持单体。当团队互相阻塞、某模块需要独立扩缩容(如MQTT接入高峰)、或设备数达到万台以上时考虑拆分。
+  </div>
+</div>
+
+<!-- 实施路线图 -->
+<div class="chapter-banner delivery" id="s-roadmap">
+  <div class="chapter-kicker">第四章</div>
+  <div class="chapter-title">实施路线图</div>
+  <p class="chapter-desc">分阶段交付计划: 先跑通最小可行闭环, 然后逐步扩展。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">交付计划</div>
+  <h2>实施阶段</h2>
+
+  <div class="roadmap-grid">
+    <div class="roadmap-card active">
+      <div class="roadmap-title">Phase 1 — 基础建设 <span class="badge p1">当前</span></div>
+      <ul class="roadmap-list">
+        <li>项目框架 (Spring Boot 3.x, neuron-* 模块)</li>
+        <li>MQTT + Kafka 消息通道 (neuron-mqtt)</li>
+        <li>设备管理 + OTA (neuron-device)</li>
+        <li>OCPP 直连通道 (neuron-protocol) <em style="color:#64748b;">已完成</em></li>
+        <li><strong>N3 Lite 首次上云联调验证</strong></li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">交付物: N3 Lite 上线, 管理后台可见设备状态, OTA远程可用。</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 2 — 核心业务 <span class="badge p2">下一步</span></div>
+      <ul class="roadmap-list">
+        <li>充电管理 (neuron-charge)</li>
+        <li>能耗分析 (neuron-energy)</li>
+        <li>告警中心 (neuron-alert)</li>
+        <li>用户APP (基础版)</li>
+        <li>管理后台页面 (设备/充电/能耗)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">交付物: 用户可通过APP监控和控制充电。</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 3 — 商业化 <span class="badge p3">后续</span></div>
+      <ul class="roadmap-list">
+        <li>计费模块 (neuron-billing)</li>
+        <li>运营商管理 (neuron-operator)</li>
+        <li>开放API平台 (neuron-openapi)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">交付物: 平台可从充电服务中获得收入。</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-title">Phase 4 — 差异化 <span class="badge p4">远期</span></div>
+      <ul class="roadmap-list">
+        <li>光储充一体化 (neuron-solar)</li>
+        <li>电网互动 / V2G (neuron-grid)</li>
+        <li>数据分析平台 (neuron-analytics)</li>
+      </ul>
+      <p class="muted-text" style="margin-top:8px;">交付物: 通过高级能源管理实现竞争差异化。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 设计原则 -->
+<div class="section" id="s-principles">
+  <div class="section-label">指导准则</div>
+  <h2>设计原则</h2>
+
+  <table>
+    <tr><th>#</th><th>原则</th><th>说明</th></tr>
+    <tr><td>1</td><td><strong>以设备为中心</strong></td><td>每个功能都从 N3 Lite 实际硬件能力出发。设备不支持的，不做。</td></tr>
+    <tr><td>2</td><td><strong>离线优先</strong></td><td>N3 Lite 的 DLM 和本地充电必须在无云端的情况下正常工作。连接恢复后数据同步。</td></tr>
+    <tr><td>3</td><td><strong>数据可靠</strong></td><td>计费相关数据: 零丢失。QoS 1 + 本地持久化 + 业务ACK + 对账(预留设计)。</td></tr>
+    <tr><td>4</td><td><strong>水平扩展</strong></td><td>MQTT/Kafka 架构支持 100 到 10万台设备。单体可演进为微服务。</td></tr>
+    <tr><td>5</td><td><strong>多租户就绪</strong></td><td>从第一天起考虑租户隔离。未来运营商入驻是配置，不是代码修改。</td></tr>
+    <tr><td>6</td><td><strong>协议共存</strong></td><td>MQTT (N3网关) + OCPP (充电桩直连) 双通道，内部统一数据模型。</td></tr>
+    <tr><td>7</td><td><strong>单体优先</strong></td><td>清晰的模块边界，开发效率优先。只在业务增长需要时才拆分微服务。</td></tr>
+  </table>
+
+  <div class="guardrail-grid" style="margin-top:20px;">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">必须坚持</div>
+      <ul class="guardrail-list">
+        <li>DLM 算法运行在设备端, 不在云端 (延迟 + 离线安全)</li>
+        <li>云端只下发配置, 绝不参与实时控制环路</li>
+        <li>每台网关一个 MQTT 连接 (不是每台充电桩)</li>
+        <li>模块边界 == 未来微服务边界</li>
+      </ul>
+    </div>
+    <div class="guardrail-card ban">
+      <div class="guardrail-title">必须避免</div>
+      <ul class="guardrail-list">
+        <li>设计假设设备永远在线的功能</li>
+        <li>过早拆分微服务 (分布式单体陷阱)</li>
+        <li>在同一个 Kafka Topic 中混合不同类型的 MQTT 消息</li>
+        <li>设备协议层与业务逻辑紧耦合</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- container -->
+
+<div class="doc-footer">
+  <p>NeuronCloud 平台架构设计 v1.0 | 旭衡电子(深圳)有限公司</p>
+  <p>中国深圳 | www.alwayscontrol.com.cn</p>
+</div>
+
+</body>
+</html>

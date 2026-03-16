@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: neuron-cloud
+  config:
+    import: optional:classpath:config/application-liteflow.yml
+  profiles:
+    active: '@profile.name@'

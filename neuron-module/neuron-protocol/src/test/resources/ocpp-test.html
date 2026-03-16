@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>OCPP WebSocket Tester</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+  h1 { font-size: 20px; margin-bottom: 16px; color: #00d2ff; }
+  .container { display: grid; grid-template-columns: 340px 1fr; gap: 16px; max-width: 1200px; margin: 0 auto; }
+  .panel { background: #16213e; border-radius: 8px; padding: 16px; }
+  label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+  input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #333; border-radius: 4px; background: #0f3460; color: #eee; font-size: 13px; margin-bottom: 10px; font-family: 'Consolas', monospace; }
+  textarea { resize: vertical; min-height: 120px; }
+  button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-connect { background: #00b894; color: #fff; }
+  .btn-connect:hover { background: #00a381; }
+  .btn-disconnect { background: #e17055; color: #fff; }
+  .btn-disconnect:hover { background: #d35400; }
+  .btn-send { background: #0984e3; color: #fff; width: 100%; margin-top: 4px; }
+  .btn-send:hover { background: #0770c2; }
+  .btn-send:disabled { background: #555; cursor: not-allowed; }
+  .btn-preset { background: #2d3436; color: #dfe6e9; border: 1px solid #444; margin: 2px; font-size: 11px; padding: 5px 10px; }
+  .btn-preset:hover { background: #444; }
+  .btn-preset.active { border-color: #00d2ff; color: #00d2ff; }
+  .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .status.connected { background: #00b894; box-shadow: 0 0 6px #00b894; }
+  .status.disconnected { background: #e17055; }
+  .log-area { height: calc(100vh - 120px); overflow-y: auto; font-family: 'Consolas', monospace; font-size: 12px; line-height: 1.6; }
+  .log-entry { padding: 4px 8px; border-bottom: 1px solid #1a1a2e; word-break: break-all; }
+  .log-entry:hover { background: #1a1a3e; }
+  .log-in { color: #55efc4; }
+  .log-out { color: #74b9ff; }
+  .log-sys { color: #ffeaa7; }
+  .log-err { color: #ff7675; }
+  .log-time { color: #636e72; margin-right: 8px; }
+  .conn-row { display: flex; gap: 8px; align-items: end; }
+  .conn-row > div:first-child { flex: 1; }
+  .presets { margin-bottom: 10px; }
+  .presets-title { font-size: 12px; color: #888; margin-bottom: 6px; }
+  #connStatus { font-size: 13px; margin-bottom: 12px; }
+  .clear-btn { float: right; background: none; border: none; color: #636e72; font-size: 11px; cursor: pointer; }
+  .clear-btn:hover { color: #eee; }
+</style>
+</head>
+<body>
+
+<h1>OCPP WebSocket Tester</h1>
+<div class="container">
+  <div class="panel">
+    <div id="connStatus"><span class="status disconnected"></span> Disconnected</div>
+
+    <label>WebSocket URL</label>
+    <input id="wsUrl" value="ws://localhost:9001/ocpp/TEST001">
+
+    <label>Sub-Protocol</label>
+    <select id="subProtocol">
+      <option value="ocpp1.6" selected>ocpp1.6</option>
+      <option value="ocpp2.0.1">ocpp2.0.1</option>
+    </select>
+
+    <div class="conn-row">
+      <div><button class="btn-connect" id="btnConnect" onclick="connect()">Connect</button></div>
+      <div><button class="btn-disconnect" id="btnDisconnect" onclick="disconnect()" disabled>Disconnect</button></div>
+    </div>
+
+    <hr style="border-color:#333; margin: 14px 0;">
+
+    <div class="presets">
+      <div class="presets-title">OCPP 1.6 Presets</div>
+      <button class="btn-preset" onclick="loadPreset('boot16')">BootNotification</button>
+      <button class="btn-preset" onclick="loadPreset('heartbeat')">Heartbeat</button>
+      <button class="btn-preset" onclick="loadPreset('status16')">StatusNotification</button>
+      <button class="btn-preset" onclick="loadPreset('authorize16')">Authorize</button>
+      <button class="btn-preset" onclick="loadPreset('startTx')">StartTransaction</button>
+      <button class="btn-preset" onclick="loadPreset('stopTx')">StopTransaction</button>
+      <button class="btn-preset" onclick="loadPreset('meter16')">MeterValues</button>
+      <button class="btn-preset" onclick="loadPreset('data16')">DataTransfer</button>
+    </div>
+
+    <div class="presets">
+      <div class="presets-title">OCPP 2.0.1 Presets</div>
+      <button class="btn-preset" onclick="loadPreset('boot201')">BootNotification</button>
+      <button class="btn-preset" onclick="loadPreset('heartbeat201')">Heartbeat</button>
+      <button class="btn-preset" onclick="loadPreset('status201')">StatusNotification</button>
+      <button class="btn-preset" onclick="loadPreset('txEvent')">TransactionEvent</button>
+      <button class="btn-preset" onclick="loadPreset('authorize201')">Authorize</button>
+    </div>
+
+    <label>Message (OCPP JSON Array)</label>
+    <textarea id="msgInput"></textarea>
+
+    <button class="btn-send" id="btnSend" onclick="sendMsg()" disabled>Send</button>
+  </div>
+
+  <div class="panel">
+    <div style="margin-bottom: 8px;">
+      Message Log <button class="clear-btn" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-area" id="logArea"></div>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let msgId = 1;
+
+const presets = {
+  boot16: () => [2, uid(), "BootNotification", {
+    chargePointVendor: "AlwaysControl",
+    chargePointModel: "ATP-III",
+    chargePointSerialNumber: "AC-001",
+    firmwareVersion: "1.0.0"
+  }],
+  heartbeat: () => [2, uid(), "Heartbeat", {}],
+  status16: () => [2, uid(), "StatusNotification", {
+    connectorId: 1,
+    status: "Available",
+    errorCode: "NoError",
+    timestamp: now()
+  }],
+  authorize16: () => [2, uid(), "Authorize", {
+    idTag: "TAG001"
+  }],
+  startTx: () => [2, uid(), "StartTransaction", {
+    connectorId: 1,
+    idTag: "TAG001",
+    meterStart: 0,
+    timestamp: now()
+  }],
+  stopTx: () => [2, uid(), "StopTransaction", {
+    transactionId: 1,
+    meterStop: 32000,
+    timestamp: now(),
+    reason: "Local"
+  }],
+  meter16: () => [2, uid(), "MeterValues", {
+    connectorId: 1,
+    transactionId: 1,
+    meterValue: [{
+      timestamp: now(),
+      sampledValue: [{ value: "16000", measurand: "Energy.Active.Import.Register", unit: "Wh" }]
+    }]
+  }],
+  data16: () => [2, uid(), "DataTransfer", {
+    vendorId: "AlwaysControl",
+    messageId: "custom01",
+    data: "{\"key\":\"value\"}"
+  }],
+  boot201: () => [2, uid(), "BootNotification", {
+    chargingStation: { vendorName: "AlwaysControl", model: "ATP-III", serialNumber: "AC-001", firmwareVersion: "1.0.0" },
+    reason: "PowerUp"
+  }],
+  heartbeat201: () => [2, uid(), "Heartbeat", {}],
+  status201: () => [2, uid(), "StatusNotification", {
+    timestamp: now(),
+    connectorStatus: "Available",
+    evseId: 1,
+    connectorId: 1
+  }],
+  txEvent: () => [2, uid(), "TransactionEvent", {
+    eventType: "Started",
+    timestamp: now(),
+    triggerReason: "Authorized",
+    seqNo: 0,
+    transactionInfo: { transactionId: "TX-001" },
+    idToken: { idToken: "TAG001", type: "ISO14443" }
+  }],
+  authorize201: () => [2, uid(), "Authorize", {
+    idToken: { idToken: "TAG001", type: "ISO14443" }
+  }]
+};
+
+function uid() { return "msg" + String(msgId++).padStart(3, "0"); }
+function now() { return new Date().toISOString(); }
+function time() { return new Date().toLocaleTimeString("en-GB", { hour12: false }); }
+
+function loadPreset(key) {
+  document.getElementById("msgInput").value = JSON.stringify(presets[key](), null, 2);
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function log(type, msg) {
+  const area = document.getElementById("logArea");
+  const div = document.createElement("div");
+  div.className = "log-entry log-" + type;
+  const prefix = type === "in" ? "<<" : type === "out" ? ">>" : type === "err" ? "!!" : "--";
+  div.innerHTML = '<span class="log-time">' + time() + '</span>' + prefix + ' ' + escHtml(msg);
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function clearLog() { document.getElementById("logArea").innerHTML = ""; }
+
+function setConnected(ok) {
+  document.getElementById("connStatus").innerHTML = ok
+    ? '<span class="status connected"></span> Connected'
+    : '<span class="status disconnected"></span> Disconnected';
+  document.getElementById("btnConnect").disabled = ok;
+  document.getElementById("btnDisconnect").disabled = !ok;
+  document.getElementById("btnSend").disabled = !ok;
+}
+
+function connect() {
+  const url = document.getElementById("wsUrl").value;
+  const proto = document.getElementById("subProtocol").value;
+  log("sys", "Connecting to " + url + " [" + proto + "]...");
+
+  try {
+    ws = new WebSocket(url, proto);
+  } catch (e) {
+    log("err", "Failed: " + e.message);
+    return;
+  }
+
+  ws.onopen = () => { log("sys", "Connected"); setConnected(true); };
+  ws.onclose = (e) => { log("sys", "Disconnected (code=" + e.code + ")"); setConnected(false); ws = null; };
+  ws.onerror = (e) => { log("err", "WebSocket error"); };
+  ws.onmessage = (e) => {
+    log("in", e.data);
+    try {
+      const arr = JSON.parse(e.data);
+      if (arr[0] === 3) log("sys", "CALLRESULT for " + arr[1]);
+      if (arr[0] === 4) log("err", "CALLERROR: " + arr[2] + " - " + arr[3]);
+    } catch(_) {}
+  };
+}
+
+function disconnect() {
+  if (ws) { ws.close(); ws = null; }
+}
+
+function sendMsg() {
+  const text = document.getElementById("msgInput").value.trim();
+  if (!text || !ws) return;
+  try {
+    const compact = JSON.stringify(JSON.parse(text));
+    ws.send(compact);
+    log("out", compact);
+  } catch (e) {
+    log("err", "Invalid JSON: " + e.message);
+  }
+}
+
+// keyboard shortcut: Ctrl+Enter to send
+document.getElementById("msgInput").addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "Enter") { sendMsg(); e.preventDefault(); }
+});
+
+// load default preset
+loadPreset("boot16");
+</script>
+
+</body>
+</html>
