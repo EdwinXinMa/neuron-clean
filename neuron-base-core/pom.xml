@@ -139,44 +139,12 @@
 			<version>${mysql-connector-java.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!--  sqlserver-->
-		<dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>mssql-jdbc</artifactId>
-			<version>${sqljdbc4.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<!-- oracle驱动 -->
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>${ojdbc6.version}</version>
-			<scope>runtime</scope>
-		</dependency>
 		<!-- postgresql驱动 -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
-		</dependency>
-		<!--人大金仓驱动 版本号V008R006C005B0013 -->
-		<dependency>
-			<groupId>org.jeecgframework</groupId>
-			<artifactId>kingbase8</artifactId>
-			<version>${kingbase8.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<!--达梦数据库驱动 版本号1-3-26-2023.07.26-197096-20046-ENT -->
-		<dependency>
-			<groupId>com.dameng</groupId>
-			<artifactId>DmJdbcDriver18</artifactId>
-			<version>${dm8.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.dameng</groupId>
-			<artifactId>DmDialect-for-hibernate5.0</artifactId>
-			<version>${dm8.version}</version>
 		</dependency>
 		<!-- Quartz定时任务 -->
 		<dependency>
@@ -274,23 +242,6 @@
 			<version>2.7.0</version>
 		</dependency>
 
-		<!-- 代码生成器 -->
-		<!-- 如下载失败，请参考此文档  https://help.jeecg.com/java/setup/maven.html -->
-		<dependency>
-			<groupId>org.jeecgframework.boot</groupId>
-			<artifactId>codegenerate</artifactId>
-			<version>${codegenerate.version}</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-io</artifactId>
-					<groupId>commons-io</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>mysql-connector-java</artifactId>
-					<groupId>mysql</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 
 		<!-- AutoPoi Excel工具类-->
 		<dependency>
@@ -324,33 +275,6 @@
 			</exclusions>
 		</dependency>
 
-		<!-- 阿里云短信 -->
-		<dependency>
-			<groupId>com.aliyun</groupId>
-			<artifactId>aliyun-java-sdk-dysmsapi</artifactId>
-			<version>${aliyun-java-sdk-dysmsapi.version}</version>
-		</dependency>
-		<!-- aliyun oss -->
-		<dependency>
-			<groupId>com.aliyun.oss</groupId>
-			<artifactId>aliyun-sdk-oss</artifactId>
-			<version>${aliyun.oss.version}</version>
-		</dependency>
-		<!-- 第三方登录  -->
-		<dependency>
-			<groupId>com.xkcoding.justauth</groupId>
-			<artifactId>justauth-spring-boot-starter</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-autoconfigure</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-configuration-processor</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
@@ -364,6 +288,11 @@
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
 		</dependency>
+		<!-- commons-codec -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
 		<!--加载hutool-->
 		<dependency>
 			<groupId>cn.hutool</groupId>
@@ -373,21 +302,5 @@
 			<groupId>cn.hutool</groupId>
 			<artifactId>hutool-crypto</artifactId>
 		</dependency>
-        <!-- 腾讯云 -->
-        <dependency>
-            <groupId>com.tencentcloudapi</groupId>
-            <artifactId>tencentcloud-sdk-java-sms</artifactId>
-            <version>${tencentcloud-sdk-java-sms.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.xml.bind</groupId>
-					<artifactId>jaxb-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.squareup.okio</groupId>
-					<artifactId>okio</artifactId>
-				</exclusion>
-			</exclusions>
-        </dependency>
 	</dependencies>
 </project>

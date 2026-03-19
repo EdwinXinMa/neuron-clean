@@ -186,6 +186,9 @@ mybatis-plus:
 minidao:
   base-package: com.echarge.modules.jmreport.*,com.echarge.modules.drag.*
 neuron:
+  # Kafka 开关（false=直连模式，true=走Kafka投递）
+  kafka:
+    enabled: false
   # OCPP 协议网关
   protocol:
     enabled: true
@@ -328,6 +331,7 @@ logging:
     org.flywaydb: debug
     com.echarge.modules.system.mapper: info
     com.echarge.modules.demo.test.mapper: info
+    com.echarge.modules.device.mapper: debug
 #swagger
 knife4j:
   #开启增强配置

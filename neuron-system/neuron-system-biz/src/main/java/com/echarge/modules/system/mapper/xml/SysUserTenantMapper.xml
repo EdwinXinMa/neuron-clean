@@ -173,7 +173,7 @@
     </select>
 
     <!--根据租户id和名称获取用户数据-->
-    <select id="getUsersByTenantIdAndName" resultType="com.echarge.modules.system.vo.thirdapp.JwUserDepartVo">
+    <select id="getUsersByTenantIdAndName" resultType="com.echarge.modules.system.entity.SysUser">
         SELECT su.id userId,su.realname,su.avatar
         FROM sys_user_tenant sut
         JOIN sys_tenant st ON sut.tenant_id = st.id and st.status = 1 and st.del_flag = 0

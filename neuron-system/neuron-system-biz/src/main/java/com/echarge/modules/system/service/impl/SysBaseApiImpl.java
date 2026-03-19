@@ -3,7 +3,6 @@ package com.echarge.modules.system.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.aliyuncs.exceptions.ClientException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -12,7 +11,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Joiner;
-import com.jeecg.dingtalk.api.core.response.Response;
 import freemarker.core.TemplateClassResolver;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -44,9 +42,7 @@ import com.echarge.common.util.dynamic.db.FreemarkerParseFactory;
 import com.echarge.config.firewall.SqlInjection.IDictTableWhiteListHandler;
 import com.echarge.config.mybatis.MybatisPlusSaasConfig;
 import com.echarge.modules.message.entity.SysMessageTemplate;
-import com.echarge.modules.message.handle.impl.DdSendMsgHandle;
 import com.echarge.modules.message.handle.impl.EmailSendMsgHandle;
-import com.echarge.modules.message.handle.impl.QywxSendMsgHandle;
 import com.echarge.modules.message.handle.impl.SystemSendMsgHandle;
 import com.echarge.modules.message.service.ISysMessageTemplateService;
 import com.echarge.modules.message.websocket.WebSocket;
@@ -135,10 +131,6 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 	private SysPermissionMapper sysPermissionMapper;
 	@Autowired
 	private ISysPermissionDataRuleService sysPermissionDataRuleService;
-	@Autowired
-	private ThirdAppWechatEnterpriseServiceImpl wechatEnterpriseService;
-	@Autowired
-	private ThirdAppDingtalkServiceImpl dingtalkService;
 	@Autowired
 	ISysCategoryService sysCategoryService;
 	@Autowired
@@ -445,8 +437,7 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
                 message.getNoticeType());
 		try {
 			// 同步发送第三方APP消息
-			wechatEnterpriseService.sendMessage(message, true);
-			dingtalkService.sendMessage(message, true);
+			// 第三方APP消息已移除
 		} catch (Exception e) {
 			log.error("同步发送第三方APP消息失败！", e);
 		}
@@ -464,8 +455,7 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 				message.getNoticeType());
 		try {
 			// 同步发送第三方APP消息
-			wechatEnterpriseService.sendMessage(message, true);
-			dingtalkService.sendMessage(message, true);
+			// 第三方APP消息已移除
 		} catch (Exception e) {
 			log.error("同步发送第三方APP消息失败！", e);
 		}
@@ -539,8 +529,7 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 		}
 		try {
 			// 同步企业微信、钉钉的消息通知
-			dingtalkService.sendActionCardMessage(announcement, mobileOpenUrl, true);
-			wechatEnterpriseService.sendTextCardMessage(announcement, mobileOpenUrl, true);
+			// 第三方APP消息已移除
 		} catch (Exception e) {
 			log.error("同步发送第三方APP消息失败！", e);
 		}
@@ -633,21 +622,7 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 				webSocket.sendMessage(sysUser.getId(), obj.toJSONString());
 			}
 		}
-		try {
-			// 钉钉的消息通知
-			dingtalkService.sendActionCardMessage(announcement, mobileOpenUrl, true);
-			// 企业微信通知
-			wechatEnterpriseService.sendTextCardMessage(announcement, mobileOpenUrl, true);
-			// Uniapp手机端消息推送
-			PushMessageDTO pushMessageDTO = new PushMessageDTO();
-			pushMessageDTO.setTitle(announcement.getTitile());
-			pushMessageDTO.setContent(announcement.getMsgContent());
-			pushMessageDTO.setPayload(new HashMap<>(message.getTemplateParam()));
-			pushMessageDTO.setUsernames(Arrays.asList(toUser));
-			this.uniPushMsgToUser(pushMessageDTO);
-		} catch (Exception e) {
-			log.error("同步发送第三方APP消息失败！", e);
-		}
+		// 第三方APP消息已移除
 
 	}
 
@@ -1481,14 +1456,8 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 	 */
 	@Override
 	public void sendSmsMsg(String phone, JSONObject param,DySmsEnum dySmsEnum) {
-        try {
-			log.info(" 发送短信消息 phone = {}", phone);
-			log.info(" 发送短信消息 param = {}", param);
-            DySmsHelper.sendSms(phone, param,dySmsEnum);
-        } catch (ClientException e) {
-			e.printStackTrace();
-        }
-    }
+		log.warn("短信发送功能未启用, phone = {}", phone);
+	}
 
 	/**
 	 * 发送html模版邮件消息
@@ -1665,16 +1634,10 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 
 	//-------------------------------------流程节点发送模板消息-----------------------------------------------
 	@Autowired
-	private QywxSendMsgHandle qywxSendMsgHandle;
-
-	@Autowired
 	private SystemSendMsgHandle systemSendMsgHandle;
 
 	@Autowired
 	private EmailSendMsgHandle emailSendMsgHandle;
-
-	@Autowired
-	private DdSendMsgHandle ddSendMsgHandle;
 
 	@Override
 	public void sendTemplateMessage(MessageDTO message) {
@@ -1714,10 +1677,6 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 			}else{
 				emailSendMsgHandle.sendMessage(message);
 			}
-		}else if(MessageTypeEnum.DD.getType().equals(messageType)){
-			ddSendMsgHandle.sendMessage(message);
-		}else if(MessageTypeEnum.QYWX.getType().equals(messageType)){
-			qywxSendMsgHandle.sendMessage(message);
 		}
 	}
 
@@ -2037,19 +1996,7 @@ public class SysBaseApiImpl implements ISysBaseAPI, org.jeecg.common.system.api.
 				obj.put(WebsocketConst.MSG_TXT, sysAnnouncement.getTitile());
 				webSocket.sendMessage(userIds, obj.toJSONString());
 			}
-			try {
-				// 同步企业微信、钉钉的消息通知
-				Response<String> dtResponse = dingtalkService.sendActionCardMessage(sysAnnouncement, null, true);
-				wechatEnterpriseService.sendTextCardMessage(sysAnnouncement, null,true);
-
-				if (dtResponse != null && dtResponse.isSuccess()) {
-					String taskId = dtResponse.getResult();
-					sysAnnouncement.setDtTaskId(taskId);
-					sysAnnouncementService.updateById(sysAnnouncement);
-				}
-			} catch (Exception e) {
-				log.error("同步发送第三方APP消息失败：", e);
-			}
+			// 第三方APP消息已移除
 		}
 	}
 

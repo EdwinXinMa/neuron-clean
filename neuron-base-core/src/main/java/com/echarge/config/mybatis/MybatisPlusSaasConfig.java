@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.baomidou.mybatisplus.extension.toolkit.JdbcUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.zhyd.oauth.log.Log;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import com.echarge.common.config.TenantContext;
@@ -140,7 +139,7 @@ public class MybatisPlusSaasConfig {
              dbType = JdbcUtils.getDbType(dataSource.getConnection().getMetaData().getURL());
              log.info("当前数据库类型: {}", dbType);
         } catch (SQLException e) {
-            Log.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
         if (dbType!=null && (dbType == DbType.SQL_SERVER || dbType == DbType.SQL_SERVER2005)) {
             // 如果是SQL Server则覆盖为2005分页方式

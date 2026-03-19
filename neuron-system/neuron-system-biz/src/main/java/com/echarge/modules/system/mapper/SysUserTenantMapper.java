@@ -12,7 +12,6 @@ import com.echarge.modules.system.entity.SysUser;
 import com.echarge.modules.system.entity.SysUserTenant;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.echarge.modules.system.vo.SysUserTenantVo;
-import com.echarge.modules.system.vo.thirdapp.JwUserDepartVo;
 
 /**
  * @Description: sys_user_tenant_relation
@@ -165,7 +164,7 @@ public interface SysUserTenantMapper extends BaseMapper<SysUserTenant> {
      * @param tenantId
      * @return
      */
-    List<JwUserDepartVo> getUsersByTenantIdAndName(@Param("tenantId") Integer tenantId);
+    List<SysUser> getUsersByTenantIdAndName(@Param("tenantId") Integer tenantId);
 
     /**
      * 根据多个用户id获取租户id

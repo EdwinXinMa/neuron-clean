@@ -17,10 +17,6 @@ public enum SendMsgTypeEnum {
      */
 	EMAIL("2", "com.echarge.modules.message.handle.impl.EmailSendMsgHandle"),
     /**
-     * 微信
-     */
-	WX("3","com.echarge.modules.message.handle.impl.WxSendMsgHandle"),
-    /**
      * 系统消息
      */
 	SYSTEM_MESSAGE("4","com.echarge.modules.message.handle.impl.SystemSendMsgHandle");

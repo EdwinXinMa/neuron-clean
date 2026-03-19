@@ -19,23 +19,6 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 		</dependency>
-		<!-- Online低代码模块 (hibernate-re) -->
-		<dependency>
-			<groupId>org.jeecgframework.boot3</groupId>
-			<artifactId>hibernate-re</artifactId>
-			<version>3.9.1-beta</version>
-		</dependency>
-		<!-- langchain4j core: hibernate-re catches AuthenticationException -->
-		<dependency>
-			<groupId>dev.langchain4j</groupId>
-			<artifactId>langchain4j-core</artifactId>
-			<version>1.9.1</version>
-		</dependency>
-		<!-- 企业微信/钉钉 api (暂时保留，后续清理) -->
-		<dependency>
-			<groupId>org.jeecgframework</groupId>
-			<artifactId>weixin4j</artifactId>
-		</dependency>
 	</dependencies>
 	
 </project>

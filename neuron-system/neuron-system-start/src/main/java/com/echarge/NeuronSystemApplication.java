@@ -1,10 +1,8 @@
 package com.echarge;
 
-import com.xkcoding.justauth.autoconfigure.JustAuthAutoConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import com.echarge.common.util.oConvertUtils;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -23,7 +21,6 @@ import java.util.Map;
 */
 @Slf4j
 @SpringBootApplication(exclude = MongoAutoConfiguration.class, scanBasePackages = {"com.echarge", "org.jeecg"})
-@ImportAutoConfiguration(JustAuthAutoConfiguration.class)  // spring boot 3.x justauth 兼容性处理
 public class NeuronSystemApplication extends SpringBootServletInitializer {
 
     @Override

@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.aliyuncs.exceptions.ClientException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -108,10 +107,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Autowired
 	private SysThirdAccountMapper sysThirdAccountMapper;
 	@Autowired
-	ThirdAppWechatEnterpriseServiceImpl wechatEnterpriseService;
-	@Autowired
-	ThirdAppDingtalkServiceImpl dingtalkService;
-	@Autowired
 	ISysRoleIndexService sysRoleIndexService;
 	@Autowired
 	SysTenantMapper sysTenantMapper;
@@ -125,9 +120,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private SysPositionMapper sysPositionMapper;
 	@Autowired
 	private SystemSendMsgHandle systemSendMsgHandle;
-	
-	@Autowired
-	private ISysThirdAccountService sysThirdAccountService;
+
 	@Autowired
 	private RedisUtil redisUtil;
     
@@ -232,19 +225,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				item.setPost(CommonUtils.getSplitText(positionList,SymbolConstant.COMMA));
 				
 				//是否根据租户隔离(敲敲云用户列表专用，用于展示是否同步钉钉)
-				if (MybatisPlusSaasConfig.OPEN_SYSTEM_TENANT_CONTROL) {
-					//查询账号表是否已同步钉钉
-					LambdaQueryWrapper<SysThirdAccount> query = new LambdaQueryWrapper<>();
-					query.eq(SysThirdAccount::getSysUserId,item.getId());
-					query.eq(SysThirdAccount::getTenantId, tenantId);
-					//目前只有同步钉钉
-					query.eq(SysThirdAccount::getThirdType, MessageTypeEnum.DD.getType());
-					//不为空代表已同步钉钉
-					List<SysThirdAccount> account = sysThirdAccountService.list(query);
-					if(CollectionUtil.isNotEmpty(account)){
-						item.setIzBindThird(true);
-					}
-				}
+				// 第三方账号绑定检查已移除
                 //查询部门的兼职岗位
                 List<String> depPostList = depPostMapper.getDepPostByUserId(item.getId());
                 if(CollectionUtil.isNotEmpty(depPostList)){
@@ -747,13 +728,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		line += sysUserDepartMapper.delete(new LambdaQueryWrapper<SysUserDepart>().in(SysUserDepart::getUserId, userIds));
 		//3. 删除用户角色关系
 		line += sysUserRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().in(SysUserRole::getUserId, userIds));
-		//4.同步删除第三方App的用户
-		try {
-			dingtalkService.removeThirdAppUser(userIds);
-			wechatEnterpriseService.removeThirdAppUser(userIds);
-		} catch (Exception e) {
-			log.error("同步删除第三方App的用户失败：", e);
-		}
+		// 第三方APP用户同步已移除
 		//5. 删除第三方用户表（因为第4步需要用到第三方用户表，所以在他之后删）
 		line += sysThirdAccountMapper.delete(new LambdaQueryWrapper<SysThirdAccount>().in(SysThirdAccount::getSysUserId, userIds));
 
@@ -2204,17 +2179,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		String captcha = RandomUtil.randomNumbers(6);
 		JSONObject obj = new JSONObject();
 		obj.put("code", captcha);
-		try {
-			boolean sendSmsSuccess = DySmsHelper.sendSms(phone, obj, DySmsEnum.LOGIN_TEMPLATE_CODE);
-			if(!sendSmsSuccess){
-				throw new NeuronBootException("短信验证码发送失败,请稍后重试！");
-			}
-			//验证码10分钟内有效
-			redisUtil.set(redisKey, captcha, 600);
-		} catch (ClientException e) {
-			log.error(e.getMessage(),e);
-			throw new NeuronBootException("短信接口未配置，请联系管理员！");
-		}
+		//验证码10分钟内有效
+		redisUtil.set(redisKey, captcha, 600);
+		log.warn("短信功能未启用, phone = {}", phone);
 	}
 
     //================================================= begin 低代码部门导入导出 ================================================================

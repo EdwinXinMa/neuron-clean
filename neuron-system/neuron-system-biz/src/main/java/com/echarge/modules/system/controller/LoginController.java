@@ -2,7 +2,6 @@ package com.echarge.modules.system.controller;
 
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.aliyuncs.exceptions.ClientException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import io.swagger.v3.oas.annotations.Operation;
@@ -353,7 +352,7 @@ public class LoginController {
 					baseCommonService.addLog("手机号已经注册，请直接登录！", CommonConstant.LOG_TYPE_1, null);
 					return result;
 				}
-				b = DySmsHelper.sendSms(mobile, obj, DySmsEnum.REGISTER_TEMPLATE_CODE);
+				b = false /* 短信功能未启用 */;
 			}else {
 				//登录模式，校验用户有效性
 				SysUser sysUser = sysUserService.getUserByPhone(mobile);
@@ -372,10 +371,10 @@ public class LoginController {
 				 */
 				if (CommonConstant.SMS_TPL_TYPE_0.equals(smsmode)) {
 					//登录模板
-					b = DySmsHelper.sendSms(mobile, obj, DySmsEnum.LOGIN_TEMPLATE_CODE);
+					b = false /* 短信功能未启用 */;
 				} else if(CommonConstant.SMS_TPL_TYPE_2.equals(smsmode)) {
 					//忘记密码模板
-					b = DySmsHelper.sendSms(mobile, obj, DySmsEnum.FORGET_PASSWORD_TEMPLATE_CODE);
+					b = false /* 短信功能未启用 */;
                     // 代码逻辑说明: 【issues/8567】严重：修改密码存在水平越权问题。---
                     if(b){
                         String username = sysUser.getUsername();
@@ -397,7 +396,7 @@ public class LoginController {
 			redisUtil.set(redisKey, captcha, 600);
 			result.setSuccess(true);
 
-		} catch (ClientException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			result.error500(" 短信接口未配置，请联系管理员！");
 			return result;
@@ -858,7 +857,7 @@ public class LoginController {
 		JSONObject obj = new JSONObject();
 		obj.put("code", captcha);
 		try {
-			boolean b = DySmsHelper.sendSms(mobile, obj, DySmsEnum.CHANGE_PASSWORD_TEMPLATE_CODE);
+			boolean b = false /* 短信功能未启用 */;
 			if (!b) {
 				result.setMessage("短信验证码发送失败,请稍后重试");
 				result.setSuccess(false);
@@ -868,7 +867,7 @@ public class LoginController {
             obj.put("username",username);
             redisUtil.set(redisKey, obj.toJSONString(), 300);
 			result.setSuccess(true);
-		} catch (ClientException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			result.error500(" 短信接口未配置，请联系管理员！");
 			return result;

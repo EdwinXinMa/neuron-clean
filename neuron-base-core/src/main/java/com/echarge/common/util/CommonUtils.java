@@ -13,7 +13,6 @@ import com.echarge.common.constant.ServiceNameConstants;
 import com.echarge.common.constant.SymbolConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.util.filter.SsrfFileTypeFilter;
-import com.echarge.common.util.oss.OssBootUtil;
 import org.jeecgframework.poi.util.PoiPublicUtil;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.util.FileCopyUtils;
@@ -74,8 +73,6 @@ public class CommonUtils {
                 String relativePath = bizPath+"/"+fileName;
                 if(CommonConstant.UPLOAD_TYPE_MINIO.equals(uploadType)){
                     dbPath = MinioUtil.upload(in,relativePath);
-                }else if(CommonConstant.UPLOAD_TYPE_OSS.equals(uploadType)){
-                    dbPath = OssBootUtil.upload(in,relativePath);
                 }
             }
         } catch (Exception e) {
@@ -138,8 +135,6 @@ public class CommonUtils {
         try {
             if (CommonConstant.UPLOAD_TYPE_MINIO.equals(uploadType)) {
                 url = MinioUtil.upload(file, bizPath);
-            } else {
-                url = OssBootUtil.upload(file, bizPath);
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -206,8 +201,6 @@ public class CommonUtils {
         try {
             if (CommonConstant.UPLOAD_TYPE_MINIO.equals(uploadType)) {
                 url = MinioUtil.upload(file, bizPath, customBucket);
-            } else {
-                url = OssBootUtil.upload(file, bizPath, customBucket);
             }
         } catch (Exception e) {
             log.error(e.getMessage(),e);

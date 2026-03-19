@@ -14,9 +14,8 @@
 
     <modules>
         <module>neuron-device</module>
-        <module>neuron-station</module>
-        <module>neuron-data</module>
         <module>neuron-protocol</module>
+        <module>neuron-alert</module>
     </modules>
 
 

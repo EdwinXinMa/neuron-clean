@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jeecg.dingtalk.api.core.response.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
@@ -29,8 +28,6 @@ import com.echarge.modules.system.entity.SysAnnouncementSend;
 import com.echarge.modules.system.service.ISysAnnouncementSendService;
 import com.echarge.modules.system.service.ISysAnnouncementService;
 import com.echarge.modules.system.service.impl.SysBaseApiImpl;
-import com.echarge.modules.system.service.impl.ThirdAppDingtalkServiceImpl;
-import com.echarge.modules.system.service.impl.ThirdAppWechatEnterpriseServiceImpl;
 import com.echarge.modules.system.util.XssUtils;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
@@ -77,10 +74,6 @@ public class SysAnnouncementController {
 	private ISysAnnouncementSendService sysAnnouncementSendService;
 	@Resource
     private WebSocket webSocket;
-	@Autowired
-    ThirdAppWechatEnterpriseServiceImpl wechatEnterpriseService;
-	@Autowired
-    ThirdAppDingtalkServiceImpl dingtalkService;
 	@Autowired
 	private SysBaseApiImpl sysBaseApi;
 	@Autowired
@@ -334,19 +327,7 @@ public class SysAnnouncementController {
 					sysBaseApi.uniPushMsgToUser(pushMessageDTO);
 					//update-begin-author:liusq---date:2025-11-13--for: JHHB-827 【审批消息】移动端需要有推送
 				}
-				try {
-					// 同步企业微信、钉钉的消息通知
-					Response<String> dtResponse = dingtalkService.sendActionCardMessage(sysAnnouncement, null, true);
-					wechatEnterpriseService.sendTextCardMessage(sysAnnouncement, null,true);
-
-					if (dtResponse != null && dtResponse.isSuccess()) {
-						String taskId = dtResponse.getResult();
-						sysAnnouncement.setDtTaskId(taskId);
-						sysAnnouncementService.updateById(sysAnnouncement);
-					}
-				} catch (Exception e) {
-					log.error("同步发送第三方APP消息失败：", e);
-				}
+				// 第三方APP消息已移除
 			}
 		}
 
@@ -371,13 +352,7 @@ public class SysAnnouncementController {
 			boolean ok = sysAnnouncementService.updateById(sysAnnouncement);
 			if(ok) {
 				result.success("该系统通知撤销成功");
-				if (oConvertUtils.isNotEmpty(sysAnnouncement.getDtTaskId())) {
-					try {
-						dingtalkService.recallMessage(sysAnnouncement.getDtTaskId());
-					} catch (Exception e) {
-						log.error("第三方APP撤回消息失败：", e);
-					}
-				}
+				// 第三方APP消息已移除
 			}
 		}
 
