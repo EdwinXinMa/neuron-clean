@@ -23,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
+@Component
 public class RedisUtil {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;

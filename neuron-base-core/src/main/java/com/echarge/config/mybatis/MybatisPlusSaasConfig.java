@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Slf4j
 @Configuration
-@MapperScan(value={"com.echarge.**.mapper*", "org.jeecg.**.mapper*"})
+@MapperScan(value={"com.echarge.**.mapper*"})
 public class MybatisPlusSaasConfig {
     @Autowired
     private DataSource dataSource;

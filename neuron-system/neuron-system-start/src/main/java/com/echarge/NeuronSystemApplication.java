@@ -20,7 +20,7 @@ import java.util.Map;
 * 报错提醒: 未集成mongo报错，可以打开启动类上面的注释 exclude={MongoAutoConfiguration.class}
 */
 @Slf4j
-@SpringBootApplication(exclude = MongoAutoConfiguration.class, scanBasePackages = {"com.echarge", "org.jeecg"})
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
 public class NeuronSystemApplication extends SpringBootServletInitializer {
 
     @Override

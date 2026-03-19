@@ -24,7 +24,7 @@ import java.util.*;
  */
 @Service
 @Slf4j
-public class BaseCommonServiceImpl implements BaseCommonService, org.jeecg.modules.base.service.BaseCommonService {
+public class BaseCommonServiceImpl implements BaseCommonService {
 
     @Resource
     private BaseCommonMapper baseCommonMapper;

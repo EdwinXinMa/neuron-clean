@@ -51,7 +51,20 @@
       "Bash(git remote:*)",
       "Bash(git push:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)",
+      "Bash(redis-cli ping:*)",
+      "Bash(sc query:*)",
+      "Read(//c/Program Files/**)",
+      "Read(//d//**)",
+      "Bash(\"/c/Redis/Redis-8.6.1-Windows-x64-msys2-with-Service/redis-server.exe\" --service-install 2>/dev/null; \"/c/Redis/Redis-8.6.1-Windows-x64-msys2-with-Service/redis-server.exe\" --service-start 2>/dev/null; sleep 2; redis-cli -p 6379 ping 2>/dev/null || \"/c/Redis/Redis-8.6.1-Windows-x64-msys2-with-Service/redis-cli.exe\" ping 2>/dev/null || echo \"still not responding\")",
+      "Bash(PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d neuron_system -c \"\nCREATE TABLE IF NOT EXISTS nc_connector \\(\n    id varchar\\(36\\) NOT NULL,\n    device_id varchar\\(36\\) NOT NULL,\n    connector_id integer NOT NULL,\n    status varchar\\(20\\) DEFAULT 'Available',\n    current_power decimal\\(10, 3\\) DEFAULT NULL,\n    current_energy decimal\\(12, 3\\) DEFAULT NULL,\n    create_by varchar\\(50\\) DEFAULT NULL,\n    create_time timestamp DEFAULT NULL,\n    update_by varchar\\(50\\) DEFAULT NULL,\n    update_time timestamp DEFAULT NULL,\n    PRIMARY KEY \\(id\\)\n\\);\nCREATE INDEX IF NOT EXISTS idx_connector_device_id ON nc_connector \\(device_id\\);\nCOMMENT ON TABLE nc_connector IS '充电枪/接口';\nCOMMENT ON COLUMN nc_connector.device_id IS '所属桩ID（关联nc_device）';\nCOMMENT ON COLUMN nc_connector.connector_id IS 'OCPP connectorId';\nCOMMENT ON COLUMN nc_connector.status IS '枪状态: Available/Charging/Faulted/Unavailable等';\nCOMMENT ON COLUMN nc_connector.current_power IS '当前充电功率\\(kW\\)';\nCOMMENT ON COLUMN nc_connector.current_energy IS '当前充电电量\\(kWh\\)';\n\")",
+      "Bash(cd:*)"
     ]
   }
 }
