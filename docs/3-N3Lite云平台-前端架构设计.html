@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 Lite 云平台 — 前端架构设计文档 v1.1</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f8fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --code-bg: #0f172a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.75;
+}
+.doc-header {
+  background: linear-gradient(135deg, #1e3a5f, #0e7490);
+  color: white;
+  padding: 52px 0 44px;
+  text-align: center;
+}
+.doc-header h1 { font-size: 30px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+.doc-header .sub { opacity: 0.85; font-size: 14px; margin-bottom: 22px; }
+.meta-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.meta-tag { background: rgba(255,255,255,0.18); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+.container { max-width: 1024px; margin: 0 auto; padding: 0 24px; }
+.toc {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px 36px; margin: 32px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toc h2 { font-size: 20px; color: var(--text); font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toc-group { margin-bottom: 14px; }
+.toc-group a { display: block; color: #475569; text-decoration: none; font-size: 14px; padding: 3px 0 3px 16px; transition: color 0.2s; border-left: 2px solid transparent; }
+.toc-group a:hover { color: var(--accent); border-left-color: var(--accent); }
+.toc-group a.toc-top { padding-left: 0; font-weight: 600; color: var(--primary); border-left: none; }
+.toc-part { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; margin-top: 2px; letter-spacing: 0.3px; }
+@media (min-width: 1680px) {
+  .toc.toc-floating { position: fixed; left: 20px; top: 18px; width: 280px; max-height: calc(100vh - 36px); overflow-y: auto; margin: 0; padding: 18px 18px 20px; z-index: 20; box-shadow: 0 10px 26px rgba(15,23,42,0.14); }
+  .toc.toc-floating h2 { font-size: 16px; margin-bottom: 10px; }
+  .toc.toc-floating .toc-group { margin-bottom: 10px; }
+  .toc.toc-floating .toc-group a { font-size: 12px; padding: 2px 0 2px 12px; }
+  .toc.toc-floating .toc-part { font-size: 11px; }
+}
+.section {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 32px 40px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px; }
+h2 { font-size: 22px; color: var(--primary); font-weight: 600; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 17px; color: var(--primary); margin: 24px 0 12px; font-weight: 600; }
+h4 { font-size: 15px; color: var(--accent); margin: 18px 0 10px; font-weight: 600; }
+p { margin: 10px 0; }
+ul, ol { margin: 8px 0; padding-left: 20px; }
+li { margin: 4px 0; }
+.highlight { background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight strong { color: var(--primary); }
+.highlight-warn { background: #fef9c3; border-left: 3px solid var(--warning); border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-blue { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-red { background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+pre { background: var(--code-bg); color: #a5d8ff; border-radius: 10px; padding: 18px 22px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; margin: 14px 0; }
+code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+pre code { background: none; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: #f1f5f9; font-weight: 600; color: var(--primary); }
+tr:nth-child(even) { background: #f8fafc; }
+.table-sm { font-size: 13px; }
+.muted-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.chapter-banner { border: 1px solid; border-radius: 12px; padding: 18px 22px; margin: 12px 0 20px; }
+.chapter-banner.bg { border-color: #fed7aa; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.chapter-banner.arch { border-color: #bae6fd; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.chapter-banner.protocol { border-color: #c4b5fd; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-banner.delivery { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-banner.ops { border-color: #fca5a5; background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+.chapter-banner.data { border-color: #93c5fd; background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+.chapter-banner.tech { border-color: #a78bfa; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-kicker { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.6px; }
+.chapter-title { font-size: 24px; color: var(--primary); font-weight: 700; margin: 6px 0 4px; }
+.chapter-desc { font-size: 13px; color: #475569; margin: 0; }
+.module-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; position: relative; }
+.module-card.core { background: #f0fdf4; border-color: #86efac; }
+.module-card.support { background: #f0f9ff; border-color: #7dd3fc; }
+.module-card.special { background: #faf5ff; border-color: #c4b5fd; }
+.module-name { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+.module-en { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.module-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.v1 { background: #dcfce7; color: #166534; }
+.badge.critical { background: #fef2f2; color: #dc2626; }
+.badge.important { background: #fff7ed; color: #c2410c; }
+.badge.normal { background: #eff6ff; color: #1d4ed8; }
+.badge.info { background: #f1f5f9; color: #64748b; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.why-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 14px; }
+.why-box .why-q { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.why-box .why-a { color: var(--text); line-height: 1.7; }
+.flow-step { display: grid; grid-template-columns: 36px 1fr; gap: 10px; margin: 8px 0; align-items: start; }
+.flow-num { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-top: 2px; }
+.flow-body { font-size: 14px; line-height: 1.7; }
+.flow-body strong { color: var(--primary); }
+.page-mockup { border: 2px solid var(--border); border-radius: 10px; background: #f8fafc; padding: 18px; margin: 14px 0; }
+.page-mockup-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.3px; }
+.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.guardrail-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; }
+.guardrail-card.must { border-color: #86efac; background: #f0fdf4; }
+.guardrail-card.ban { border-color: #fca5a5; background: #fef2f2; }
+.guardrail-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+.guardrail-list { padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
+.stat-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 14px 0; }
+.stat-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; background: #fff; }
+.stat-card .stat-num { font-size: 24px; font-weight: 800; margin-bottom: 2px; }
+.stat-card .stat-label { font-size: 12px; color: var(--muted); }
+.stat-card.green .stat-num { color: var(--success); }
+.stat-card.gray .stat-num { color: #94a3b8; }
+.stat-card.red .stat-num { color: var(--danger); }
+.stat-card.blue .stat-num { color: var(--accent); }
+.stat-card.purple .stat-num { color: #7c3aed; }
+.nav-mockup { border: 2px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; margin: 14px 0; }
+.nav-header { background: var(--primary); color: white; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.nav-body { display: grid; grid-template-columns: 200px 1fr; min-height: 200px; }
+.nav-sidebar { background: #f1f5f9; border-right: 1px solid var(--border); padding: 12px 0; font-size: 13px; }
+.nav-sidebar-item { padding: 6px 18px; color: var(--text); cursor: default; }
+.nav-sidebar-item.active { background: var(--accent-light); color: var(--accent); font-weight: 600; border-right: 3px solid var(--accent); }
+.nav-sidebar-item.indent { padding-left: 36px; color: var(--muted); }
+.nav-content { padding: 16px; font-size: 13px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+.doc-footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+@media (max-width: 900px) {
+  .two-col, .guardrail-grid, .stat-cards { grid-template-columns: 1fr; }
+  .section { padding: 20px 18px; }
+  .nav-body { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="container">
+    <h1>N3 Lite 云平台  前端架构设计文档</h1>
+    <div class="sub">设备商运维管理平台 &mdash; 前端架构设计文档 v1.1 &mdash; 旭衡电子(深圳) AlwaysControl Technology</div>
+    <div class="meta-tags" style="margin-top: 20px;">
+      <span class="meta-tag">v1.1</span>
+      <span class="meta-tag">2026-03</span>
+      <span class="meta-tag">前端架构设计</span>
+      <span class="meta-tag">设备商管理平台</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc toc-floating">
+    <h2>目录</h2>
+    <div class="toc-group">
+      <div class="toc-part">一、平台定位与用户角色</div>
+      <a href="#s-position">1.1 平台定位</a>
+      <a href="#s-role">1.2 用户角色</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">二、页面清单与导航结构</div>
+      <a href="#s-pages">2.1 页面清单</a>
+      <a href="#s-nav">2.2 导航结构</a>
+      <a href="#s-jump">2.3 页面跳转关系</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">三、各页面交互设计</div>
+      <a href="#s-crud">3.1 标准 CRUD 页面</a>
+      <a href="#s-dashboard">3.2 首页仪表盘</a>
+      <a href="#s-diag">3.3 客服诊断页</a>
+      <a href="#s-detail">3.4 设备详情页</a>
+      <a href="#s-ota-task">3.5 OTA 升级任务页</a>
+      <a href="#s-system">3.6 系统管理</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">四、数据流设计</div>
+      <a href="#s-channel">4.1 两种数据通道</a>
+      <a href="#s-datasource">4.2 各页面数据来源</a>
+      <a href="#s-api">4.3 API 接口分组</a>
+      <a href="#s-response">4.4 统一响应格式</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">五、技术能力要求</div>
+      <a href="#s-tech-req">5.1 业务需求对前端的技术要求</a>
+      <a href="#s-tech-cap">5.2 需要具备的基础能力</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">六、工程结构</div>
+      <a href="#s-dir">6.1 目录划分原则</a>
+      <a href="#s-dev-pattern">6.2 页面开发模式</a>
+      <a href="#s-convention">6.3 开发规范</a>
+    </div>
+  </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 一、平台定位与用户角色                                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner bg" id="s-position">
+  <div class="chapter-kicker">一、平台定位与用户角色</div>
+  <div class="chapter-title">功能定位和使用角色</div>
+</div>
+
+<div class="section">
+  <div class="section-label">POSITIONING</div>
+  <h2>1.1 平台定位</h2>
+
+  <div class="highlight">
+    <strong>N3 Lite 云平台是一个 B 端管理后台</strong> &mdash; 优先服务于我们自己的设备管理平台。
+  </div>
+
+  <p>这个定位决定了前端的几个基本特征：</p>
+  <ul>
+    <li><strong>PC 优先</strong> &mdash; 用户在办公电脑上操作，优先PC端</li>
+    <li><strong>数据密集</strong> &mdash; 大量表格、列表、搜索、筛选，信息密度高</li>
+    <li><strong>使用频率适中</strong> &mdash; 不是高频交易系统，但要求响应流畅</li>
+	<li><strong>权限分层</strong> &mdash; 不同角色看到不同菜单和数据</li>
+  </ul>
+
+  <h2 id="s-role">1.2 用户角色</h2>
+
+  <table>
+    <tr><th style="width:15%">角色</th><th style="width:30%">职责</th><th>核心操作</th></tr>
+    <tr>
+      <td><strong>管理者</strong></td>
+      <td>掌握全局 + 系统管理</td>
+      <td>看仪表盘、看统计、用户管理、角色管理、权限分配、菜单管理</td>
+    </tr>
+    <tr>
+      <td><strong>运维人员</strong></td>
+      <td>日常运维</td>
+      <td>搜设备、诊断、处理告警、管固件、推 OTA、操作日志</td>
+    </tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 二、页面清单与导航结构                                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner delivery" id="s-pages">
+  <div class="chapter-kicker">二、页面清单与导航结构</div>
+  <div class="chapter-title">一共几个页面，菜单怎么组织</div>
+  <p class="chapter-desc">从整体架构设计中的"连、看、触"三大能力，推导出完整的页面清单。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">PAGE INVENTORY</div>
+  <h2>2.1 页面清单</h2>
+
+  <p class="muted-text">根据功能需求，前端共需 <strong>9 个业务页面</strong> + 系统管理页面。</p>
+
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:8%">能力</th><th style="width:22%">页面名称</th><th style="width:10%">页面类型</th><th>核心功能</th></tr>
+    <tr><td>1</td><td rowspan="2">连</td><td>设备台账</td><td>CRUD</td><td>按批次录入设备出厂信息（序列号、型号、批次、经销商），批量 Excel 导入导出</td></tr>
+    <tr><td>2</td><td>设备列表</td><td>CRUD</td><td>全部设备一览，状态筛选，点击进入详情页</td></tr>
+    <tr><td>3</td><td rowspan="3">看</td><td>首页仪表盘</td><td>聚合展示</td><td>数字卡片 + 设备地图 + 告警动态 + 固件分布</td></tr>
+    <tr><td>4</td><td>客服诊断页</td><td>聚合操作</td><td>按序列号搜索定位设备，快速查看当前状态，直接操作 DLM/OTA</td></tr>
+    <tr><td>5</td><td>告警列表</td><td>CRUD</td><td>告警事件列表，筛选/处理/备注，跳转诊断页</td></tr>
+    <tr><td>6</td><td rowspan="4">触</td><td>固件管理</td><td>CRUD</td><td>上传固件包，版本列表，变更说明</td></tr>
+    <tr><td>7</td><td>OTA 升级任务</td><td>任务流</td><td>创建升级任务（单台/批量/灰度），进度跟踪，针对升级异常可跳转诊断页</td></tr>
+    <tr><td>8</td><td>设备详情页</td><td>详情+操作</td><td>设备完整档案 + 拓扑树 + DLM 配置 + OTA 记录 + 告警历史 + 操作日志</td></tr>
+    <tr><td>9</td><td>操作日志</td><td>CRUD</td><td>记录所有对设备的远程操作（OTA 升级、DLM 下发等），操作人、时间、结果</td></tr>
+  </table>
+
+  <div class="highlight-blue">
+    <strong>页面类型说明：</strong><br>
+    &bull; <strong>CRUD</strong> &mdash; 标准的列表 + 搜索 + 新增/编辑/删除，可以套用统一的表格表单模式<br>
+    &bull; <strong>聚合展示</strong> &mdash; 多种数据源汇聚到一个页面，需要定制布局<br>
+    &bull; <strong>聚合操作</strong> &mdash; 聚合展示 + 可直接操作，交互复杂度最高<br>
+    &bull; <strong>任务流</strong> &mdash; 有状态流转的任务管理，需要进度展示<br>
+    &bull; <strong>详情+操作</strong> &mdash; 信息详情页面内嵌操作能力
+  </div>
+
+  <h2 id="s-nav">2.2 导航结构</h2>
+
+  <p>菜单按用户的思维模型组织 &mdash; 按"我要干什么"分：</p>
+
+  <div class="nav-mockup">
+    <div class="nav-header">
+      <span>N3 Lite 设备运维管理平台</span>
+      <span style="display:flex;align-items:center;gap:14px;"><span style="color:#fca5a5;">&#x1f514; 3</span> <span>admin</span></span>
+    </div>
+    <div class="nav-body">
+      <div class="nav-sidebar">
+        <div class="nav-sidebar-item active">首页仪表盘</div>
+        <div class="nav-sidebar-item" style="margin-top:8px;font-weight:600;color:var(--accent);font-size:12px;">设备管理</div>
+        <div class="nav-sidebar-item indent">设备列表</div>
+        <div class="nav-sidebar-item indent">设备台账</div>
+        <div class="nav-sidebar-item" style="margin-top:8px;font-weight:600;color:var(--accent);font-size:12px;">运维中心</div>
+        <div class="nav-sidebar-item indent">客服诊断</div>
+        <div class="nav-sidebar-item indent">告警监控</div>
+        <div class="nav-sidebar-item indent">操作日志</div>
+        <div class="nav-sidebar-item" style="margin-top:8px;font-weight:600;color:var(--accent);font-size:12px;">固件升级</div>
+        <div class="nav-sidebar-item indent">固件管理</div>
+        <div class="nav-sidebar-item indent">升级任务</div>
+        <div class="nav-sidebar-item" style="margin-top:8px;font-weight:600;color:var(--accent);font-size:12px;">系统管理</div>
+        <div class="nav-sidebar-item indent">用户管理</div>
+        <div class="nav-sidebar-item indent">角色管理</div>
+        <div class="nav-sidebar-item indent">菜单管理</div>
+        <div class="nav-sidebar-item indent">...</div>
+      </div>
+      <div class="nav-content">
+        页面内容区域
+      </div>
+    </div>
+  </div>
+
+  <h4>菜单分组逻辑</h4>
+  <table class="table-sm">
+    <tr><th style="width:18%">菜单组</th><th style="width:30%">包含页面</th><th>分组理由</th></tr>
+    <tr><td>首页仪表盘</td><td>仪表盘（独立入口）</td><td>管理者打开就看的第一个页面，不需要归类</td></tr>
+    <tr><td>设备管理</td><td>设备列表、设备台账</td><td>围绕"设备"的生命周期管理</td></tr>
+    <tr><td>运维中心</td><td>客服诊断、告警监控、操作日志</td><td>日常运维工作的核心入口</td></tr>
+    <tr><td>固件升级</td><td>固件管理、升级任务</td><td>OTA 相关操作集中管理</td></tr>
+    <tr><td>系统管理</td><td>用户、角色、菜单、字典等</td><td>基础设施，低频使用</td></tr>
+  </table>
+
+  <h2 id="s-jump">2.3 页面跳转关系</h2>
+
+  <pre><code>首页仪表盘
+  ├── 点击告警动态条目 &rarr; 告警列表（带筛选条件）
+  ├── 点击设备状态卡片 &rarr; 设备列表（带状态筛选）
+  └── 点击固件版本分布 &rarr; 设备列表（带版本筛选）
+
+设备列表
+  └── 点击某台设备 &rarr; 设备详情页
+
+客服诊断页
+  └── 搜索并选择设备 &rarr; 展开设备当前状态（页内，不跳转）
+
+告警列表
+  └── 点击告警条目的设备链接 &rarr; 客服诊断页（带设备参数）
+
+OTA 升级任务
+  └── 点击失败设备 &rarr; 设备详情页</code></pre>
+
+  <div class="highlight">
+    <strong>导航栏告警角标：</strong>右上角告警图标旁显示红色数字角标（未处理告警总数），全局可见。点击进入告警列表页。这个角标需要 WebSocket 实时更新。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 三、各页面交互设计                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner arch" id="s-crud">
+  <div class="chapter-kicker">三、各页面交互设计</div>
+  <div class="chapter-title">每个页面长什么样，关键交互是什么</div>
+  <p class="chapter-desc">按页面类型分组说明，CRUD 页面统一描述，特殊页面逐个详解。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">CRUD PAGES</div>
+  <h2>3.1 标准 CRUD 页面</h2>
+
+  <p>以下 5 个页面遵循统一的 CRUD 模式：<strong>设备台账、设备列表、告警列表、固件管理、操作日志</strong></p>
+
+  <h4>统一布局</h4>
+  <div class="page-mockup">
+    <div class="page-mockup-title">标准 CRUD 页面布局</div>
+<pre style="background:none; color:var(--text); font-size:13px; line-height:2; margin:0;">
+┌─────────────────────────────────────────────────────────┐
+│  搜索区域（折叠式）                                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐  [搜索] [重置]   │
+│  │ 搜索条件1  │ │ 搜索条件2  │ │ 搜索条件3  │               │
+│  └──────────┘ └──────────┘ └──────────┘               │
+├─────────────────────────────────────────────────────────┤
+│  操作栏    [新增]  [批量导入]  [导出]  [批量删除]            │
+├─────────────────────────────────────────────────────────┤
+│  数据表格                                                 │
+│  ┌────┬─────────┬──────┬──────┬──────┬───────┐         │
+│  │ 选择 │  字段1    │ 字段2  │ 字段3  │ 状态   │  操作    │         │
+│  ├────┼─────────┼──────┼──────┼──────┼───────┤         │
+│  │ ☐  │  ...     │ ...   │ ...   │ 在线   │ 编辑 删除 │         │
+│  │ ☐  │  ...     │ ...   │ ...   │ 离线   │ 编辑 删除 │         │
+│  └────┴─────────┴──────┴──────┴──────┴───────┘         │
+├─────────────────────────────────────────────────────────┤
+│  分页    共 128 条    &lt; 1 2 3 ... 13 &gt;    每页 10 条      │
+└─────────────────────────────────────────────────────────┘
+</pre>
+  </div>
+
+  <h4>各 CRUD 页面差异点</h4>
+  <table class="table-sm">
+    <tr><th style="width:18%">页面</th><th style="width:35%">搜索条件</th><th style="width:25%">特殊列</th><th>特殊操作</th></tr>
+    <tr>
+      <td>设备台账</td>
+      <td>序列号、设备型号、生产批次、经销商、出货日期范围</td>
+      <td>状态标签（未激活/在线/离线/故障）</td>
+      <td>按批次批量 Excel 导入</td>
+    </tr>
+    <tr>
+      <td>设备列表</td>
+      <td>序列号、设备型号、状态筛选、固件版本</td>
+      <td>在线状态、固件版本</td>
+      <td>点击行 &rarr; 设备详情页</td>
+    </tr>
+    <tr>
+      <td>告警列表</td>
+      <td>告警级别、告警类型、处理状态、时间范围</td>
+      <td>级别颜色标签、设备链接</td>
+      <td>标记已处理（填处理备注）</td>
+    </tr>
+    <tr>
+      <td>固件管理</td>
+      <td>版本号、适用设备类型</td>
+      <td>文件大小、SHA256 摘要</td>
+      <td>上传固件包（.bin 文件）</td>
+    </tr>
+    <tr>
+      <td>操作日志</td>
+      <td>操作类型、设备序列号、操作人、时间范围</td>
+      <td>操作结果（成功/失败/进行中）</td>
+      <td>只读，不可编辑删除</td>
+    </tr>
+  </table>
+
+  <div class="why-box">
+    <div class="why-q">设备台账和设备列表有什么区别？</div>
+    <div class="why-a">
+      <strong>设备台账</strong>是"出厂登记本" &mdash; 记录设备的出厂信息（序列号、型号、批次、出给了哪个经销商），在设备出货时批量录入。设备还没通电上线时就已经有台账记录了。<br><br>
+      <strong>设备列表</strong>是"运行时状态" &mdash; 展示所有已知设备的当前状态（在线/离线/故障），是运维人员日常查看设备情况的入口。设备通电上线后自动出现在这里。<br><br>
+      两者通过<strong>序列号</strong>关联：设备上线时自动匹配台账记录，如果台账里没有该序列号，系统也允许接入（标记为"未登记设备"），后续可以补录台账。
+    </div>
+  </div>
+</div>
+
+<div class="section" id="s-dashboard">
+  <div class="section-label">DASHBOARD</div>
+  <h2>3.2 首页仪表盘</h2>
+
+  <div class="why-box">
+    <div class="why-q">设计目标</div>
+    <div class="why-a">管理者打开后台，<strong>10 秒内</strong>回答三个问题：现在有多少设备在跑？有没有问题？有多少旧固件需要升级？</div>
+  </div>
+
+  <h4>布局设计</h4>
+  <div class="page-mockup">
+    <div class="page-mockup-title">首页仪表盘 &mdash; 分区布局</div>
+<pre style="background:none; color:var(--text); font-size:13px; line-height:2; margin:0;">
+┌──────────────────────────────────────────────────────────┐
+│  A 区 &mdash; 数字卡片（一行 5 个）                               │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │
+│  │ 设备总数 │ │  在线   │ │  离线   │ │  故障   │ │ 未激活  │ │
+│  │   128  │ │   96   │ │   24   │ │   3    │ │   5    │ │
+│  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ │
+├──────────────────────────────────────────────────────────┤
+│  B 区 &mdash; 设备地图分布（占据主要空间）                         │
+│  ┌──────────────────────────────────────────────────────┐ │
+│  │  地图                                                │ │
+│  │  按经销商/出货地标点，颜色区分状态                         │ │
+│  │  绿 = 在线 / 灰 = 离线 / 红 = 故障                      │ │
+│  │  悬停看：序列号 + 型号 + 状态                             │ │
+│  └──────────────────────────────────────────────────────┘ │
+├────────────────────────────┬─────────────────────────────┤
+│  C 区 &mdash; 告警动态              │  D 区 &mdash; 固件版本分布        │
+│  最近未处理告警 5~10 条       │  饼图/柱状图                  │
+│  级别颜色标记                │  各版本设备占比               │
+│  点击跳转诊断页              │  旧版本一目了然               │
+└────────────────────────────┴─────────────────────────────┘
+</pre>
+  </div>
+
+  <h4>交互要点</h4>
+  <ul>
+    <li>数字卡片可点击 &mdash; 点"故障 3"跳转到设备列表（状态=故障）</li>
+    <li>地图标点可点击 &mdash; 跳转到对应设备的诊断页</li>
+    <li>告警条目可点击 &mdash; 跳转到告警列表或诊断页</li>
+    <li>数据自动刷新 &mdash; 通过 WebSocket 推送更新数字卡片和告警动态</li>
+  </ul>
+
+  <div class="highlight-warn">
+    <strong>地图注意事项：</strong>产品面向海外市场，国内地图服务（高德、百度）在海外无法使用。地图方案需要选择全球可用的服务，避免地域封锁。
+  </div>
+</div>
+
+<div class="section" id="s-diag">
+  <div class="section-label">DIAGNOSIS</div>
+  <h2>3.3 客服诊断页</h2>
+
+  <div class="highlight-red">
+    <strong>定位：当下怎么了。</strong>核心原则：<strong>搜索要快，聚焦当前状态，操作要少点击</strong>。适用于快速定位问题时使用。
+  </div>
+
+  <h4>交互流程</h4>
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div class="flow-body"><strong>搜索</strong> &mdash; 页面顶部搜索栏，支持按<strong>设备序列号</strong>搜索。输入即搜，下拉显示匹配结果。</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div class="flow-body"><strong>选择</strong> &mdash; 从下拉结果中选择一台设备，页面立刻展开该设备的当前状态。</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div class="flow-body"><strong>诊断</strong> &mdash; 一屏展示设备当前状态和问题，快速判断。</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">4</div>
+    <div class="flow-body"><strong>操作</strong> &mdash; 如需要，直接在页面内修改 DLM 参数或推送 OTA，不用跳转到其他页面。</div>
+  </div>
+
+  <h4>布局设计</h4>
+  <div class="page-mockup">
+    <div class="page-mockup-title">客服诊断页 &mdash; 聚焦当前状态</div>
+<pre style="background:none; color:var(--text); font-size:13px; line-height:2; margin:0;">
+┌──────────────────────────────────────────────────────────┐
+│  搜索栏    [输入设备序列号...]                     [搜索]    │
+├──────────────────────────┬───────────────────────────────┤
+│  设备状态快照              │  当前告警（未处理的）            │
+│                          │                               │
+│  在线状态：● 在线          │  ⚠ 过温告警  10分钟前           │
+│  最后心跳：2 分钟前        │  ⚠ 通信异常  30分钟前           │
+│  固件版本：v2.1.3         │                               │
+│  当前错误码：无            │                               │
+├──────────────────────────┴───────────────────────────────┤
+│  下挂桩拓扑（当前状态）                                      │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  N3 Lite (NL-20260301-0001) [在线]                  │   │
+│  │  ├── ATP III-11.5 (AT-0001) [可用]                  │   │
+│  │  └── ATP III-11.5 (AT-0002) [充电中]                │   │
+│  └────────────────────────────────────────────────────┘   │
+├──────────────────────────────────────────────────────────┤
+│  快捷操作    [修改 DLM 档位]    [推送 OTA 升级]  [重启设备]   │
+└──────────────────────────────────────────────────────────┘
+</pre>
+  </div>
+
+  <div class="why-box">
+    <div class="why-q">诊断页和详情页有什么区别？</div>
+    <div class="why-a">
+      <strong>诊断页 = 当下怎么了</strong> &mdash; 只看现在的状态和问题，一屏看完，快速定位问题时使用。不展示设备基本信息（序列号、型号、批次等），不展示历史记录。<br><br>
+      <strong>详情页 = 这台设备的一切</strong> &mdash; 完整档案 + 历史记录，Tab 页签组织，从设备列表点击进入，适合深入查看和管理。
+    </div>
+  </div>
+</div>
+
+<div class="section" id="s-detail">
+  <div class="section-label">DETAIL</div>
+  <h2>3.4 设备详情页</h2>
+
+  <p>从设备列表点击某台设备进入，展示该设备的完整信息，以 Tab 页签方式组织：</p>
+
+  <table class="table-sm">
+    <tr><th style="width:18%">Tab 页签</th><th style="width:40%">内容</th><th>可操作</th></tr>
+    <tr><td>基本信息</td><td>序列号、型号、固件版本、生产批次、经销商、注册时间</td><td>编辑台账信息</td></tr>
+    <tr><td>拓扑结构</td><td>N3 Lite &harr; ATP III 树形结构，各节点状态</td><td>只读</td></tr>
+    <tr><td>DLM 配置</td><td>当前断路器档位、各桩分配电流</td><td>修改档位并下发</td></tr>
+    <tr><td>OTA 记录</td><td>该设备的升级历史、当前版本、可用升级</td><td>推送升级</td></tr>
+    <tr><td>告警历史</td><td>该设备的历史告警记录</td><td>标记处理</td></tr>
+    <tr><td>操作日志</td><td>该设备的远程操作记录（OTA、DLM 下发等）</td><td>只读</td></tr>
+  </table>
+</div>
+
+<div class="section" id="s-ota-task">
+  <div class="section-label">OTA TASK</div>
+  <h2>3.5 OTA 升级任务页</h2>
+
+  <p>分两个视图：</p>
+
+  <div class="two-col">
+    <div>
+      <h4>任务列表视图</h4>
+      <ul>
+        <li>所有升级任务列表</li>
+        <li>每条：目标版本、设备数、成功/失败/进行中</li>
+        <li>操作：创建新任务、查看详情</li>
+        <li>筛选：按状态、按时间</li>
+      </ul>
+    </div>
+    <div>
+      <h4>任务详情视图</h4>
+      <ul>
+        <li>任务概览：目标版本、策略（单台/批量/灰度）</li>
+        <li>进度条：总体完成百分比</li>
+        <li>设备明细表：每台设备的升级状态</li>
+        <li>状态流转：等待 &rarr; 下载中 &rarr; 安装中 &rarr; 成功/失败/已回滚</li>
+        <li>失败设备可一键重试</li>
+        <li>点击失败设备可跳转到诊断页，自动展示该设备当前状态，快速定位失败原因</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<div class="section" id="s-system">
+  <div class="section-label">SYSTEM</div>
+  <h2>3.6 系统管理</h2>
+
+  <p>系统管理是平台的基础设施，提供用户认证和权限控制能力，这些基础功能需要优先完成。</p>
+
+  <h4>基础功能清单</h4>
+  <table class="table-sm">
+    <tr><th style="width:20%">功能</th><th style="width:40%">说明</th><th>页面类型</th></tr>
+    <tr><td>登录 / 注册</td><td>账号密码登录，登录态过期自动跳转登录页</td><td>独立页面</td></tr>
+    <tr><td>用户管理</td><td>用户列表、新增/编辑/禁用账号、重置密码</td><td>CRUD</td></tr>
+    <tr><td>角色管理</td><td>角色列表、新增/编辑角色、为角色分配菜单和按钮权限</td><td>CRUD</td></tr>
+    <tr><td>菜单管理</td><td>菜单树配置（目录/菜单/按钮三级），支持排序、图标、路由路径</td><td>树形 CRUD</td></tr>
+    <tr><td>权限控制</td><td>路由级：无权限的菜单不显示、URL 不可访问；按钮级：无权限的操作按钮不渲染</td><td>配置，无独立页面</td></tr>
+    <tr><td>数据字典</td><td>下拉选项、状态标签等可配置项，后台维护，前端动态加载</td><td>CRUD</td></tr>
+  </table>
+
+  <div class="highlight">
+    <strong>说明：</strong>系统管理是所有业务功能的前置基础，需要优先开发完成。业务页面的菜单显示和操作权限都依赖于这套权限体系。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 四、数据流设计                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner data" id="s-channel">
+  <div class="chapter-kicker">四、数据流设计</div>
+  <div class="chapter-title">数据从哪来，怎么流转</div>
+  <p class="chapter-desc">每个页面需要什么数据，通过什么方式获取。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">DATA FLOW</div>
+  <h2>4.1 两种数据通道</h2>
+
+  <p>前端获取数据只有两个通道：</p>
+
+  <div class="two-col">
+    <div class="module-card core">
+      <div class="module-name">HTTP 请求（主动拉取）</div>
+      <div class="module-desc">
+        前端发起 RESTful API 请求，后端返回 JSON 数据。<br>
+        用于：页面加载、搜索查询、表单提交、文件上传。<br>
+        <strong>绝大多数数据走这个通道。</strong>
+      </div>
+    </div>
+    <div class="module-card special">
+      <div class="module-name">WebSocket 推送（被动接收）</div>
+      <div class="module-desc">
+        后端主动推送数据到前端，前端实时更新界面。<br>
+        仅用于：<strong>仪表盘大屏设备在离线数量更新、全局告警角标更新</strong>。<br>
+        使用范围很小，只服务于需要实时感知的场景。
+      </div>
+    </div>
+  </div>
+
+  <h4>WebSocket 推送事件</h4>
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:18%">事件类型</th><th style="width:30%">推送内容</th><th>前端响应</th></tr>
+    <tr><td>1</td><td>设备上线</td><td>设备序列号、上线时间</td><td>仪表盘数字卡片更新</td></tr>
+    <tr><td>2</td><td>设备离线</td><td>设备序列号、最后心跳时间</td><td>仪表盘数字卡片更新</td></tr>
+    <tr><td>3</td><td>新告警</td><td>告警级别、告警类型、设备序列号、描述</td><td>导航栏角标+1，仪表盘告警动态插入新条目</td></tr>
+    <tr><td>4</td><td>告警已处理</td><td>告警 ID</td><td>导航栏角标-1</td></tr>
+  </table>
+
+  <h4>WebSocket 消息格式</h4>
+  <pre><code>{
+  "type": "DEVICE_ONLINE",        // 事件类型
+  "payload": {                    // 事件数据
+    "serialNumber": "NL-20260301-0001",
+    "timestamp": 1710000000
+  }
+}</code></pre>
+
+  <h4>WebSocket 连接管理</h4>
+  <ul>
+    <li><strong>建立时机：</strong>用户登录成功后立即建立连接</li>
+    <li><strong>认证方式：</strong>连接时携带 JWT Token</li>
+    <li><strong>断线重连：</strong>断开后自动重连，间隔递增（1s &rarr; 2s &rarr; 4s &rarr; 8s &rarr; 最大 30s）</li>
+    <li><strong>心跳保活：</strong>每 30 秒发送 ping，服务端回复 pong</li>
+    <li><strong>销毁时机：</strong>用户登出或关闭页面时断开连接</li>
+  </ul>
+
+  <h2 id="s-datasource">4.2 各页面数据来源</h2>
+
+  <table>
+    <tr><th style="width:18%">页面</th><th style="width:45%">HTTP 请求（页面加载/操作时）</th><th>WebSocket 推送（实时更新）</th></tr>
+    <tr>
+      <td>首页仪表盘</td>
+      <td>设备统计数据、告警列表、固件版本分布</td>
+      <td>设备上下线 &rarr; 更新数字卡片<br>新告警 &rarr; 插入告警动态列表</td>
+    </tr>
+    <tr>
+      <td>设备列表</td>
+      <td>分页查询设备列表</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>客服诊断页</td>
+      <td>搜索设备、查询设备当前状态、下发 DLM 配置</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>告警列表</td>
+      <td>分页查询告警、标记处理</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>OTA 升级任务</td>
+      <td>创建任务、查询任务列表、查询进度</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>设备台账</td>
+      <td>CRUD 操作、Excel 导入导出</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>固件管理</td>
+      <td>上传固件、查询版本列表</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>操作日志</td>
+      <td>分页查询操作记录</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td>全局（导航栏）</td>
+      <td>登录时查询未处理告警数</td>
+      <td>新告警/告警处理 &rarr; 更新角标数字</td>
+    </tr>
+  </table>
+
+  <h2 id="s-api">4.3 API 接口分组</h2>
+
+  <p class="muted-text">按后端模块对齐，前端 API 分为 4 组：</p>
+
+  <table class="table-sm">
+    <tr><th style="width:20%">API 分组</th><th style="width:25%">URL 前缀</th><th>覆盖接口</th></tr>
+    <tr><td>设备 API</td><td><code>/api/device/**</code></td><td>设备 CRUD、设备台账、拓扑查询、DLM 配置、OTA 任务、操作日志</td></tr>
+    <tr><td>告警 API</td><td><code>/api/alert/**</code></td><td>告警查询、告警处理、告警统计</td></tr>
+    <tr><td>系统 API</td><td><code>/api/system/**</code></td><td>用户、角色、权限、菜单、字典</td></tr>
+    <tr><td>通用 API</td><td><code>/api/common/**</code></td><td>文件上传/下载、数据字典</td></tr>
+  </table>
+
+  <h2 id="s-response">4.4 统一响应格式</h2>
+
+  <p>所有 HTTP API 返回统一的 JSON 结构：</p>
+
+  <pre><code>{
+  "success": true,
+  "code": 200,
+  "message": "操作成功",
+  "result": { ... },       // 业务数据
+  "timestamp": 1710000000
+}</code></pre>
+
+  <p>分页查询返回：</p>
+
+  <pre><code>{
+  "success": true,
+  "code": 200,
+  "result": {
+    "records": [ ... ],    // 当前页数据
+    "total": 128,          // 总条数
+    "current": 1,          // 当前页码
+    "size": 10             // 每页条数
+  }
+}</code></pre>
+
+  <h4>错误处理策略</h4>
+  <table class="table-sm">
+    <tr><th style="width:20%">HTTP 状态码</th><th style="width:35%">含义</th><th>前端处理</th></tr>
+    <tr><td>200</td><td>成功（看 success 字段判断业务是否成功）</td><td>正常处理</td></tr>
+    <tr><td>401</td><td>未认证 / Token 过期</td><td>跳转登录页</td></tr>
+    <tr><td>403</td><td>无权限</td><td>提示"无权限访问"</td></tr>
+    <tr><td>500</td><td>服务器错误</td><td>提示"服务异常，请稍后重试"</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 五、技术能力要求                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner tech" id="s-tech-req">
+  <div class="chapter-kicker">五、技术能力要求</div>
+  <div class="chapter-title">前端技术栈必须满足什么条件</div>
+  <p class="chapter-desc">从前四章的业务需求和数据设计，反推出对前端技术栈的硬性要求。选型时以此为评估标准。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">REQUIREMENTS</div>
+  <h2>5.1 业务需求对前端的技术要求</h2>
+
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:25%">业务需求</th><th style="width:40%">技术要求</th><th>优先级</th></tr>
+    <tr><td>1</td><td>B 端管理后台，大量表格表单</td><td>成熟的企业级 UI 组件库，Table / Form / Modal 等组件开箱即用</td><td><span class="badge critical">必须</span></td></tr>
+    <tr><td>2</td><td>大屏设备在离线数量、全局告警角标</td><td>原生 WebSocket 支持 + 响应式状态管理（推送触发界面自动更新）</td><td><span class="badge critical">必须</span></td></tr>
+    <tr><td>3</td><td>仪表盘图表（饼图、柱状图）</td><td>功能完备的图表库，支持常见图表类型和交互</td><td><span class="badge important">重要</span></td></tr>
+    <tr><td>4</td><td>仪表盘设备地图</td><td>全球可用的地图方案（产品出海，不能依赖国内地图服务）</td><td><span class="badge important">重要</span></td></tr>
+    <tr><td>5</td><td>动态菜单 + 角色权限控制</td><td>路由守卫 + 动态路由加载 + 按钮级权限指令</td><td><span class="badge critical">必须</span></td></tr>
+    <tr><td>6</td><td>后端 Spring Boot（Java 生态）</td><td>前后端完全分离，纯 HTTP / WebSocket 通信，技术栈无耦合</td><td><span class="badge normal">标准</span></td></tr>
+    <tr><td>7</td><td>OTA 固件包上传</td><td>文件上传能力（大文件、进度条、校验）</td><td><span class="badge normal">标准</span></td></tr>
+    <tr><td>8</td><td>台账批量导入导出</td><td>Excel 导入/导出能力</td><td><span class="badge normal">标准</span></td></tr>
+  </table>
+
+  <h2 id="s-tech-cap">5.2 需要具备的基础能力</h2>
+
+  <p class="muted-text">除了直接对应业务需求的能力外，一个 B 端管理后台还需要以下基础设施。如果选型时能找到已经内置这些能力的成熟模板/脚手架，可以大幅减少基础设施开发量，让团队聚焦业务页面。</p>
+
+  <div class="two-col">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">必须具备</div>
+      <ul class="guardrail-list">
+        <li><strong>登录认证</strong> &mdash; JWT Token 管理、自动刷新、过期跳转</li>
+        <li><strong>权限体系</strong> &mdash; 路由守卫（无权限页面不可访问）+ 按钮权限（无权限按钮不显示）</li>
+        <li><strong>动态菜单</strong> &mdash; 菜单配置从后端加载，支持角色级菜单隔离</li>
+        <li><strong>HTTP 请求封装</strong> &mdash; 统一拦截器（Token 注入、错误处理、Loading 状态）</li>
+        <li><strong>布局框架</strong> &mdash; 左侧菜单 + 顶部导航 + 多 Tab 页签 + 内容区的标准管理后台布局</li>
+        <li><strong>CRUD 封装</strong> &mdash; 可配置化的表格 + 搜索表单 + 弹窗表单，避免每个页面重复写模板代码</li>
+      </ul>
+    </div>
+    <div class="guardrail-card must">
+      <div class="guardrail-title">应该具备</div>
+      <ul class="guardrail-list">
+        <li><strong>主题切换</strong> &mdash; 亮色/暗色模式，满足不同使用环境偏好</li>
+        <li><strong>数据字典</strong> &mdash; 下拉选项、状态标签等从后端字典表加载，无需前端硬编码</li>
+        <li><strong>文件处理</strong> &mdash; 统一的上传/下载封装，支持进度展示</li>
+        <li><strong>消息通知</strong> &mdash; 全局消息提示、操作确认弹窗的统一交互</li>
+        <li><strong>构建优化</strong> &mdash; 路由懒加载、组件按需导入、生产环境压缩</li>
+        <!-- <li><strong>代码规范</strong> &mdash; 统一的格式化规则 + 提交前自动检查</li> -->
+      </ul>
+    </div>
+  </div>
+
+ <!--  <div class="highlight">
+    <strong>选型建议：</strong>以上基础能力如果全部自研，工作量巨大。B 端管理后台领域有大量成熟的开源脚手架/模板项目，已内置上述全部能力。<strong>优先选择成熟模板作为开发基座</strong>，在此基础上只开发 9 个业务页面，聚焦业务逻辑而非基础设施。
+  </div> -->
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 六、工程结构                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner delivery" id="s-dir">
+  <div class="chapter-kicker">六、工程结构</div>
+  <div class="chapter-title">代码怎么组织，文件放哪里</div>
+  <p class="chapter-desc">一套清晰的目录规范，让每个开发者知道代码该往哪放。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">STRUCTURE</div>
+  <h2>6.1 目录划分原则</h2>
+
+  <p>无论最终选择什么技术栈，前端工程的目录都应遵循以下划分原则：</p>
+
+  <table>
+    <tr><th style="width:20%">目录职责</th><th style="width:25%">存放内容</th><th>划分规则</th></tr>
+    <tr><td><strong>API 层</strong></td><td>后端接口定义 + 请求/响应类型</td><td>按后端模块分目录（设备、告警、系统），每个模块一个接口文件 + 一个类型定义文件</td></tr>
+    <tr><td><strong>页面层</strong></td><td>业务页面组件</td><td>按菜单结构分目录，与导航结构（第二章）一一对应</td></tr>
+    <tr><td><strong>组件层</strong></td><td>可复用的公共组件</td><td>只有被 2 个以上页面复用的组件才放公共目录；只在一个页面内使用的子组件放在该页面的子目录</td></tr>
+    <tr><td><strong>状态层</strong></td><td>全局共享状态</td><td>只有跨页面共享的状态才放全局（如用户信息、告警通知）；页面内部状态留在组件本地</td></tr>
+    <tr><td><strong>工具层</strong></td><td>工具函数、常量枚举</td><td>通用工具（日期格式化、文件处理等）+ 业务枚举（设备状态、告警级别）</td></tr>
+  </table>
+
+  <h4>页面目录与菜单的对应关系</h4>
+  <pre><code>页面目录/
+├── dashboard/              &larr; 首页仪表盘
+│   ├── 主页面文件
+│   └── components/         &larr; 仪表盘子组件（数字卡片、地图、告警动态、固件分布）
+├── device/                 &larr; 设备管理
+│   ├── list/               &larr; 设备列表
+│   ├── detail/             &larr; 设备详情（Tab 页签结构）
+│   └── ledger/             &larr; 设备台账
+├── operation/              &larr; 运维中心
+│   ├── diagnosis/          &larr; 客服诊断页
+│   │   └── components/     &larr; 搜索组件、状态快照、DLM 面板、拓扑树
+│   ├── alert/              &larr; 告警监控
+│   └── oplog/              &larr; 操作日志
+├── firmware/               &larr; 固件升级
+│   ├── list/               &larr; 固件管理
+│   └── task/               &larr; OTA 升级任务
+└── system/                 &larr; 系统管理（基座自带）</code></pre>
+
+  <div class="why-box">
+    <div class="why-q">为什么页面目录要和菜单结构对齐？</div>
+    <div class="why-a">
+      开发者看到菜单上有"运维中心 &rarr; 客服诊断"，就知道代码在 <code>operation/diagnosis/</code> 目录下，不用猜、不用搜。菜单结构 = 目录结构 = 路由结构，三者统一，维护成本最低。
+    </div>
+  </div>
+
+  <h2 id="s-dev-pattern">6.2 页面开发模式</h2>
+
+  <p>9 个业务页面按类型可分为两种开发模式：</p>
+
+  <div class="two-col">
+    <div class="module-card core">
+      <div class="module-name">模式一：配置驱动的 CRUD 页面</div>
+      <div class="module-en">适用：设备台账、设备列表、告警列表、固件管理、操作日志</div>
+      <div class="module-desc" style="margin-top:8px;">
+        <strong>核心思路：</strong>表格列定义和搜索条件写成配置，页面组件套用统一模板。<br><br>
+        开发一个 CRUD 页面只需三步：<br>
+        1. 定义数据配置（表格有哪些列、搜索有哪些条件）<br>
+        2. 编写页面组件（套用 CRUD 模板，传入配置）<br>
+        3. 定义 API 接口（对接后端 CRUD 接口）<br><br>
+       <!--  <strong>一个标准 CRUD 页面预计 30 分钟完成。</strong> -->
+      </div>
+    </div>
+    <div class="module-card special">
+      <div class="module-name">模式二：定制布局的特殊页面</div>
+      <div class="module-en">适用：首页仪表盘、客服诊断页、设备详情页、OTA 升级任务</div>
+      <div class="module-desc" style="margin-top:8px;">
+        <strong>核心思路：</strong>拆成多个子组件，各自独立获取数据，组合到一个页面布局中。<br><br>
+        以客服诊断页为例：<br>
+        1. 搜索组件 &mdash; 负责设备搜索<br>
+        2. 状态快照组件 &mdash; 展示当前状态和问题<br>
+        3. DLM 操作面板 &mdash; 快捷操作<br>
+        4. 拓扑树组件 &mdash; 展示父子关系<br>
+        5. 主页面 &mdash; 组合以上子组件，控制整体布局<br><br>
+        <strong>每个子组件职责单一，独立可测试。</strong>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="s-convention">6.3 开发规范</h2>
+
+  <div class="guardrail-grid">
+    <div class="guardrail-card must">
+      <div class="guardrail-title">必须遵守</div>
+      <ul class="guardrail-list">
+        <li>API 请求必须经过统一的接口层，页面组件中禁止直接写请求 URL</li>
+        <li>API 接口的请求参数和返回值必须定义类型，禁止使用 any</li>
+        <li>页面入口文件统一命名，子组件放在页面子目录中</li>
+        <li>跨页面复用的组件放公共组件目录，单页面使用的组件留在页面内</li>
+        <li>枚举值使用常量定义，禁止魔法数字和魔法字符串</li>
+      </ul>
+    </div>
+    <div class="guardrail-card ban">
+      <div class="guardrail-title">禁止事项</div>
+      <ul class="guardrail-list">
+        <li>禁止跨模块直接引用其他模块的内部子组件</li>
+        <li>禁止在全局状态中存放只有一个页面使用的临时数据</li>
+        <li>禁止绕过权限体系直接控制页面/按钮的显示隐藏</li>
+        <li>禁止在业务代码中直接操作 DOM，应通过框架的响应式机制更新界面</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+</div><!-- /container -->
+
+<div class="doc-footer">
+  <p>&copy; 2026 旭衡电子(深圳) AlwaysControl Technology. All rights reserved.</p>
+  <p>N3 Lite 智能充电云平台 &mdash; 前端架构设计文档 v1.1</p>
+  <p style="margin-top: 8px; font-size: 12px; color: #94a3b8;">文档生成日期：2026-03</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 Lite 云平台通信协议文档 v1.0</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f8fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --code-bg: #0f172a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.75;
+}
+.doc-header {
+  background: linear-gradient(135deg, #0c4a6e, #0e7490);
+  color: white; padding: 52px 0 44px; text-align: center;
+}
+.doc-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.doc-header .sub { opacity: 0.85; font-size: 14px; margin-bottom: 22px; }
+.meta-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.meta-tag { background: rgba(255,255,255,0.18); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+.container { max-width: 1024px; margin: 0 auto; padding: 0 24px; }
+.toc {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px 36px; margin: 32px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toc h2 { font-size: 20px; color: var(--text); font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toc-group { margin-bottom: 14px; }
+.toc-group a { display: block; color: #475569; text-decoration: none; font-size: 14px; padding: 3px 0 3px 16px; transition: color 0.2s; border-left: 2px solid transparent; }
+.toc-group a:hover { color: var(--accent); border-left-color: var(--accent); }
+.toc-part { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; margin-top: 2px; letter-spacing: 0.3px; }
+.section {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 32px 40px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px; }
+h2 { font-size: 22px; color: var(--primary); font-weight: 600; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 17px; color: var(--primary); margin: 24px 0 12px; font-weight: 600; }
+h4 { font-size: 15px; color: var(--accent); margin: 18px 0 10px; font-weight: 600; }
+p { margin: 10px 0; }
+ul, ol { margin: 8px 0; padding-left: 20px; }
+li { margin: 4px 0; }
+.highlight { background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight strong { color: var(--primary); }
+.highlight-warn { background: #fef9c3; border-left: 3px solid var(--warning); border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-blue { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-red { background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+pre { background: var(--code-bg); color: #a5d8ff; border-radius: 10px; padding: 18px 22px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; margin: 14px 0; }
+code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+pre code { background: none; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: #f1f5f9; font-weight: 600; color: var(--primary); }
+tr:nth-child(even) { background: #f8fafc; }
+.table-sm { font-size: 13px; }
+.muted-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.chapter-banner { border: 1px solid; border-radius: 12px; padding: 18px 22px; margin: 12px 0 20px; }
+.chapter-banner.bg { border-color: #fed7aa; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.chapter-banner.arch { border-color: #bae6fd; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.chapter-banner.protocol { border-color: #c4b5fd; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-banner.delivery { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-banner.ops { border-color: #fca5a5; background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+.chapter-banner.data { border-color: #93c5fd; background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+.chapter-kicker { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.6px; }
+.chapter-title { font-size: 24px; color: var(--primary); font-weight: 700; margin: 6px 0 4px; }
+.chapter-desc { font-size: 13px; color: #475569; margin: 0; }
+.flow-step { display: grid; grid-template-columns: 36px 1fr; gap: 10px; margin: 8px 0; align-items: start; }
+.flow-num { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-top: 2px; }
+.flow-body { font-size: 14px; line-height: 1.7; }
+.flow-body strong { color: var(--primary); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.up { background: #dcfce7; color: #166534; }
+.badge.down { background: #dbeafe; color: #1e40af; }
+.badge.custom { background: #fae8ff; color: #7c3aed; }
+.badge.native { background: #ecfdf5; color: #065f46; }
+.badge.p1 { background: #fef2f2; color: #dc2626; }
+.badge.p2 { background: #fff7ed; color: #c2410c; }
+.badge.p3 { background: #f1f5f9; color: #64748b; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.why-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 14px; }
+.why-box .why-q { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.why-box .why-a { color: var(--text); line-height: 1.7; }
+.seq-diagram { background: #fff; border: 2px solid var(--border); border-radius: 10px; padding: 18px; margin: 14px 0; }
+.seq-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+.doc-footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+@media (max-width: 900px) {
+  .two-col { grid-template-columns: 1fr; }
+  .section { padding: 20px 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="container">
+    <h1>N3 Lite 云平台通信协议文档</h1>
+    <div class="sub">N3 Lite 设备端与云平台之间的通信协议规范 &mdash; 旭衡电子(深圳) AlwaysControl Technology</div>
+    <div class="meta-tags" style="margin-top: 20px;">
+      <span class="meta-tag">v1.0</span>
+      <span class="meta-tag">2026-03</span>
+      <span class="meta-tag">OCPP 1.6-J</span>
+      <span class="meta-tag">设备端开发指南</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>目录</h2>
+    <div class="toc-group">
+      <div class="toc-part">一、概述</div>
+      <a href="#s-overview">1.1 文档说明</a>
+      <a href="#s-arch">1.2 系统架构</a>
+      <a href="#s-priority">1.3 优先级说明</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">二、通信基础</div>
+      <a href="#s-connect">2.1 连接方式</a>
+      <a href="#s-msgformat">2.2 消息格式</a>
+      <a href="#s-connector-map">2.3 ConnectorId 映射规则</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">三、场景一：设备启动与注册</div>
+      <a href="#s-boot">3.1 启动流程</a>
+      <a href="#s-boot-msg">3.2 BootNotification</a>
+      <a href="#s-topo">3.3 TopologyReport（自定义）</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">四、场景二：心跳保活</div>
+      <a href="#s-heartbeat">4.1 Heartbeat</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">五、场景三：状态与告警上报</div>
+      <a href="#s-status">5.1 StatusNotification</a>
+      <a href="#s-dlm-status">5.2 DLMStatus（自定义）</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">六、场景四：拓扑变更</div>
+      <a href="#s-topo-change">6.1 TopologyChange（自定义）</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">七、场景五：远程 DLM 配置</div>
+      <a href="#s-dlm-config">7.1 DLMConfig（自定义）</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">八、场景六：N3 Lite OTA 升级</div>
+      <a href="#s-ota">8.1 OTA 流程</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">九、预留功能</div>
+      <a href="#s-reserved">9.1 后续扩展</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">附录</div>
+      <a href="#s-error-codes">A. OCPP 错误码对照表</a>
+      <a href="#s-status-codes">B. 枪状态对照表</a>
+      <a href="#s-msg-list">C. 完整消息清单</a>
+    </div>
+  </div>
+
+
+<!-- ══════════════════════════════════════ 一、概述 ══════════════════════════════════════ -->
+
+<div class="chapter-banner bg" id="s-overview">
+  <div class="chapter-kicker">一、概述</div>
+  <div class="chapter-title">这份文档是做什么的</div>
+</div>
+
+<div class="section">
+  <h2>1.1 文档说明</h2>
+  <p>本文档定义了 <strong>N3 Lite 设备端</strong>与<strong>云平台</strong>之间的通信协议。硬件开发人员根据本文档实现 N3 Lite 的云端通信功能。</p>
+
+  <div class="highlight">
+    <strong>阅读对象：</strong>N3 Lite 硬件/固件开发人员<br>
+    <strong>核心原则：</strong>每个消息都给出完整的 JSON 示例，照着示例开发即可。
+  </div>
+
+  <h2 id="s-arch">1.2 系统架构</h2>
+  <p>N3 Lite 作为<strong>虚拟充电桩</strong>通过 OCPP 1.6-J 协议连接云平台。下挂的 ATP III 充电桩不直接与云平台通信，所有数据经 N3 Lite 代理上报。</p>
+
+<pre><code>                    WiFi / 互联网
+  N3 Lite  ──────────────────────────────  云平台
+    │              WebSocket (OCPP 1.6-J)
+    │ PLC
+    ├── ATP III 桩1（枪1、枪2）
+    └── ATP III 桩2（枪1、枪2）</code></pre>
+
+  <div class="highlight-blue">
+    <strong>关键概念：</strong>N3 Lite 在 OCPP 协议中扮演 Charge Point（充电桩）角色，云平台扮演 Central System（中央系统）角色。N3 Lite 下挂的每把充电枪映射为 OCPP 的 Connector。
+  </div>
+
+  <h2 id="s-priority">1.3 优先级说明</h2>
+  <table>
+    <tr><th style="width:12%">优先级</th><th style="width:35%">功能</th><th>说明</th></tr>
+    <tr>
+      <td><span class="badge p1">第一优先</span></td>
+      <td>设备注册、心跳、拓扑上报、拓扑变更、状态/告警上报、DLM 运行数据上报</td>
+      <td>连上来、看得到 &mdash; 云平台的基础能力</td>
+    </tr>
+    <tr>
+      <td><span class="badge p2">第二优先</span></td>
+      <td>远程 DLM 配置、N3 Lite OTA 升级</td>
+      <td>能远程操作 &mdash; 解决售后问题</td>
+    </tr>
+    <tr>
+      <td><span class="badge p3">第三优先</span></td>
+      <td>充电启停、充电记录、远程启停、下挂桩 OTA</td>
+      <td>预留，后续版本实现</td>
+    </tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════ 二、通信基础 ══════════════════════════════════════ -->
+
+<div class="chapter-banner arch" id="s-connect">
+  <div class="chapter-kicker">二、通信基础</div>
+  <div class="chapter-title">怎么连、消息长什么样</div>
+</div>
+
+<div class="section">
+  <h2>2.1 连接方式</h2>
+
+  <table>
+    <tr><th style="width:20%">项目</th><th>说明</th></tr>
+    <tr><td>协议</td><td>WebSocket</td></tr>
+    <tr><td>子协议</td><td><code>ocpp1.6</code>（WebSocket 握手时在 Sec-WebSocket-Protocol 头中指定）</td></tr>
+    <tr><td>连接地址</td><td><code>ws://{服务器地址}:{端口}/ocpp/{设备序列号}</code></td></tr>
+    <tr><td>示例</td><td><code>ws://cloud.alwayscontrol.com:9001/ocpp/NL-20260301-0001</code></td></tr>
+    <tr><td>端口</td><td>9001</td></tr>
+  </table>
+
+  <div class="highlight-warn">
+    <strong>重要：</strong>URL 路径中的 <code>{设备序列号}</code> 就是 N3 Lite 的唯一标识（SN），云平台通过它识别是哪台设备。每台 N3 Lite 使用自己的 SN 连接，不能共用。
+  </div>
+
+  <h4>连接与重连</h4>
+  <ul>
+    <li><strong>首次连接：</strong>N3 Lite 通电并连上 WiFi 后，立即发起 WebSocket 连接</li>
+    <li><strong>断线重连：</strong>连接断开后自动重连，间隔递增 &mdash; 1s &rarr; 2s &rarr; 4s &rarr; 8s &rarr; 最大 30s</li>
+    <li><strong>连接成功后：</strong>立即发送 BootNotification（见第三章）</li>
+  </ul>
+
+  <h2 id="s-msgformat">2.2 消息格式</h2>
+
+  <p>OCPP 1.6-J 使用 JSON 数组格式，共三种消息类型：</p>
+
+  <h4>请求（CALL）&mdash; 发起方发送</h4>
+  <pre><code>[2, "{唯一消息ID}", "{动作名称}", {载荷}]</code></pre>
+  <p>示例：</p>
+  <pre><code>[2, "msg001", "Heartbeat", {}]</code></pre>
+
+  <h4>成功响应（CALLRESULT）&mdash; 接收方回复</h4>
+  <pre><code>[3, "{对应的消息ID}", {载荷}]</code></pre>
+  <p>示例：</p>
+  <pre><code>[3, "msg001", {"currentTime": "2026-03-17T10:00:00Z"}]</code></pre>
+
+  <h4>错误响应（CALLERROR）&mdash; 接收方回复错误</h4>
+  <pre><code>[4, "{对应的消息ID}", "{错误码}", "{错误描述}", {详情}]</code></pre>
+  <p>示例：</p>
+  <pre><code>[4, "msg001", "InternalError", "Server error", {}]</code></pre>
+
+  <div class="highlight">
+    <strong>消息ID 规则：</strong>每次请求使用唯一的消息 ID（建议用递增序号如 msg001、msg002），响应中的消息 ID 必须与请求一致，用于匹配请求和响应。
+  </div>
+
+  <h4>消息方向说明</h4>
+  <table class="table-sm">
+    <tr><th style="width:15%">标记</th><th style="width:25%">方向</th><th>说明</th></tr>
+    <tr><td><span class="badge up">上行</span></td><td>N3 Lite &rarr; 云平台</td><td>设备主动发送请求，云平台回复响应</td></tr>
+    <tr><td><span class="badge down">下行</span></td><td>云平台 &rarr; N3 Lite</td><td>云平台主动发送请求，设备回复响应</td></tr>
+  </table>
+
+  <h2 id="s-connector-map">2.3 ConnectorId 映射规则</h2>
+
+  <p>N3 Lite 作为虚拟充电桩，下挂的充电桩的每把枪映射为一个 ConnectorId：</p>
+
+  <table>
+    <tr><th style="width:20%">ConnectorId</th><th style="width:30%">对应设备</th><th>说明</th></tr>
+    <tr><td>0</td><td>N3 Lite 本体</td><td>上报 N3 Lite 自身的状态/故障</td></tr>
+    <tr><td>1</td><td>桩1 - 枪1</td><td rowspan="2">第一台 ATP III 充电桩的两把枪</td></tr>
+    <tr><td>2</td><td>桩1 - 枪2</td></tr>
+    <tr><td>3</td><td>桩2 - 枪1</td><td rowspan="2">第二台 ATP III 充电桩的两把枪（如有）</td></tr>
+    <tr><td>4</td><td>桩2 - 枪2</td></tr>
+  </table>
+
+  <div class="highlight-warn">
+    <strong>注意：</strong>ConnectorId 的分配在 TopologyReport 中确定。云平台通过 TopologyReport 知道 ConnectorId 1/2 属于哪台桩、3/4 属于哪台桩。后续所有消息（StatusNotification 等）中的 ConnectorId 必须与 TopologyReport 中上报的一致。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 三、设备启动与注册 ══════════════════════════════════════ -->
+
+<div class="chapter-banner delivery" id="s-boot">
+  <div class="chapter-kicker">三、场景一：设备启动与注册</div>
+  <div class="chapter-title">通电后做什么</div>
+  <p class="chapter-desc"><span class="badge p1">第一优先</span> &mdash; N3 Lite 通电联网后的第一件事。</p>
+</div>
+
+<div class="section">
+  <h2>3.1 启动流程</h2>
+
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div class="flow-body"><strong>连接 WiFi</strong> &mdash; N3 Lite 通电后连接已配置的 WiFi 网络</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div class="flow-body"><strong>建立 WebSocket 连接</strong> &mdash; 连接到云平台 <code>ws://服务器/ocpp/{SN}</code></div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div class="flow-body"><strong>发送 BootNotification</strong> &mdash; 上报设备身份信息，等待云平台回复 Accepted</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">4</div>
+    <div class="flow-body"><strong>发送 TopologyReport</strong> &mdash; 上报下挂充电桩和枪的完整信息</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">5</div>
+    <div class="flow-body"><strong>发送各枪 StatusNotification</strong> &mdash; 上报每把枪的初始状态</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">6</div>
+    <div class="flow-body"><strong>开始心跳</strong> &mdash; 按照 BootNotification 响应中的 interval 值定时发送 Heartbeat</div>
+  </div>
+
+  <h2 id="s-boot-msg">3.2 BootNotification</h2>
+  <p><span class="badge up">上行</span> <span class="badge native">OCPP 原生</span> &mdash; 设备注册，上报身份信息</p>
+
+  <h4>请求（N3 Lite &rarr; 云平台）</h4>
+  <pre><code>[2, "msg001", "BootNotification", {
+  "chargePointVendor": "AlwaysControl",
+  "chargePointModel": "N3 Lite",
+  "chargePointSerialNumber": "NL-20260301-0001",
+  "firmwareVersion": "2.1.3"
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:30%">字段</th><th style="width:15%">类型</th><th style="width:10%">必填</th><th>说明</th></tr>
+    <tr><td>chargePointVendor</td><td>String</td><td>是</td><td>固定值 <code>"AlwaysControl"</code></td></tr>
+    <tr><td>chargePointModel</td><td>String</td><td>是</td><td>固定值 <code>"N3 Lite"</code></td></tr>
+    <tr><td>chargePointSerialNumber</td><td>String</td><td>是</td><td>N3 Lite 的序列号（SN），与 URL 路径中的一致</td></tr>
+    <tr><td>firmwareVersion</td><td>String</td><td>是</td><td>当前固件版本号</td></tr>
+  </table>
+
+  <h4>响应（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[3, "msg001", {
+  "status": "Accepted",
+  "currentTime": "2026-03-17T10:00:00Z",
+  "interval": 60
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:30%">字段</th><th style="width:15%">类型</th><th>说明</th></tr>
+    <tr><td>status</td><td>String</td><td><code>"Accepted"</code> 表示注册成功</td></tr>
+    <tr><td>currentTime</td><td>String</td><td>云平台当前时间（ISO 8601 格式），设备可用于校时</td></tr>
+    <tr><td>interval</td><td>Integer</td><td>心跳间隔，单位秒。设备按此间隔发送 Heartbeat</td></tr>
+  </table>
+
+  <div class="highlight">
+    <strong>处理逻辑：</strong>收到 <code>"Accepted"</code> 后，记录 interval 值用于心跳，然后立即发送 TopologyReport。如果收到 <code>"Rejected"</code>，等待 interval 秒后重新发送 BootNotification。
+  </div>
+
+  <h2 id="s-topo">3.3 TopologyReport（自定义）</h2>
+  <p><span class="badge up">上行</span> <span class="badge custom">自定义扩展</span> &mdash; 上报下挂充电桩和枪的完整信息</p>
+
+  <div class="why-box">
+    <div class="why-q">为什么需要自定义？</div>
+    <div class="why-a">OCPP 标准的 Connector 没有序列号和型号的概念。云平台需要知道每把枪对应的是哪台物理充电桩，以及桩的序列号和型号，所以通过 DataTransfer 扩展上报。</div>
+  </div>
+
+  <h4>请求（N3 Lite &rarr; 云平台）</h4>
+  <pre><code>[2, "msg002", "DataTransfer", {
+  "vendorId": "AlwaysControl",
+  "messageId": "TopologyReport",
+  "data": "{JSON 字符串，内容见下方}"
+}]</code></pre>
+
+  <p><code>data</code> 字段的 JSON 内容（转义前）：</p>
+
+  <pre><code>{
+  "chargePoints": [
+    {
+      "sn": "AT-0001",
+      "model": "ATP III-11.5",
+      "connectors": [
+        { "connectorId": 1, "status": "Available" },
+        { "connectorId": 2, "status": "Available" }
+      ]
+    },
+    {
+      "sn": "AT-0002",
+      "model": "ATP III-11.5",
+      "connectors": [
+        { "connectorId": 3, "status": "Available" },
+        { "connectorId": 4, "status": "Available" }
+      ]
+    }
+  ]
+}</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">字段</th><th style="width:15%">类型</th><th style="width:10%">必填</th><th>说明</th></tr>
+    <tr><td>chargePoints</td><td>Array</td><td>是</td><td>下挂充电桩列表</td></tr>
+    <tr><td>chargePoints[].sn</td><td>String</td><td>是</td><td>充电桩序列号</td></tr>
+    <tr><td>chargePoints[].model</td><td>String</td><td>是</td><td>充电桩型号</td></tr>
+    <tr><td>chargePoints[].connectors</td><td>Array</td><td>是</td><td>该桩下的枪列表</td></tr>
+    <tr><td>connectors[].connectorId</td><td>Integer</td><td>是</td><td>枪编号（全局唯一，从 1 开始递增）</td></tr>
+    <tr><td>connectors[].status</td><td>String</td><td>是</td><td>枪当前状态（见附录 B）</td></tr>
+  </table>
+
+  <h4>响应（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[3, "msg002", {
+  "status": "Accepted"
+}]</code></pre>
+
+  <div class="highlight-warn">
+    <strong>发送时机：</strong><br>
+    1. BootNotification 成功后立即发送一次（全量上报）<br>
+    2. 设备重启后发送一次<br>
+    3. 拓扑发生变化时发送（见第六章 TopologyChange）
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 四、心跳 ══════════════════════════════════════ -->
+
+<div class="chapter-banner protocol" id="s-heartbeat">
+  <div class="chapter-kicker">四、场景二：心跳保活</div>
+  <div class="chapter-title">告诉云平台"我还活着"</div>
+  <p class="chapter-desc"><span class="badge p1">第一优先</span> &mdash; 云平台通过心跳判断设备是否在线。</p>
+</div>
+
+<div class="section">
+  <h2>4.1 Heartbeat</h2>
+  <p><span class="badge up">上行</span> <span class="badge native">OCPP 原生</span></p>
+
+  <h4>请求（N3 Lite &rarr; 云平台）</h4>
+  <pre><code>[2, "msg003", "Heartbeat", {}]</code></pre>
+
+  <h4>响应（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[3, "msg003", {
+  "currentTime": "2026-03-17T10:01:00Z"
+}]</code></pre>
+
+  <div class="highlight">
+    <strong>发送规则：</strong><br>
+    &bull; 按照 BootNotification 响应中的 <code>interval</code> 值定时发送（如 interval=60，则每 60 秒发一次）<br>
+    &bull; 如果在心跳间隔内已经发送过其他消息（如 StatusNotification），可以跳过本次心跳<br>
+    &bull; 云平台超过 3 倍心跳间隔未收到任何消息，将判定设备离线
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 五、状态与告警 ══════════════════════════════════════ -->
+
+<div class="chapter-banner ops" id="s-status">
+  <div class="chapter-kicker">五、场景三：状态与告警上报</div>
+  <div class="chapter-title">设备状态变了、出故障了，告诉云平台</div>
+  <p class="chapter-desc"><span class="badge p1">第一优先</span> &mdash; 让云平台实时掌握设备状态。</p>
+</div>
+
+<div class="section">
+  <h2>5.1 StatusNotification</h2>
+  <p><span class="badge up">上行</span> <span class="badge native">OCPP 原生</span> &mdash; 上报设备/枪的状态变化和故障信息</p>
+
+  <h4>请求（N3 Lite &rarr; 云平台）</h4>
+
+  <p><strong>示例1：枪1 状态变为"充电中"</strong></p>
+  <pre><code>[2, "msg004", "StatusNotification", {
+  "connectorId": 1,
+  "status": "Charging",
+  "errorCode": "NoError",
+  "timestamp": "2026-03-17T10:05:00Z"
+}]</code></pre>
+
+  <p><strong>示例2：枪2 发生过流故障</strong></p>
+  <pre><code>[2, "msg005", "StatusNotification", {
+  "connectorId": 2,
+  "status": "Faulted",
+  "errorCode": "OverCurrentFailure",
+  "vendorErrorCode": "E1023",
+  "info": "Phase L1 over current 35A",
+  "timestamp": "2026-03-17T10:06:00Z"
+}]</code></pre>
+
+  <p><strong>示例3：N3 Lite 本体故障</strong></p>
+  <pre><code>[2, "msg006", "StatusNotification", {
+  "connectorId": 0,
+  "status": "Faulted",
+  "errorCode": "HighTemperature",
+  "info": "Internal temperature 82°C",
+  "timestamp": "2026-03-17T10:07:00Z"
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">字段</th><th style="width:15%">类型</th><th style="width:10%">必填</th><th>说明</th></tr>
+    <tr><td>connectorId</td><td>Integer</td><td>是</td><td>0=N3 Lite 本体，1/2/3/4=对应枪号</td></tr>
+    <tr><td>status</td><td>String</td><td>是</td><td>当前状态（见附录 B）</td></tr>
+    <tr><td>errorCode</td><td>String</td><td>是</td><td>错误码，无错误时填 <code>"NoError"</code>（见附录 A）</td></tr>
+    <tr><td>vendorErrorCode</td><td>String</td><td>否</td><td>厂商自定义错误码，用于更细粒度的故障定位</td></tr>
+    <tr><td>info</td><td>String</td><td>否</td><td>故障描述文字（最长 50 字符）</td></tr>
+    <tr><td>timestamp</td><td>String</td><td>是</td><td>状态变化时间（ISO 8601 格式）</td></tr>
+  </table>
+
+  <h4>响应（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[3, "msg004", {}]</code></pre>
+
+  <div class="highlight-warn">
+    <strong>发送时机：</strong>状态发生变化时立即发送，不需要定时。包括：<br>
+    &bull; 枪状态变化（空闲 &rarr; 充电中、充电中 &rarr; 空闲、任意状态 &rarr; 故障）<br>
+    &bull; N3 Lite 本体故障（connectorId=0）<br>
+    &bull; 故障恢复（status 从 Faulted 变回正常状态，errorCode 改为 NoError）
+  </div>
+
+  <div class="highlight-red">
+    <strong>桩级别故障处理：</strong>如果整台充电桩故障（而不是某把枪），将该桩下<strong>所有枪</strong>都上报为 Faulted。例如桩1整机故障，同时发送 connectorId=1 和 connectorId=2 的 Faulted 状态。
+  </div>
+
+  <h2 id="s-dlm-status">5.2 DLMStatus（自定义）</h2>
+  <p><span class="badge up">上行</span> <span class="badge custom">自定义扩展</span> &mdash; 上报 N3 Lite 的核心运行数据</p>
+
+  <div class="highlight-red">
+    <strong>这是最重要的自定义消息。</strong>没有这个数据，云平台只能看到设备在线/离线，看不到设备实际的运行状况。
+  </div>
+
+  <h4>请求（N3 Lite &rarr; 云平台）</h4>
+  <pre><code>[2, "msg007", "DataTransfer", {
+  "vendorId": "AlwaysControl",
+  "messageId": "DLMStatus",
+  "data": "{JSON 字符串，内容见下方}"
+}]</code></pre>
+
+  <p><code>data</code> 字段的 JSON 内容：</p>
+  <pre><code>{
+  "breakerRating": 32,
+  "totalCurrent": 30.8,
+  "voltage": 231.5,
+  "totalPower": 7.12,
+  "deviceTemp": 42.5,
+  "wifiRssi": -55,
+  "uptime": 86400,
+  "pileAllocations": [
+    { "sn": "AT-0001", "allocatedCurrent": 11.0, "actualCurrent": 10.8 },
+    { "sn": "AT-0002", "allocatedCurrent": 11.0, "actualCurrent": 10.5 }
+  ]
+}</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">字段</th><th style="width:12%">类型</th><th style="width:10%">必填</th><th style="width:10%">单位</th><th>说明</th></tr>
+    <tr><td>breakerRating</td><td>Integer</td><td>是</td><td>A</td><td>当前断路器档位设置（20/25/32/40/50/63）</td></tr>
+    <tr><td>totalCurrent</td><td>Number</td><td>是</td><td>A</td><td>CT 采集的入户总电流</td></tr>
+    <tr><td>voltage</td><td>Number</td><td>是</td><td>V</td><td>当前电压</td></tr>
+    <tr><td>totalPower</td><td>Number</td><td>是</td><td>kW</td><td>总功率</td></tr>
+    <tr><td>deviceTemp</td><td>Number</td><td>是</td><td>&deg;C</td><td>N3 Lite 内部温度</td></tr>
+    <tr><td>wifiRssi</td><td>Integer</td><td>是</td><td>dBm</td><td>WiFi 信号强度（负值，越大越好，如 -55 &gt; -80）</td></tr>
+    <tr><td>uptime</td><td>Integer</td><td>是</td><td>秒</td><td>设备运行时长（从本次通电开始计算）</td></tr>
+    <tr><td>pileAllocations</td><td>Array</td><td>是</td><td></td><td>各桩的电流分配信息</td></tr>
+    <tr><td>pileAllocations[].sn</td><td>String</td><td>是</td><td></td><td>桩序列号</td></tr>
+    <tr><td>pileAllocations[].allocatedCurrent</td><td>Number</td><td>是</td><td>A</td><td>DLM 分配给该桩的电流</td></tr>
+    <tr><td>pileAllocations[].actualCurrent</td><td>Number</td><td>是</td><td>A</td><td>该桩实际使用的电流</td></tr>
+  </table>
+
+  <h4>响应（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[3, "msg007", {
+  "status": "Accepted"
+}]</code></pre>
+
+  <div class="highlight">
+    <strong>发送时机：</strong><br>
+    &bull; 定时上报：建议每 30~60 秒上报一次<br>
+    &bull; 断路器档位变化时立即上报一次<br>
+    &bull; 可与心跳交替发送（如心跳 60 秒，DLMStatus 在中间 30 秒时发送）
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 六、拓扑变更 ══════════════════════════════════════ -->
+
+<div class="chapter-banner delivery" id="s-topo-change">
+  <div class="chapter-kicker">六、场景四：拓扑变更</div>
+  <div class="chapter-title">充电桩加了一台、掉了一台</div>
+  <p class="chapter-desc"><span class="badge p1">第一优先</span> &mdash; 运行中桩的增减需要通知云平台。</p>
+</div>
+
+<div class="section">
+  <h2>6.1 TopologyChange（自定义）</h2>
+  <p><span class="badge up">上行</span> <span class="badge custom">自定义扩展</span></p>
+
+  <p>当 N3 Lite 检测到下挂充电桩发生变化（通过 PLC 发现新桩或桩失联），重新发送一次完整的 TopologyReport 即可。</p>
+
+  <div class="highlight-blue">
+    <strong>实现方式：</strong>不需要单独定义 TopologyChange 消息。拓扑变化时，重新发送一次 TopologyReport（第三章 3.3），云平台会对比新旧拓扑，自动处理桩的增加和删除。<br><br>
+    <strong>全量覆盖：</strong>每次 TopologyReport 都是完整的当前拓扑，不是增量。云平台以最新一次 TopologyReport 为准。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 七、远程 DLM 配置 ══════════════════════════════════════ -->
+
+<div class="chapter-banner data" id="s-dlm-config">
+  <div class="chapter-kicker">七、场景五：远程 DLM 配置</div>
+  <div class="chapter-title">云平台远程修改断路器档位</div>
+  <p class="chapter-desc"><span class="badge p2">第二优先</span> &mdash; 客服帮客户远程调参数。</p>
+</div>
+
+<div class="section">
+  <h2>7.1 DLMConfig（自定义）</h2>
+  <p><span class="badge down">下行</span> <span class="badge custom">自定义扩展</span> &mdash; 云平台下发 DLM 配置到 N3 Lite</p>
+
+  <h4>请求（云平台 &rarr; N3 Lite）</h4>
+  <pre><code>[2, "req001", "DataTransfer", {
+  "vendorId": "AlwaysControl",
+  "messageId": "DLMConfig",
+  "data": "{\"breakerRating\": 25}"
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">字段</th><th style="width:15%">类型</th><th style="width:10%">必填</th><th>说明</th></tr>
+    <tr><td>breakerRating</td><td>Integer</td><td>是</td><td>目标断路器档位，可选值：20 / 25 / 32 / 40 / 50 / 63</td></tr>
+  </table>
+
+  <h4>响应（N3 Lite &rarr; 云平台）</h4>
+
+  <p><strong>成功：</strong></p>
+  <pre><code>[3, "req001", {
+  "status": "Accepted"
+}]</code></pre>
+
+  <p><strong>充电中拒绝：</strong></p>
+  <pre><code>[3, "req001", {
+  "status": "Rejected",
+  "data": "Charging in progress, cannot modify DLM settings"
+}]</code></pre>
+
+  <div class="highlight-warn">
+    <strong>充电中保护：</strong>任意充电桩正在充电时，N3 Lite 必须拒绝 DLM 配置修改，返回 <code>"Rejected"</code>。这与本地蓝牙 App 的行为一致 &mdash; 充电中禁止修改最大入户电流设置。
+  </div>
+
+  <div class="highlight">
+    <strong>生效确认：</strong>N3 Lite 应用新配置后，在下一次 DLMStatus 上报中体现新的 breakerRating 值，云平台以此确认配置已生效。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 八、OTA 升级 ══════════════════════════════════════ -->
+
+<div class="chapter-banner arch" id="s-ota">
+  <div class="chapter-kicker">八、场景六：N3 Lite OTA 升级</div>
+  <div class="chapter-title">云平台远程推送固件升级</div>
+  <p class="chapter-desc"><span class="badge p2">第二优先</span> &mdash; 远程修复 bug、推送新功能。</p>
+</div>
+
+<div class="section">
+  <h2>8.1 OTA 流程</h2>
+
+  <p>N3 Lite 自身的 OTA 使用 OCPP 原生的 UpdateFirmware + FirmwareStatusNotification。</p>
+
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div class="flow-body"><strong>云平台下发 UpdateFirmware</strong> &mdash; 告诉 N3 Lite 固件下载地址</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div class="flow-body"><strong>N3 Lite 通过 WiFi 下载固件</strong> &mdash; 从指定 URL 下载 .bin 文件</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div class="flow-body"><strong>N3 Lite 上报下载进度</strong> &mdash; FirmwareStatusNotification(Downloading)</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">4</div>
+    <div class="flow-body"><strong>下载完成，校验并安装</strong> &mdash; FirmwareStatusNotification(Installing)</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">5</div>
+    <div class="flow-body"><strong>安装完成，设备重启</strong> &mdash; 重启后重新连接，发送 BootNotification（新固件版本）</div>
+  </div>
+
+  <h4>UpdateFirmware（云平台 &rarr; N3 Lite）<span class="badge down">下行</span> <span class="badge native">OCPP 原生</span></h4>
+  <pre><code>[2, "req002", "UpdateFirmware", {
+  "location": "https://ota.alwayscontrol.com/firmware/N3Lite-2.2.0.bin",
+  "retrieveDate": "2026-03-17T12:00:00Z"
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">字段</th><th style="width:15%">类型</th><th>说明</th></tr>
+    <tr><td>location</td><td>String</td><td>固件下载 URL</td></tr>
+    <tr><td>retrieveDate</td><td>String</td><td>开始下载的时间（可立即执行，设为当前时间即可）</td></tr>
+  </table>
+
+  <h4>响应（N3 Lite &rarr; 云平台）</h4>
+  <pre><code>[3, "req002", {}]</code></pre>
+
+  <h4>FirmwareStatusNotification（N3 Lite &rarr; 云平台）<span class="badge up">上行</span> <span class="badge native">OCPP 原生</span></h4>
+  <pre><code>[2, "msg008", "FirmwareStatusNotification", {
+  "status": "Downloading"
+}]</code></pre>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">status 值</th><th>说明</th></tr>
+    <tr><td>Downloading</td><td>正在下载固件</td></tr>
+    <tr><td>Downloaded</td><td>下载完成</td></tr>
+    <tr><td>Installing</td><td>正在安装</td></tr>
+    <tr><td>Installed</td><td>安装成功（随后设备会重启）</td></tr>
+    <tr><td>DownloadFailed</td><td>下载失败</td></tr>
+    <tr><td>InstallationFailed</td><td>安装失败（自动回滚到上一版本）</td></tr>
+  </table>
+
+  <div class="highlight-red">
+    <strong>充电中保护：</strong>任意充电桩正在充电时，N3 Lite 不应立即执行 OTA。应等待所有充电结束后再开始下载和安装。设备可以先记录下升级指令，待充电结束后自动执行。
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════ 九、预留 ══════════════════════════════════════ -->
+
+<div class="chapter-banner bg" id="s-reserved">
+  <div class="chapter-kicker">九、预留功能</div>
+  <div class="chapter-title">后续版本扩展</div>
+</div>
+
+<div class="section">
+  <h2>9.1 后续扩展</h2>
+
+  <p>以下功能在后续版本中实现，当前版本暂不要求设备端开发，但需要预留扩展能力：</p>
+
+  <table>
+    <tr><th style="width:25%">功能</th><th style="width:20%">协议类型</th><th>说明</th></tr>
+    <tr><td>充电启停上报</td><td>OCPP 原生</td><td>StartTransaction / StopTransaction &mdash; 上报充电开始和结束</td></tr>
+    <tr><td>充电数据上报</td><td>OCPP 原生</td><td>MeterValues &mdash; 充电过程中定时上报电量、功率数据</td></tr>
+    <tr><td>充电授权</td><td>OCPP 原生</td><td>Authorize &mdash; 充电前授权验证</td></tr>
+    <tr><td>远程启停充电</td><td>OCPP 原生</td><td>RemoteStartTransaction / RemoteStopTransaction</td></tr>
+    <tr><td>远程重启</td><td>OCPP 原生</td><td>Reset &mdash; 云平台远程重启 N3 Lite</td></tr>
+    <tr><td>下挂桩 OTA</td><td>自定义扩展</td><td>N3 Lite 下载桩的固件后通过 PLC 中转给 ATP III</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════ 附录 ══════════════════════════════════════ -->
+
+<div class="chapter-banner protocol" id="s-error-codes">
+  <div class="chapter-kicker">附录</div>
+  <div class="chapter-title">对照表</div>
+</div>
+
+<div class="section">
+  <h2>A. OCPP 错误码对照表</h2>
+
+  <p>StatusNotification 中 <code>errorCode</code> 字段的可选值：</p>
+
+  <table class="table-sm">
+    <tr><th style="width:30%">errorCode</th><th style="width:25%">含义</th><th>说明</th></tr>
+    <tr><td>NoError</td><td>无错误</td><td>正常状态，必须填此值</td></tr>
+    <tr><td>GroundFailure</td><td>接地故障</td><td>检测到接地异常</td></tr>
+    <tr><td>HighTemperature</td><td>过温</td><td>设备温度过高</td></tr>
+    <tr><td>OverCurrentFailure</td><td>过流</td><td>电流超过安全阈值</td></tr>
+    <tr><td>OverVoltage</td><td>过压</td><td>电压过高</td></tr>
+    <tr><td>UnderVoltage</td><td>欠压</td><td>电压过低</td></tr>
+    <tr><td>InternalError</td><td>内部错误</td><td>设备内部故障</td></tr>
+    <tr><td>PowerSwitchFailure</td><td>开关故障</td><td>继电器/接触器故障</td></tr>
+    <tr><td>ConnectorLockFailure</td><td>枪锁故障</td><td>充电枪锁定/解锁失败</td></tr>
+    <tr><td>OtherError</td><td>其他错误</td><td>不属于以上类别的错误，用 vendorErrorCode 和 info 补充说明</td></tr>
+  </table>
+
+  <h2 id="s-status-codes">B. 枪状态对照表</h2>
+
+  <p>StatusNotification 和 TopologyReport 中 <code>status</code> 字段的可选值：</p>
+
+  <table class="table-sm">
+    <tr><th style="width:25%">status</th><th style="width:20%">中文含义</th><th>说明</th></tr>
+    <tr><td>Available</td><td>空闲</td><td>可以使用，没有充电</td></tr>
+    <tr><td>Preparing</td><td>准备中</td><td>充电枪已插入，等待授权或启动</td></tr>
+    <tr><td>Charging</td><td>充电中</td><td>正在充电</td></tr>
+    <tr><td>SuspendedEV</td><td>车辆暂停</td><td>车辆主动暂停充电</td></tr>
+    <tr><td>SuspendedEVSE</td><td>桩端暂停</td><td>桩端暂停充电（如 DLM 限流到 0）</td></tr>
+    <tr><td>Finishing</td><td>结束中</td><td>充电完成，等待拔枪</td></tr>
+    <tr><td>Faulted</td><td>故障</td><td>设备故障，不可使用</td></tr>
+    <tr><td>Unavailable</td><td>不可用</td><td>设备维护或被禁用</td></tr>
+  </table>
+
+  <h2 id="s-msg-list">C. 完整消息清单</h2>
+
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:25%">消息</th><th style="width:8%">方向</th><th style="width:10%">类型</th><th style="width:12%">优先级</th><th>用途</th></tr>
+    <tr><td>1</td><td>BootNotification</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p1">P1</span></td><td>设备注册</td></tr>
+    <tr><td>2</td><td>Heartbeat</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p1">P1</span></td><td>心跳保活</td></tr>
+    <tr><td>3</td><td>StatusNotification</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p1">P1</span></td><td>状态/告警上报</td></tr>
+    <tr><td>4</td><td>TopologyReport</td><td><span class="badge up">上行</span></td><td><span class="badge custom">自定义</span></td><td><span class="badge p1">P1</span></td><td>拓扑上报（桩+枪）</td></tr>
+    <tr><td>5</td><td>DLMStatus</td><td><span class="badge up">上行</span></td><td><span class="badge custom">自定义</span></td><td><span class="badge p1">P1</span></td><td>DLM 运行数据上报</td></tr>
+    <tr><td>6</td><td>DLMConfig</td><td><span class="badge down">下行</span></td><td><span class="badge custom">自定义</span></td><td><span class="badge p2">P2</span></td><td>远程修改断路器档位</td></tr>
+    <tr><td>7</td><td>UpdateFirmware</td><td><span class="badge down">下行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p2">P2</span></td><td>N3 Lite OTA 指令</td></tr>
+    <tr><td>8</td><td>FirmwareStatusNotification</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p2">P2</span></td><td>OTA 进度上报</td></tr>
+    <tr><td>9</td><td>StartTransaction</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>充电开始（预留）</td></tr>
+    <tr><td>10</td><td>StopTransaction</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>充电结束（预留）</td></tr>
+    <tr><td>11</td><td>MeterValues</td><td><span class="badge up">上行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>充电数据（预留）</td></tr>
+    <tr><td>12</td><td>RemoteStartTransaction</td><td><span class="badge down">下行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>远程启动充电（预留）</td></tr>
+    <tr><td>13</td><td>RemoteStopTransaction</td><td><span class="badge down">下行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>远程停止充电（预留）</td></tr>
+    <tr><td>14</td><td>Reset</td><td><span class="badge down">下行</span></td><td><span class="badge native">原生</span></td><td><span class="badge p3">P3</span></td><td>远程重启（预留）</td></tr>
+    <tr><td>15</td><td>ChildFirmwareUpdate</td><td><span class="badge down">下行</span></td><td><span class="badge custom">自定义</span></td><td><span class="badge p3">P3</span></td><td>下挂桩 OTA（预留）</td></tr>
+  </table>
+</div>
+
+
+</div><!-- /container -->
+
+<div class="doc-footer">
+  <p>&copy; 2026 旭衡电子(深圳) AlwaysControl Technology. All rights reserved.</p>
+  <p>N3 Lite 云平台通信协议文档 v1.0</p>
+  <p style="margin-top: 8px; font-size: 12px; color: #94a3b8;">文档日期：2026-03</p>
+</div>
+
+</body>
+</html>

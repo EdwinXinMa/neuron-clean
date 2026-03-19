@@ -1,16 +1,22 @@
 package com.echarge.protocol.ocpp.v16.action;
 
+import com.echarge.common.event.DeviceEvent;
+import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.core.session.Session;
 import com.echarge.protocol.ocpp.common.OcppAction;
 import com.echarge.protocol.ocpp.v16.Ocpp16ActionHandler;
 import com.echarge.protocol.ocpp.v16.model.DataTransferReq;
 import com.echarge.protocol.ocpp.v16.model.DataTransferResp;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq, DataTransferResp> {
+
+    @Autowired
+    private DeviceEventPublisher eventPublisher;
 
     @Override
     public String action() {
@@ -27,7 +33,18 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
         log.info("[OCPP1.6] DataTransfer from {}: vendor={}, messageId={}",
                 session.getChargePointId(), request.getVendorId(), request.getMessageId());
 
-        // TODO: handle vendor-specific data transfer
+        // 根据 messageId 路由到不同业务
+        if ("TopologyReport".equals(request.getMessageId())) {
+            DeviceEvent event = new DeviceEvent(
+                    DeviceEvent.TOPOLOGY_REPORT,
+                    session.getChargePointId(),
+                    request.getData()
+            );
+            eventPublisher.publish(event);
+            return new DataTransferResp("Accepted", null);
+        }
+
+        log.warn("[OCPP1.6] Unknown DataTransfer messageId: {}", request.getMessageId());
         return new DataTransferResp("Accepted", null);
     }
 }

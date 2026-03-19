@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 Lite 云平台 — 前端设计说明 v2.0</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f8fafb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --code-bg: #0f172a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.75;
+}
+.doc-header {
+  background: linear-gradient(135deg, #1e3a5f, #0e7490);
+  color: white;
+  padding: 52px 0 44px;
+  text-align: center;
+}
+.doc-header h1 { font-size: 30px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+.doc-header .sub { opacity: 0.85; font-size: 14px; margin-bottom: 22px; }
+.meta-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.meta-tag { background: rgba(255,255,255,0.18); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+.container { max-width: 1024px; margin: 0 auto; padding: 0 24px; }
+.toc {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px 36px; margin: 32px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toc h2 { font-size: 20px; color: var(--text); font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toc-group { margin-bottom: 14px; }
+.toc-group a { display: block; color: #475569; text-decoration: none; font-size: 14px; padding: 3px 0 3px 16px; transition: color 0.2s; border-left: 2px solid transparent; }
+.toc-group a:hover { color: var(--accent); border-left-color: var(--accent); }
+.toc-group a.toc-top { padding-left: 0; font-weight: 600; color: var(--primary); border-left: none; }
+.toc-part { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; margin-top: 2px; letter-spacing: 0.3px; }
+@media (min-width: 1680px) {
+  .toc.toc-floating { position: fixed; left: 20px; top: 18px; width: 280px; max-height: calc(100vh - 36px); overflow-y: auto; margin: 0; padding: 18px 18px 20px; z-index: 20; box-shadow: 0 10px 26px rgba(15,23,42,0.14); }
+  .toc.toc-floating h2 { font-size: 16px; margin-bottom: 10px; }
+  .toc.toc-floating .toc-group { margin-bottom: 10px; }
+  .toc.toc-floating .toc-group a { font-size: 12px; padding: 2px 0 2px 12px; }
+  .toc.toc-floating .toc-part { font-size: 11px; }
+}
+.section {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 32px 40px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.section-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px; }
+h2 { font-size: 22px; color: var(--primary); font-weight: 600; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 17px; color: var(--primary); margin: 24px 0 12px; font-weight: 600; }
+h4 { font-size: 15px; color: var(--accent); margin: 18px 0 10px; font-weight: 600; }
+p { margin: 10px 0; }
+ul, ol { margin: 8px 0; padding-left: 20px; }
+li { margin: 4px 0; }
+.highlight { background: #ecfdf5; border-left: 3px solid #10b981; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight strong { color: var(--primary); }
+.highlight-warn { background: #fef9c3; border-left: 3px solid var(--warning); border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-blue { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+.highlight-red { background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.8; }
+pre { background: var(--code-bg); color: #a5d8ff; border-radius: 10px; padding: 18px 22px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; margin: 14px 0; }
+code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+pre code { background: none; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+th { background: #f1f5f9; font-weight: 600; color: var(--primary); }
+tr:nth-child(even) { background: #f8fafc; }
+.table-sm { font-size: 13px; }
+.muted-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.chapter-banner { border: 1px solid; border-radius: 12px; padding: 18px 22px; margin: 12px 0 20px; }
+.chapter-banner.bg { border-color: #fed7aa; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.chapter-banner.arch { border-color: #bae6fd; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.chapter-banner.delivery { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+.chapter-banner.ops { border-color: #fca5a5; background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+.chapter-banner.data { border-color: #93c5fd; background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+.chapter-banner.tech { border-color: #a78bfa; background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.chapter-kicker { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.6px; }
+.chapter-title { font-size: 24px; color: var(--primary); font-weight: 700; margin: 6px 0 4px; }
+.chapter-desc { font-size: 13px; color: #475569; margin: 0; }
+.why-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 14px; }
+.why-box .why-q { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.why-box .why-a { color: var(--text); line-height: 1.7; }
+.page-mockup { border: 2px solid var(--border); border-radius: 10px; background: #f8fafc; padding: 18px; margin: 14px 0; }
+.page-mockup-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.3px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.module-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; position: relative; }
+.module-card.core { background: #f0fdf4; border-color: #86efac; }
+.module-card.special { background: #faf5ff; border-color: #c4b5fd; }
+.module-name { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+.module-desc { font-size: 13px; color: var(--text); line-height: 1.6; margin-top: 6px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.online { background: #dcfce7; color: #166534; }
+.badge.offline { background: #f1f5f9; color: #64748b; }
+.badge.fault { background: #fef2f2; color: #dc2626; }
+.badge.unactivated { background: #fef9c3; color: #a16207; }
+.badge.charging { background: #dbeafe; color: #1d4ed8; }
+.badge.paused { background: #f3e8ff; color: #7c3aed; }
+.nav-demo { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+.nav-demo-bar { background: var(--primary); color: white; padding: 12px 24px; display: flex; align-items: center; gap: 32px; font-size: 13px; }
+.nav-demo-bar .logo { font-weight: 700; font-size: 15px; margin-right: 16px; }
+.nav-demo-bar .nav-item { opacity: 0.7; cursor: default; padding: 4px 8px; border-radius: 6px; }
+.nav-demo-bar .nav-item.active { opacity: 1; background: rgba(255,255,255,0.15); font-weight: 600; }
+.nav-demo-bar .nav-badge { background: #ef4444; color: white; border-radius: 999px; font-size: 11px; padding: 1px 6px; margin-left: 4px; }
+.nav-demo-bar .user { margin-left: auto; opacity: 0.85; }
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+.stat-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; background: #fff; }
+.stat-card .stat-num { font-size: 28px; font-weight: 800; margin-bottom: 2px; }
+.stat-card .stat-label { font-size: 12px; color: var(--muted); }
+.stat-card.total .stat-num { color: var(--accent); }
+.stat-card.green .stat-num { color: var(--success); }
+.stat-card.gray .stat-num { color: #94a3b8; }
+.stat-card.red .stat-num { color: var(--danger); }
+.split-demo { display: grid; grid-template-columns: 280px 1fr; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; min-height: 320px; }
+.split-left { background: #f8fafc; border-right: 1px solid var(--border); padding: 12px 0; }
+.split-left-header { padding: 8px 14px 10px; }
+.split-left-search { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--muted); width: 100%; }
+.split-left-filter { display: flex; gap: 4px; padding: 6px 14px 8px; }
+.split-left-filter span { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: white; border: 1px solid var(--border); color: var(--muted); cursor: default; }
+.split-left-filter span.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+.device-item { padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: default; }
+.device-item.active { background: var(--accent-light); }
+.device-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.device-dot.online { background: var(--success); }
+.device-dot.offline { background: #94a3b8; }
+.device-dot.fault { background: var(--danger); }
+.device-dot.unactivated { background: transparent; border: 2px solid #94a3b8; }
+.split-right { padding: 20px 24px; background: white; }
+.split-right-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.split-right-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.detail-section { margin-bottom: 16px; }
+.detail-section-title { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.detail-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+.detail-row .label { color: var(--muted); }
+.detail-row .value { color: var(--text); font-weight: 500; }
+.charger-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 10px; background: #f8fafc; border-radius: 6px; margin: 4px 0; }
+.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.guardrail-card { border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 14px; }
+.guardrail-card.must { border-color: #86efac; background: #f0fdf4; }
+.guardrail-card.ban { border-color: #fca5a5; background: #fef2f2; }
+.guardrail-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+.guardrail-list { padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
+.doc-footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+.contrast-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+.contrast-table th { background: #f1f5f9; padding: 10px 14px; text-align: left; font-weight: 600; color: var(--primary); border: 1px solid var(--border); }
+.contrast-table td { padding: 10px 14px; border: 1px solid var(--border); }
+.contrast-table .old { color: #94a3b8; }
+.contrast-table .new { color: var(--success); font-weight: 600; }
+@media (max-width: 900px) {
+  .two-col, .guardrail-grid, .stat-cards { grid-template-columns: 1fr; }
+  .split-demo { grid-template-columns: 1fr; }
+  .section { padding: 20px 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="container">
+    <h1>N3 Lite 云平台  前端设计说明</h1>
+    <div class="sub">设备商运维管理平台 &mdash; 云平台前端设计说明 v2.0 &mdash; 旭衡电子(深圳) AlwaysControl Technology</div>
+    <div class="meta-tags" style="margin-top: 20px;">
+      <span class="meta-tag">v2.0</span>
+      <span class="meta-tag">2026-03</span>
+      <span class="meta-tag">设备监控台</span>
+      <span class="meta-tag">以看为主 操作为辅</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc toc-floating">
+    <h2>目录</h2>
+    <div class="toc-group">
+      <div class="toc-part">一、设计出发点</div>
+      <a href="#s-user">1.1 N3 Lite 背景</a>
+      <a href="#s-goal">1.2 核心场景</a>
+      <a href="#s-principle">1.3 设计思路</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">二、整体布局</div>
+      <a href="#s-layout">2.1 布局结构</a>
+      <a href="#s-nav">2.2 顶部导航</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">三、五个视图设计</div>
+      <a href="#s-overview">3.1 总览大屏</a>
+      <a href="#s-device">3.2 设备视图</a>
+      <a href="#s-alert">3.3 告警中心</a>
+      <a href="#s-oplog">3.4 操作日志</a>
+      <a href="#s-settings">3.5 设置</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-part">四、关键交互设计</div>
+      <a href="#s-realtime">4.1 实时更新</a>
+      <a href="#s-ota">4.2 OTA 升级流程</a>
+      <a href="#s-jump">4.3 视图联动跳转</a>
+    </div>
+  </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 一、设计出发点                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner bg" id="s-user">
+  <div class="chapter-kicker">一、设计出发点</div>
+  <div class="chapter-title">以设备为基础，以自身使用为方向</div>
+  <p class="chapter-desc">先理解设备，再从我们自己的工作场景出发设计。</p>
+</div>
+
+<div class="section">
+  <div class="section-label">BACKGROUND</div>
+  <h2 id="s-user">1.1 N3 Lite 背景</h2>
+
+  <p>N3 Lite 是一台家用智能充电网关，出货后自主运行。设备通过 PLC 管理下挂充电桩，通过 CT 传感器实时读取家庭电流，自动进行动态负载调节（DLM）。设备一旦部署，便在客户侧独立运行，<strong>不需要我们的日常介入</strong>。</p>
+
+  <p>这决定了我们与设备的关系：我们是设备的<strong>出货方与守护者</strong>，而不是使用者。我们关心的是出货设备的整体运行状况。</p>
+
+  <p>基于这个角色，我们的工作天然分为两种状态：</p>
+
+  <div class="two-col" style="margin: 14px 0;">
+    <div class="module-card">
+      <div class="module-name">大多数时候 — 被动监控</div>
+      <div class="module-desc">设备正常运行，无需干预。我们只需要知道整体情况：在线多少台、有没有故障、设备分布在哪里。<strong>靠看。</strong></div>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">少数时候 — 主动处理</div>
+      <div class="module-desc">出现告警，或客户反馈问题。需要快速定位这台设备，一屏看清全部状态，必要时远程干预。<strong>靠查与操作。</strong></div>
+    </div>
+  </div>
+
+  <p>这两种工作状态，直接决定了平台的设计方向。</p>
+
+  <h2 id="s-goal" style="margin-top: 28px;">1.2 核心场景</h2>
+
+  <p>基于我们的角色，平台围绕两个核心场景展开：</p>
+
+  <div class="why-box">
+    <div class="why-q">总览监控：</div>
+    <div class="why-a">
+      设备出货总量、运行中、离线、故障等数量，以及分布区域
+    </div>
+  </div>
+
+  <div class="why-box">
+    <div class="why-q">定位排查：</div>
+    <div class="why-a">
+      按序列号找到这台设备 &rarr; 一屏看清设备状态、家庭电力数据、下挂充电桩状态 &rarr; 必要时远程修改参数或推送升级
+    </div>
+  </div>
+
+  <h2 id="s-principle" style="margin-top: 28px;">1.3 设计思路</h2>
+
+  <div class="highlight">
+    大多数时候我们在看，少数时候才需要操作。所以：<br><br>
+    <strong>以看为主，操作为辅。</strong>打开即是信息，操作内嵌在数据旁边，需要时才触发。导航从简，几个视图一目了然，不需要层层菜单。视线始终留在数据上，不被导航分散。
+  </div>
+
+  <!-- <table class="contrast-table">
+    <tr><th>维度</th><th>传统管理后台思路</th><th>本平台思路</th></tr>
+    <tr>
+      <td>设计起点</td>
+      <td class="old">有哪些功能，就做哪些页面</td>
+      <td class="new">以使用者真实视角为起点，直观快捷</td>
+    </tr>
+    <tr>
+      <td>导航方式</td>
+      <td class="old">左侧菜单树，多级展开</td>
+      <td class="new">顶部导航，内容区全宽，地图与设备数据充分展示</td>
+    </tr>
+    <tr>
+      <td>打开第一眼</td>
+      <td class="old">空白页面或欢迎页</td>
+      <td class="new">直观展示设备运行全局</td>
+    </tr>
+    <tr>
+      <td>操作入口</td>
+      <td class="old">功能独立分散，操作需要多次点击菜单切换页面</td>
+      <td class="new">操作内嵌于设备数据旁，看到即可操作</td>
+    </tr>
+  </table> -->
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 二、整体布局                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner arch" id="s-layout">
+  <div class="chapter-kicker">二、整体布局</div>
+  <div class="chapter-title">围绕两个核心场景，确定整体布局</div>
+</div>
+
+<div class="section">
+  <div class="section-label">LAYOUT</div>
+  <h2>2.1 布局结构</h2>
+
+  <p>顶部导航，内容区全宽展示，地图和分屏布局充分铺开。</p>
+
+  <ol>
+    <li><strong>导航在顶部</strong> — 我们日常只需要在几个固定视图之间切换，顶部一行导航栏即可完成，视线始终停留在内容区，不会被侧边菜单分散注意力。</li>
+    <li><strong>全宽内容区</strong> — 设备地图需要大面积铺开才能看清设备分布，全宽布局让地图、表格、数据卡片都有充足的展示空间，打开就能一屏掌握全局。</li>
+    <li><strong>左右分屏</strong> — 排查某台设备时，左侧列表快速定位，右侧立即展开详情，不需要跳转页面。找到设备和查看信息在同一屏完成，缩短定位到处理的路径。</li>
+  </ol>
+
+  <div class="two-col" style="margin: 14px 0;">
+    <div class="module-card core">
+      <div class="module-name">总览 — 全宽大屏</div>
+      <pre style="background: #f0fdf4; color: #166534; font-size: 12px; padding: 12px; border-radius: 6px; margin-top: 8px;">
+┌────────────────────────┐
+│  顶部导航                │
+├────────────────────────┤
+│  [ 总数 ] [ 在线 ] ...   │
+├────────────────────────┤
+│                        │
+│     设备地图（全宽）      │
+│                        │
+└────────────────────────┘</pre>
+    </div>
+    <div class="module-card core">
+      <div class="module-name">设备 — 左右分屏</div>
+      <pre style="background: #f0fdf4; color: #166534; font-size: 12px; padding: 12px; border-radius: 6px; margin-top: 8px;">
+┌────────────────────────┐
+│  顶部导航                │
+├────────┬───────────────┤
+│        │               │
+│ 设备列表│   设备详情      │
+│ 搜索筛选│   状态/电力/桩  │
+│        │               │
+└────────┴───────────────┘</pre>
+    </div>
+  </div>
+
+  <h2 id="s-nav" style="margin-top: 28px;">2.2 顶部导航</h2>
+
+  <div class="nav-demo">
+    <div class="nav-demo-bar">
+      <span class="logo">⚡ N3 Lite</span>
+      <span class="nav-item active">总览</span>
+      <span class="nav-item">设备</span>
+      <span class="nav-item">告警<span class="nav-badge">3</span></span>
+      <span class="nav-item">操作日志</span>
+      <span class="nav-item">设置</span>
+      <span class="user">👤 Edwin</span>
+    </div>
+    <div style="padding: 16px 24px; font-size: 13px; color: var(--muted); background: white;">
+      内容区 &mdash; 根据当前选中的导航项显示对应视图
+    </div>
+  </div>
+
+  <h4>导航设计说明</h4>
+  <table class="table-sm">
+    <tr><th style="width:15%">入口</th><th style="width:30%">对应视图</th><th>说明</th></tr>
+    <tr><td><strong>总览</strong></td><td>总览大屏</td><td>登录后默认展示，全局数据一目了然</td></tr>
+    <tr><td><strong>设备</strong></td><td>设备视图（分屏）</td><td>设备列表 + 选中设备详情</td></tr>
+    <tr><td><strong>告警</strong></td><td>告警中心</td><td>红色角标实时显示未处理告警数</td></tr>
+    <tr><td><strong>操作日志</strong></td><td>全局操作记录</td><td>所有设备的操作历史</td></tr>
+    <tr><td><strong>设置</strong></td><td>固件库 + 账号管理 + 设备台账</td><td>低频操作，收纳在此</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 三、五个视图设计                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner delivery" id="s-overview">
+  <div class="chapter-kicker">三、五个视图设计</div>
+  <div class="chapter-title">每个视图存在的理由</div>
+</div>
+
+<div class="section">
+  <div class="section-label">VIEW 1</div>
+  <h2>3.1 总览大屏</h2>
+
+  <div class="why-box">
+    <div class="why-q">对应核心场景：总览监控</div>
+    <div class="why-a">
+      打开平台，第一眼要回答三个问题：<strong>出了多少台？在跑多少台？有没有问题？</strong><br>
+      大屏是所有设备聚合展示，数字卡片和地图用来展示所有设备数量、运行状态和分布，配合告警，不需要点进任何页面就可以一览全局、发现预警。
+    </div>
+  </div>
+
+  <h4>布局结构</h4>
+
+  <div class="stat-cards">
+    <div class="stat-card total"><div class="stat-num">128</div><div class="stat-label">设备总数</div></div>
+    <div class="stat-card green"><div class="stat-num">96</div><div class="stat-label">在线</div></div>
+    <div class="stat-card gray"><div class="stat-num">24</div><div class="stat-label">离线</div></div>
+    <div class="stat-card red"><div class="stat-num">3</div><div class="stat-label">故障</div></div>
+  </div>
+
+  <div class="page-mockup">
+    <div class="page-mockup-title">总览大屏 &mdash; 布局示意</div>
+<pre style="background:none; color:var(--text); font-size:13px; line-height:2; margin:0;">
+┌─────────────────────────────────────────────────────────┐
+│  顶部导航栏                                                │
+├─────────────────────────────────────────────────────────┤
+│  [ 总数 128 ]   [ 在线 96 ]   [ 离线 24 ]   [ 故障 3 ]    │
+├─────────────────────────────────────────────────────────┤
+│                                      ┌──────────────────┐│
+│                                      │ 最近告警           ││
+│                                      │──────────────────││
+│          设 备 地 图（全宽）            │🔴 过温  NL-0001  ││
+│                                      │🟠 过压  NL-0023  ││
+│   绿点 = 在线                          │🔵 离线  NL-0047  ││
+│   灰点 = 离线                          │                  ││
+│   红点 = 故障                          └──────────────────┘│
+│                                                          │
+└─────────────────────────────────────────────────────────┘</pre>
+  </div>
+
+  <h4>地图设备点</h4>
+  <ul>
+    <li>颜色含义：<span class="badge online">在线</span> &nbsp; <span class="badge offline">离线</span> &nbsp; <span class="badge fault">故障</span></li>
+    <li>悬停显示：设备序列号 + 当前状态</li>
+    <li>点击跳转：进入设备视图，右侧自动展开该设备详情</li>
+    <li>地图方案：产品面向海外市场，使用全球可用的地图服务（Leaflet + OpenStreetMap 或 Mapbox）</li>
+  </ul>
+
+  <!-- <div class="highlight-blue">
+    <strong>设备台账中的位置录入：</strong>出货时人工维护经销商大概位置。<br>
+    &bull; <strong>手动录入</strong> &mdash; 表单内嵌地图选点组件，点击地图自动填入经纬度<br>
+    &bull; <strong>Excel 批量导入</strong> &mdash; 模板中定义 <code>longitude</code>（经度）和 <code>latitude</code>（纬度）两列
+  </div> -->
+
+</div>
+
+<div class="section" id="s-device">
+  <div class="section-label">VIEW 2</div>
+  <h2>3.2 设备视图</h2>
+
+  <div class="why-box">
+    <div class="why-q">对应核心场景：定位排查</div>
+    <div class="why-a">
+      左侧列表快速找到目标设备，右侧一屏呈现全部运行信息，必要时直接操作。一个页面完成从定位到处理的完整路径。
+    </div>
+  </div>
+
+  <h4>分屏布局</h4>
+
+  <div class="split-demo">
+    <div class="split-left">
+      <div class="split-left-header">
+        <input class="split-left-search" type="text" placeholder="🔍  搜索序列号..." readonly>
+      </div>
+      <div class="split-left-filter">
+        <span class="active">全部</span>
+        <span>在线</span>
+        <span>离线</span>
+        <span>故障</span>
+        <span>未激活</span>
+      </div>
+      <div class="device-item active">
+        <div class="device-dot online"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px;">NL-20260301-0001</div>
+          <div style="font-size:11px; color:var(--muted);">在线 · 2分钟前心跳</div>
+        </div>
+      </div>
+      <div class="device-item">
+        <div class="device-dot online"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px;">NL-20260301-0002</div>
+          <div style="font-size:11px; color:var(--muted);">在线 · 5分钟前心跳</div>
+        </div>
+      </div>
+      <div class="device-item">
+        <div class="device-dot offline"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px;">NL-20260228-0047</div>
+          <div style="font-size:11px; color:var(--muted);">离线 · 2小时前</div>
+        </div>
+      </div>
+      <div class="device-item">
+        <div class="device-dot fault"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px;">NL-20260215-0012</div>
+          <div style="font-size:11px; color:var(--muted);">故障 · 过温告警</div>
+        </div>
+      </div>
+      <div style="border-top:1px dashed var(--border); margin:6px 14px;"></div>
+      <div class="device-item">
+        <div class="device-dot unactivated"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px; color:var(--muted);">NL-20260310-0088</div>
+          <div style="font-size:11px; color:var(--muted);">未激活</div>
+        </div>
+      </div>
+      <div class="device-item">
+        <div class="device-dot unactivated"></div>
+        <div>
+          <div style="font-weight:600; font-size:13px; color:var(--muted);">NL-20260310-0089</div>
+          <div style="font-size:11px; color:var(--muted);">未激活</div>
+        </div>
+      </div>
+    </div>
+    <div class="split-right">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <div class="split-right-title">NL-20260301-0001</div>
+          <div class="split-right-sub">经销商：深圳某某电子 &nbsp;·&nbsp; 出货日期：2026-03-01</div>
+        </div>
+      </div>
+      <!-- 未激活设备示例（无台账信息时显示） -->
+      <!-- <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:6px; padding:8px 12px; font-size:12px; color:#92400e; margin-bottom:12px;">
+        ⚠ 暂无台账信息 &nbsp;<a href="#" style="color:var(--accent);">前往补录 →</a>
+      </div> -->
+
+      <div class="detail-section">
+        <div class="detail-section-title">设备状态</div>
+        <div class="detail-row"><span class="label">在线状态</span><span class="value"><span class="badge online">在线</span></span></div>
+        <div class="detail-row"><span class="label">最后心跳</span><span class="value">2分钟前</span></div>
+        <div class="detail-row"><span class="label">固件版本</span><span class="value">v1.0.2 &nbsp;<a href="#" style="font-size:12px; color:var(--accent);">升级</a></span></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">家庭电力信息（CT 实时数据）</div>
+        <div class="detail-row"><span class="label">入户总电流</span><span class="value">30.8 A</span></div>
+        <div class="detail-row"><span class="label">最大电流阈值</span><span class="value">32 A &nbsp;<a href="#" style="font-size:12px; color:var(--accent);">修改</a></span></div>
+        <div class="detail-row"><span class="label">电压</span><span class="value">230 V</span></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">下挂充电桩</div>
+        <div class="charger-item">
+          <div class="device-dot online"></div>
+          <span style="font-weight:600;">AT-20260301-0001</span>
+          <span class="badge charging">充电中</span>
+          <span style="margin-left:auto; color:var(--muted); font-size:12px;">11 A</span>
+        </div>
+        <div class="charger-item">
+          <div class="device-dot online"></div>
+          <span style="font-weight:600;">AT-20260301-0002</span>
+          <span class="badge online">空闲</span>
+          <span style="margin-left:auto; color:var(--muted); font-size:12px;">0 A</span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">最近告警 &nbsp;|&nbsp; 操作日志</div>
+        <div style="font-size:12px; color:var(--muted);">（Tab 切换，展示该设备的告警记录和操作记录）</div>
+      </div>
+    </div>
+  </div>
+
+  <h4>操作入口</h4>
+  <ul>
+    <li><strong>修改 DLM 档位</strong> &mdash; 点击家庭电力信息区的"修改"，弹出选择框（20/25/32/40/50/63A），确认后直接下发</li>
+    <li><strong>固件升级</strong> &mdash; 点击固件版本旁的"升级"，从固件库选择版本，确认后推送</li>
+  </ul>
+</div>
+
+<div class="section" id="s-alert">
+  <div class="section-label">VIEW 3</div>
+  <h2>3.3 告警中心</h2>
+
+  <div class="why-box">
+    <div class="why-q">服务于：定位排查</div>
+    <div class="why-a">
+      设备出现异常时，需要一个地方集中查看和处理。哪些问题还没处理、哪些已经跟进，不遗漏。
+    </div>
+  </div>
+
+  <h4>告警分级</h4>
+  <table>
+    <tr><th style="width:12%">级别</th><th style="width:12%">颜色</th><th style="width:40%">触发条件</th><th>处理优先级</th></tr>
+    <tr><td>严重</td><td>🔴 红色</td><td>接地故障、过温保护</td><td>立即处理</td></tr>
+    <tr><td>重要</td><td>🟠 橙色</td><td>过流、过压、欠压、设备故障码</td><td>当日处理</td></tr>
+    <tr><td>一般</td><td>🔵 蓝色</td><td>设备离线、DLM 限流频繁</td><td>关注跟踪</td></tr>
+    <tr><td>信息</td><td>⚫ 灰色</td><td>OTA 升级结果、设备首次激活</td><td>记录即可</td></tr>
+  </table>
+
+  <h4>页面设计</h4>
+  <ul>
+    <li><strong>默认排序：</strong>未处理优先，同状态按级别从高到低排列</li>
+    <li><strong>筛选条件：</strong>告警级别 / 处理状态（未处理/已处理）/ 时间范围</li>
+    <li><strong>处理操作：</strong>标记已处理 + 填写处理备注</li>
+    <li><strong>跳转联动：</strong>点击告警条目中的设备序列号 &rarr; 进入设备视图并展开该设备</li>
+  </ul>
+
+  <h4>全局告警通知</h4>
+  <div class="highlight">
+    <strong>页面内醒目提示为主。</strong>导航栏告警图标实时显示未处理告警数（红色角标），任何视图下都可见。
+  </div>
+</div>
+
+<div class="section" id="s-oplog">
+  <div class="section-label">VIEW 4</div>
+  <h2>3.4 操作日志</h2>
+
+  <div class="why-box">
+    <div class="why-q">服务于：定位排查</div>
+    <div class="why-a">
+      对设备做过什么，都应该有据可查。升级了哪个版本、改过哪个参数、谁操作的、结果如何，每一步操作都可追溯。
+    </div>
+  </div>
+
+  <h4>两个层面的操作记录</h4>
+
+  <div class="two-col">
+    <div class="module-card core">
+      <div class="module-name">设备维度（在设备视图内）</div>
+      <div class="module-desc">
+        在设备视图右侧详情的"操作日志" Tab 中，展示这台设备的历史操作记录。快速了解这台设备被操作过什么。
+      </div>
+    </div>
+    <div class="module-card special">
+      <div class="module-name">全局维度（操作日志视图）</div>
+      <div class="module-desc">
+        顶部导航"操作日志"入口，展示所有设备的操作汇总。管理者可追溯谁在什么时间对哪台设备做了什么操作。
+      </div>
+    </div>
+  </div>
+
+  <h4>全局操作日志字段</h4>
+  <table class="table-sm">
+    <tr><th>操作时间</th><th>操作人</th><th>设备序列号</th><th>操作类型</th><th>操作内容</th><th>结果</th></tr>
+    <tr><td>2026-03-18 10:23</td><td>Edwin</td><td>NL-20260301-0001</td><td>OTA 升级</td><td>v1.0.2 &rarr; v1.0.3</td><td>✅ 成功</td></tr>
+    <tr><td>2026-03-18 09:41</td><td>Edwin</td><td>NL-20260228-0047</td><td>DLM 修改</td><td>32A &rarr; 40A</td><td>✅ 成功</td></tr>
+    <tr><td>2026-03-17 16:05</td><td>Admin</td><td>NL-20260215-0012</td><td>OTA 升级</td><td>v1.0.1 &rarr; v1.0.2</td><td>❌ 失败</td></tr>
+  </table>
+
+  <p>支持按<strong>操作人 / 设备序列号 / 操作类型 / 时间范围</strong>筛选，只读，不可删除。</p>
+</div>
+
+<div class="section" id="s-settings">
+  <div class="section-label">VIEW 5</div>
+  <h2>3.5 设置</h2>
+
+  <p>所有低频的管理操作集中在设置中，不占用主导航空间。</p>
+
+  <div class="two-col">
+    <div class="module-card core">
+      <div class="module-name">固件库</div>
+      <div class="module-desc">
+        上传 .bin 固件文件，维护版本列表。设备视图触发 OTA 升级时，从这里选择目标版本。<br><br>
+        <strong>字段：</strong>版本号、适用型号、文件大小、SHA256 校验值、上传时间、变更说明<br><br>
+        <strong>文件存储：</strong>上传到对象存储（Minio），数据库只存元数据和下载地址。设备 OTA 时云平台下发下载 URL，设备自行下载安装。
+      </div>
+    </div>
+    <div class="module-card special">
+      <div class="module-name">账号管理</div>
+      <div class="module-desc">
+        用户账户的维护。<br><br>
+        <strong>功能：</strong>账号列表、新增账号、禁用账号、重置密码
+      </div>
+    </div>
+  </div>
+
+  <div class="module-card" style="margin-top: 16px;">
+    <div class="module-name">设备台账</div>
+    <div class="module-desc">
+      出货时人工录入设备基础信息，作为设备档案的补充。设备自动注册时，台账信息为可选补录。<br><br>
+      <strong>字段：</strong>序列号、设备型号、生产批次、经销商、出货日期、位置坐标<br><br>
+      <strong>录入方式：</strong>手动录入 / Excel 批量导入
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- 四、关键交互设计                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+
+<div class="chapter-banner data" id="s-realtime">
+  <div class="chapter-kicker">四、关键交互设计</div>
+  <div class="chapter-title">几个需要特别说明的交互</div>
+</div>
+
+<div class="section">
+  <div class="section-label">REAL-TIME</div>
+  <h2>4.1 实时更新</h2>
+
+  <p>前端通过 <strong>WebSocket</strong> 接收后端推送，无需手动刷新页面。涉及实时更新的场景：</p>
+
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:25%">事件</th><th style="width:40%">前端响应</th><th>影响范围</th></tr>
+    <tr><td>1</td><td>设备状态变化（上线 / 离线）</td><td>总览数字卡片更新，地图点颜色同步，设备列表状态更新</td><td>总览 + 设备视图</td></tr>
+    <tr><td>2</td><td>告警状态变化（触发 / 处理）</td><td>导航栏角标实时增减，总览告警动态同步</td><td>全局导航 + 总览</td></tr>
+  </table>
+
+  <div class="highlight-blue">
+    其他数据（设备详情、家庭电力数据等）通过 HTTP 请求拉取，点击设备时加载一次，不持续推送。
+  </div>
+</div>
+
+<div class="section" id="s-ota">
+  <div class="section-label">OTA</div>
+  <h2>4.2 OTA 升级流程</h2>
+
+  <p>OTA 操作入口在设备视图右侧详情页内，不需要跳转到独立页面。流程如下：</p>
+
+  <div class="page-mockup">
+    <div class="page-mockup-title">OTA 升级 &mdash; 完整交互流程</div>
+<pre style="background:none; color:var(--text); font-size:13px; line-height:2.2; margin:0;">
+① 运维人员在设备视图右侧，点击固件版本旁的 [升级]
+
+② 弹出选择框，展示固件库中可用版本列表
+   ┌─────────────────────────────────────┐
+   │ 选择升级版本                          │
+   │ ● v1.0.3  2026-03-10  修复心跳异常   │
+   │ ○ v1.0.2  2026-02-20  DLM稳定性优化  │
+   │ [ 取消 ]              [ 确认升级 ]    │
+   └─────────────────────────────────────┘
+
+③ 确认后，右侧详情区显示升级进度（WebSocket 实时更新）
+   固件版本   v1.0.2 → v1.0.3
+   OTA 进度   [████████░░░░]  65%  正在下载固件...
+
+④ 升级完成
+   OTA 进度   [████████████]  100%  ✅ 升级成功
+   固件版本   自动更新为 v1.0.3
+
+⑤ 操作记录自动写入该设备的操作日志
+   2026-03-18 10:23  Edwin  OTA升级  v1.0.2→v1.0.3  成功
+</pre>
+  </div>
+
+  <!-- <div class="highlight-warn">
+    <strong>充电中保护：</strong>当任意下挂桩处于充电中状态时，升级按钮自动禁用，悬停提示"充电中，请稍后操作"。与 N3 Lite 本地逻辑保持一致。
+  </div> -->
+</div>
+
+<div class="section" id="s-jump">
+  <div class="section-label">NAVIGATION</div>
+  <h2>4.3 视图联动跳转</h2>
+
+  <p>各视图之间有明确的联动关系，减少用户在导航栏来回切换的次数：</p>
+
+  <pre><code>总览大屏
+  ├── 点击地图设备点 → 设备视图（自动展开该设备详情）
+  ├── 点击数字卡片（如"故障 3"）→ 设备视图（自动筛选对应状态）
+  └── 点击告警动态条目 → 设备视图（自动展开该设备详情）
+
+告警中心
+  └── 点击告警条目的设备序列号 → 设备视图（自动展开该设备详情）
+
+设备视图（左侧列表）
+  └── 支持直接搜索序列号快速定位设备</code></pre>
+
+  <div class="highlight">
+    <strong>核心设计思路：</strong>用户不需要记住"这台设备在哪个页面能找到"。无论从总览、告警还是操作日志，点击设备相关信息都会直接定位到设备视图并展开该设备的详情。
+  </div>
+</div>
+
+
+</div><!-- /container -->
+
+<div class="doc-footer">
+  <p>&copy; 2026 旭衡电子(深圳) AlwaysControl Technology. All rights reserved.</p>
+  <p>N3 Lite 智能充电云平台 &mdash; 前端设计说明 v2.0</p>
+  <p style="margin-top: 8px; font-size: 12px; color: #94a3b8;">文档生成日期：2026-03</p>
+</div>
+
+</body>
+</html>

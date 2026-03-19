@@ -1,5 +1,7 @@
 package com.echarge.protocol.transport;
 
+import com.echarge.common.event.DeviceEvent;
+import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.core.dispatcher.InboundMessage;
 import com.echarge.protocol.core.dispatcher.MessageDispatcher;
 import com.echarge.protocol.core.dispatcher.OutboundMessage;
@@ -10,6 +12,7 @@ import com.echarge.protocol.ocpp.common.PendingCallManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -19,14 +22,24 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
 
     private final SessionManager sessionManager;
     private final Map<String, MessageDispatcher> dispatchers;
+    private final DeviceEventPublisher eventPublisher;
 
-    public ProtocolRouter(SessionManager sessionManager, Map<String, MessageDispatcher> dispatchers) {
+    public ProtocolRouter(SessionManager sessionManager, Map<String, MessageDispatcher> dispatchers, DeviceEventPublisher eventPublisher) {
         this.sessionManager = sessionManager;
         this.dispatchers = dispatchers;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        // 心跳超时检测：180秒未收到任何消息，关闭连接
+        if (evt instanceof IdleStateEvent) {
+            Session session = sessionManager.getByChannel(ctx.channel());
+            String cpId = session != null ? session.getChargePointId() : "unknown";
+            log.warn("Device heartbeat timeout, closing connection: chargePointId={}", cpId);
+            ctx.close();
+            return;
+        }
         if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete handshake) {
             String uri = handshake.requestUri();
             String subProtocol = handshake.selectedSubprotocol();
@@ -87,8 +100,27 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        sessionManager.unregister(ctx.channel());
+        handleDisconnect(ctx);
         ctx.fireChannelInactive();
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) {
+        handleDisconnect(ctx);
+    }
+
+    private void handleDisconnect(ChannelHandlerContext ctx) {
+        Session session = sessionManager.getByChannel(ctx.channel());
+        if (session != null) {
+            log.info("Device disconnected: chargePointId={}", session.getChargePointId());
+            DeviceEvent event = new DeviceEvent(
+                    DeviceEvent.DEVICE_OFFLINE,
+                    session.getChargePointId(),
+                    null
+            );
+            eventPublisher.publish(event);
+            sessionManager.unregister(ctx.channel());
+        }
     }
 
     @Override
