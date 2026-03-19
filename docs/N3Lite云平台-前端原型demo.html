@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 Lite 云平台 — 前端原型 Demo</title>
+<style>
+:root {
+  --primary: #1a3a5c;
+  --accent: #0e7490;
+  --accent-light: #e0f7fa;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #0d1520;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; height: 100vh; display: flex; flex-direction: column; }
+
+/* NAV */
+.nav { background: var(--primary); color: white; padding: 0 28px; display: flex; align-items: center; height: 52px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.nav-logo { font-weight: 700; font-size: 16px; letter-spacing: 0.3px; flex-shrink: 0; }
+.nav-items { display: flex; flex: 1; justify-content: center; align-items: center; gap: 4px; }
+.nav-item { padding: 6px 28px; border-radius: 6px; cursor: pointer; font-size: 13px; opacity: 0.75; transition: all 0.15s; position: relative; user-select: none; }
+.nav-item:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+.nav-item.active { opacity: 1; background: rgba(255,255,255,0.18); font-weight: 600; }
+.nav-badge { background: #ef4444; color: white; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 1px 5px; margin-left: 4px; }
+.nav-user { font-size: 13px; opacity: 0.8; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* CONTENT */
+.content { flex: 1; overflow: hidden; }
+.view { display: none; height: 100%; overflow: auto; }
+.view.active { display: flex; flex-direction: column; }
+
+/* ===================== 总览 ===================== */
+#view-overview { padding: 20px 24px; gap: 16px; }
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stat-card { border-radius: 12px; padding: 20px 24px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; border: 1px solid transparent; }
+.stat-card:hover { transform: translateY(-3px); }
+.stat-card::after { content: ''; position: absolute; top: -30%; right: -10%; width: 100px; height: 100px; border-radius: 50%; opacity: 0.12; transition: opacity 0.2s; }
+.stat-card:hover::after { opacity: 0.22; }
+.stat-card.total { background: linear-gradient(135deg, #0d2137, #0e3a52); border-color: rgba(14,116,144,0.4); box-shadow: 0 4px 16px rgba(14,116,144,0.15); }
+.stat-card.total::after { background: #0e7490; }
+.stat-card.total:hover { box-shadow: 0 8px 28px rgba(14,116,144,0.3); }
+.stat-card.green { background: linear-gradient(135deg, #0a2318, #0d3320); border-color: rgba(22,163,74,0.4); box-shadow: 0 4px 16px rgba(22,163,74,0.12); }
+.stat-card.green::after { background: #16a34a; }
+.stat-card.green:hover { box-shadow: 0 8px 28px rgba(22,163,74,0.25); }
+.stat-card.gray { background: linear-gradient(135deg, #141e2e, #1a2a3e); border-color: rgba(148,163,184,0.25); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.stat-card.gray::after { background: #94a3b8; }
+.stat-card.gray:hover { box-shadow: 0 8px 28px rgba(148,163,184,0.2); }
+.stat-card.red { background: linear-gradient(135deg, #1f0d0d, #2d1010); border-color: rgba(220,38,38,0.4); box-shadow: 0 4px 16px rgba(220,38,38,0.12); }
+.stat-card.red::after { background: #dc2626; }
+.stat-card.red:hover { box-shadow: 0 8px 28px rgba(220,38,38,0.25); }
+.stat-card .num { font-size: 38px; font-weight: 800; line-height: 1; }
+.stat-card .lbl { font-size: 12px; margin-top: 8px; opacity: 0.6; }
+.stat-card.total .num { color: #38bcd4; }
+.stat-card.total .lbl { color: #38bcd4; }
+.stat-card.green .num { color: #4ade80; }
+.stat-card.green .lbl { color: #4ade80; }
+.stat-card.gray .num { color: #94a3b8; }
+.stat-card.gray .lbl { color: #94a3b8; }
+.stat-card.red .num { color: #f87171; }
+.stat-card.red .lbl { color: #f87171; }
+
+/* 状态栏 */
+.overview-statusbar { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #64748b; margin-bottom: -4px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 5px; animation: livePulse 1.8s ease-in-out infinite; }
+@keyframes livePulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(34,197,94,0); } }
+
+/* 地图 */
+.map-area { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px; position: relative; overflow: hidden; min-height: 320px; }
+.map-bg { width: 100%; height: 100%; background: #0d1b2e; display: flex; align-items: center; justify-content: center; position: relative; }
+.map-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(14,116,144,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(14,116,144,0.12) 1px, transparent 1px); background-size: 40px 40px; }
+.map-placeholder { color: #334155; font-size: 13px; text-align: center; z-index: 1; }
+.map-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; cursor: pointer; transform: translate(-50%, -50%); transition: transform 0.15s; }
+.map-dot:hover { transform: translate(-50%, -50%) scale(1.8); z-index: 5; }
+.map-dot.online { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+.map-dot.offline { background: #475569; box-shadow: none; }
+.map-dot.fault { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.map-dot.online::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid #22c55e; animation: dotRing 2s ease-out infinite; opacity: 0; }
+.map-dot.fault::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid #ef4444; animation: dotRing 1.5s ease-out infinite; opacity: 0; }
+@keyframes dotRing { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
+.map-tooltip { position: absolute; background: rgba(15,23,42,0.95); color: #e2e8f0; font-size: 12px; padding: 6px 10px; border-radius: 6px; pointer-events: none; white-space: nowrap; z-index: 10; display: none; border: 1px solid rgba(14,116,144,0.4); }
+
+/* 告警浮窗 */
+.alert-float { position: absolute; bottom: 16px; right: 16px; width: 268px; background: rgba(13,27,46,0.92); border: 1px solid rgba(14,116,144,0.35); border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); overflow: hidden; backdrop-filter: blur(6px); }
+.alert-float-header { padding: 10px 14px; border-bottom: 1px solid rgba(14,116,144,0.25); font-size: 12px; font-weight: 700; color: #94d4e0; display: flex; align-items: center; gap: 6px; }
+.alert-float-item { padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; display: flex; align-items: center; gap: 8px; color: #cbd5e1; }
+.alert-float-item:last-child { border-bottom: none; }
+
+/* ===================== 设备 ===================== */
+#view-device { flex-direction: row; overflow: hidden; }
+.device-left { width: 300px; flex-shrink: 0; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.device-left-header { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.search-box { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; outline: none; color: var(--text); }
+.search-box:focus { border-color: var(--accent); }
+.filter-bar { display: flex; gap: 4px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.filter-btn { font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: white; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+.device-list { flex: 1; overflow-y: auto; }
+.device-list-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
+.device-page-btn { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 5px; background: white; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.device-page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.device-page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.device-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.device-page-info { font-size: 11px; color: var(--muted); }
+.device-item { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #f8fafc; transition: background 0.1s; }
+.device-item:hover { background: #f8fafc; }
+.device-item.active { background: var(--accent-light); }
+.device-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.device-dot.online { background: var(--success); }
+.device-dot.offline { background: #94a3b8; }
+.device-dot.fault { background: var(--danger); }
+.device-dot.unactivated { background: transparent; border: 2px solid #94a3b8; width: 9px; height: 9px; }
+.device-item-sn { font-weight: 600; font-size: 13px; }
+.device-item-sub { font-size: 11px; color: var(--muted); }
+.device-separator { border-top: 1px dashed var(--border); margin: 4px 14px; }
+.device-right { flex: 1; overflow-y: auto; padding: 24px 28px; background: white; }
+
+/* detail */
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.detail-sn { font-size: 18px; font-weight: 700; color: var(--primary); }
+.detail-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.detail-section { margin-bottom: 20px; }
+.detail-section-title { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; }
+.detail-row .lbl { color: var(--muted); }
+.detail-row .val { color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.btn-link { font-size: 12px; color: var(--accent); cursor: pointer; border: none; background: none; padding: 0; }
+.btn-link:hover { text-decoration: underline; }
+.charger-row { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 7px 10px; background: #f8fafc; border-radius: 7px; margin: 4px 0; }
+.charger-row .c-sn { font-weight: 600; flex: 1; }
+.charger-row .c-amp { color: var(--muted); font-size: 12px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.online { background: #dcfce7; color: #166534; }
+.badge.offline { background: #f1f5f9; color: #64748b; }
+.badge.fault { background: #fef2f2; color: #dc2626; }
+.badge.unactivated { background: #fef9c3; color: #a16207; }
+.badge.charging { background: #dbeafe; color: #1d4ed8; }
+.detail-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.detail-tab { padding: 6px 14px; font-size: 12px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.ledger-banner { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #92400e; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+.empty-detail { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); gap: 8px; }
+
+/* ===================== 告警 ===================== */
+#view-alert { padding: 20px 24px; gap: 16px; overflow: auto; background: #111c2d; }
+.page-header { display: flex; align-items: center; justify-content: space-between; }
+.page-title { font-size: 18px; font-weight: 700; color: #e2e8f0; }
+.filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.select-box { border: 1px solid #1e3a52; border-radius: 6px; padding: 6px 10px; font-size: 13px; color: #94a3b8; background: #0d1a2d; outline: none; cursor: pointer; }
+.table-card { background: #111c2d; border: 1px solid #1e3a52; border-radius: 10px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: #0d1a2d; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #4a7a9b; border-bottom: 1px solid #1e3a52; letter-spacing: 0.3px; }
+tbody td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #172233; color: #cbd5e1; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #162030; }
+.level-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.level-critical { background: #dc2626; }
+.level-important { background: #f97316; }
+.level-normal { background: #3b82f6; }
+.level-info { background: #94a3b8; }
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 12px 16px; border-top: 1px solid #1e3a52; }
+.page-btn { width: 30px; height: 30px; border: 1px solid #1e3a52; border-radius: 6px; background: #0d1a2d; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; color: #94a3b8; transition: all 0.15s; }
+.page-btn:hover { border-color: var(--accent); color: #38bcd4; }
+.page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-info { font-size: 12px; color: #4a7a9b; margin-right: 4px; }
+.btn-sm { padding: 4px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; border: 1px solid #1e3a52; background: #0d1a2d; color: #94a3b8; transition: all 0.15s; }
+.btn-sm:hover { border-color: var(--accent); color: #38bcd4; }
+.btn-sm.danger { color: #f87171; border-color: #7f1d1d; }
+
+/* ===================== 操作日志 ===================== */
+#view-oplog { padding: 20px 24px; gap: 16px; overflow: auto; background: #111c2d; }
+.result-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+.result-ok { color: var(--success); }
+.result-fail { color: var(--danger); }
+
+/* ===================== 设置 ===================== */
+#view-settings { padding: 20px 24px; gap: 0; overflow: auto; background: #111c2d; }
+.settings-tabs { display: flex; gap: 0; border-bottom: 1px solid #1e3a52; margin-bottom: 20px; }
+.settings-tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; transition: color 0.15s; }
+.settings-tab:hover { color: var(--accent); }
+.settings-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.settings-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.btn-primary { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; background: var(--accent); color: white; font-weight: 600; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.9; }
+
+/* OTA modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: white; border-radius: 12px; padding: 28px; width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal h3 { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+.firmware-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; margin: 6px 0; cursor: pointer; transition: all 0.15s; }
+.firmware-option:hover { border-color: var(--accent); background: var(--accent-light); }
+.firmware-option.selected { border-color: var(--accent); background: var(--accent-light); }
+.firmware-option input[type=radio] { accent-color: var(--accent); }
+.fw-name { font-weight: 600; font-size: 13px; }
+.fw-meta { font-size: 11px; color: var(--muted); }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text); }
+
+/* progress */
+.ota-progress { margin-top: 12px; }
+.progress-bar-bg { background: #e2e8f0; border-radius: 999px; height: 8px; overflow: hidden; }
+.progress-bar-fill { background: var(--accent); height: 100%; border-radius: 999px; transition: width 0.3s; }
+.progress-text { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
+
+/* tooltip */
+.tooltip { position: fixed; background: rgba(15,23,42,0.88); color: white; font-size: 12px; padding: 6px 10px; border-radius: 6px; pointer-events: none; z-index: 200; display: none; white-space: nowrap; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">⚡ N3 Lite</div>
+  <div class="nav-items">
+    <div class="nav-item active" onclick="switchView('overview')">总览</div>
+    <div class="nav-item" onclick="switchView('device')">设备</div>
+    <div class="nav-item" onclick="switchView('alert')">告警<span class="nav-badge" id="alert-badge">5</span></div>
+    <div class="nav-item" onclick="switchView('oplog')">操作日志</div>
+    <div class="nav-item" onclick="switchView('settings')">设置</div>
+  </div>
+  <div class="nav-user">👤 Edwin</div>
+</nav>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ══════════ 总览 ══════════ -->
+  <div class="view active" id="view-overview">
+    <div class="overview-statusbar">
+      <span><span class="live-dot"></span>实时监控中</span>
+      <span id="overview-clock"></span>
+      <span style="margin-left:auto;">数据每30秒自动刷新</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card total" onclick="switchToDeviceFilter('all')">
+        <div class="num" id="stat-total">0</div>
+        <div class="lbl">设备总数</div>
+      </div>
+      <div class="stat-card green" onclick="switchToDeviceFilter('online')">
+        <div class="num" id="stat-online">0</div>
+        <div class="lbl">在线</div>
+      </div>
+      <div class="stat-card gray" onclick="switchToDeviceFilter('offline')">
+        <div class="num" id="stat-offline">0</div>
+        <div class="lbl">离线</div>
+      </div>
+      <div class="stat-card red" onclick="switchToDeviceFilter('fault')">
+        <div class="num" id="stat-fault">0</div>
+        <div class="lbl">故障</div>
+      </div>
+    </div>
+
+    <div class="map-area">
+      <div class="map-bg" id="map-container">
+        <div class="map-grid"></div>
+        <div class="map-placeholder">
+          <div style="font-size:28px;margin-bottom:6px;opacity:0.3;">🗺️</div>
+          <div style="opacity:0.3;">设备分布地图</div>
+          <div style="margin-top:4px;font-size:11px;opacity:0.25;">Leaflet + OpenStreetMap</div>
+        </div>
+      </div>
+      <div class="map-tooltip" id="map-tooltip"></div>
+      <div class="alert-float">
+        <div class="alert-float-header">🔔 最近告警（未处理）</div>
+        <div id="alert-float-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 设备 ══════════ -->
+  <div class="view" id="view-device">
+    <div class="device-left">
+      <div class="device-left-header">
+        <input class="search-box" type="text" placeholder="🔍  搜索序列号..." id="device-search" oninput="filterDevices()">
+      </div>
+      <div class="filter-bar" id="device-filter-bar">
+        <span class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</span>
+        <span class="filter-btn" data-filter="online" onclick="setFilter('online')">在线</span>
+        <span class="filter-btn" data-filter="offline" onclick="setFilter('offline')">离线</span>
+        <span class="filter-btn" data-filter="fault" onclick="setFilter('fault')">故障</span>
+        <span class="filter-btn" data-filter="unactivated" onclick="setFilter('unactivated')">未激活</span>
+      </div>
+      <div class="device-list" id="device-list"></div>
+      <div class="device-list-pagination" id="device-list-pagination"></div>
+    </div>
+    <div class="device-right" id="device-right">
+      <div class="empty-detail">
+        <div style="font-size:40px;">📡</div>
+        <div style="font-weight:600; color:var(--primary);">选择一台设备查看详情</div>
+        <div style="font-size:12px;">从左侧列表点击设备</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 告警 ══════════ -->
+  <div class="view" id="view-alert">
+    <div class="page-header">
+      <div class="page-title">告警中心</div>
+      <div class="filter-row">
+        <select class="select-box" id="alert-level-filter" onchange="renderAlertTable()">
+          <option value="all">全部级别</option>
+          <option value="critical">严重</option>
+          <option value="important">重要</option>
+          <option value="normal">一般</option>
+          <option value="info">信息</option>
+        </select>
+        <select class="select-box" id="alert-status-filter" onchange="renderAlertTable()">
+          <option value="all">全部状态</option>
+          <option value="active">未处理</option>
+          <option value="resolved">已处理</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>级别</th>
+            <th>告警内容</th>
+            <th>设备序列号</th>
+            <th>触发时间</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="alert-tbody"></tbody>
+      </table>
+      <div class="pagination" id="alert-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ 操作日志 ══════════ -->
+  <div class="view" id="view-oplog">
+    <div class="page-header">
+      <div class="page-title">操作日志</div>
+      <div class="filter-row">
+        <select class="select-box" id="oplog-type-filter" onchange="renderOplogTable()">
+          <option value="all">全部操作</option>
+          <option value="OTA升级">OTA 升级</option>
+          <option value="DLM修改">DLM 修改</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>操作时间</th>
+            <th>操作人</th>
+            <th>设备序列号</th>
+            <th>操作类型</th>
+            <th>操作内容</th>
+            <th>结果</th>
+          </tr>
+        </thead>
+        <tbody id="oplog-tbody"></tbody>
+      </table>
+      <div class="pagination" id="oplog-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ 设置 ══════════ -->
+  <div class="view" id="view-settings">
+    <div class="settings-tabs">
+      <div class="settings-tab active" onclick="switchSettingsTab('firmware')">固件库</div>
+      <div class="settings-tab" onclick="switchSettingsTab('accounts')">账号管理</div>
+      <div class="settings-tab" onclick="switchSettingsTab('ledger')">设备台账</div>
+    </div>
+
+    <!-- 固件库 -->
+    <div class="settings-panel active" id="settings-firmware">
+      <div class="settings-toolbar">
+        <button class="btn-primary">+ 上传固件</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr><th>版本号</th><th>适用型号</th><th>文件大小</th><th>变更说明</th><th>上传时间</th><th>操作</th></tr>
+          </thead>
+          <tbody id="firmware-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 账号管理 -->
+    <div class="settings-panel" id="settings-accounts">
+      <div class="settings-toolbar">
+        <button class="btn-primary">+ 新增账号</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr><th>姓名</th><th>账号</th><th>状态</th><th>最后登录</th><th>操作</th></tr>
+          </thead>
+          <tbody id="accounts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 设备台账 -->
+    <div class="settings-panel" id="settings-ledger">
+      <div class="settings-toolbar">
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary">+ 新增台账</button>
+          <button class="btn-sm">📥 Excel 导入</button>
+          <button class="btn-sm">📤 导出</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr><th>序列号</th><th>设备型号</th><th>生产批次</th><th>经销商</th><th>出货日期</th><th>位置</th><th>操作</th></tr>
+          </thead>
+          <tbody id="ledger-tbody"></tbody>
+        </table>
+        <div class="pagination" id="ledger-pagination"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- OTA Modal -->
+<div class="modal-overlay" id="ota-modal">
+  <div class="modal">
+    <h3>选择升级版本</h3>
+    <div id="ota-firmware-list"></div>
+    <div class="ota-progress" id="ota-progress" style="display:none;">
+      <div style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:8px;">OTA 升级中...</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="ota-bar" style="width:0%"></div></div>
+      <div class="progress-text"><span id="ota-status-text">正在连接设备...</span><span id="ota-pct">0%</span></div>
+    </div>
+    <div class="modal-footer" id="ota-modal-footer">
+      <button class="btn-cancel" onclick="closeOtaModal()">取消</button>
+      <button class="btn-primary" onclick="startOta()">确认升级</button>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ══════════════════════════════════════════
+// MOCK DATA
+// ══════════════════════════════════════════
+
+const devices = [
+  { sn: 'NL-20260301-0001', status: 'online', dealer: '深圳某某电子', shipDate: '2026-03-01', firmware: 'v1.0.2', lastHb: '2分钟前', current: 30.8, voltage: 230, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260301-0001', status: 'charging', amp: 11 }, { sn: 'AT-20260301-0002', status: 'online', amp: 0 } ], mapPos: { x: 72, y: 45 } },
+  { sn: 'NL-20260301-0002', status: 'online', dealer: '广州智充科技', shipDate: '2026-03-01', firmware: 'v1.0.3', lastHb: '5分钟前', current: 18.2, voltage: 228, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260301-0003', status: 'online', amp: 0 } ], mapPos: { x: 68, y: 48 } },
+  { sn: 'NL-20260305-0003', status: 'online', dealer: '北京绿能充电', shipDate: '2026-03-05', firmware: 'v1.0.3', lastHb: '1分钟前', current: 25.4, voltage: 222, threshold: 40, hasLedger: true, connectors: [ { sn: 'AT-20260305-0001', status: 'charging', amp: 16 }, { sn: 'AT-20260305-0002', status: 'online', amp: 0 } ], mapPos: { x: 65, y: 30 } },
+  { sn: 'NL-20260305-0004', status: 'online', dealer: '上海充点未来', shipDate: '2026-03-05', firmware: 'v1.0.2', lastHb: '8分钟前', current: 12.0, voltage: 232, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260305-0003', status: 'online', amp: 0 } ], mapPos: { x: 70, y: 40 } },
+  { sn: 'NL-20260308-0005', status: 'online', dealer: '成都西部充电', shipDate: '2026-03-08', firmware: 'v1.0.3', lastHb: '3分钟前', current: 28.9, voltage: 226, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260308-0001', status: 'charging', amp: 13 } ], mapPos: { x: 58, y: 42 } },
+  { sn: 'NL-20260308-0006', status: 'online', dealer: '杭州电桩驿站', shipDate: '2026-03-08', firmware: 'v1.0.3', lastHb: '12分钟前', current: 8.5, voltage: 231, threshold: 25, hasLedger: true, connectors: [ { sn: 'AT-20260308-0002', status: 'online', amp: 0 }, { sn: 'AT-20260308-0003', status: 'online', amp: 0 } ], mapPos: { x: 71, y: 39 } },
+  { sn: 'NL-20260310-0007', status: 'online', dealer: '武汉充能网络', shipDate: '2026-03-10', firmware: 'v1.0.2', lastHb: '6分钟前', current: 20.1, voltage: 229, threshold: 32, hasLedger: false, connectors: [ { sn: 'AT-20260310-0001', status: 'charging', amp: 10 } ], mapPos: { x: 63, y: 40 } },
+  { sn: 'NL-20260310-0008', status: 'online', dealer: '西安新能源服务', shipDate: '2026-03-10', firmware: 'v1.0.3', lastHb: '4分钟前', current: 15.6, voltage: 227, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260310-0002', status: 'online', amp: 0 } ], mapPos: { x: 57, y: 37 } },
+  { sn: 'NL-20260228-0009', status: 'offline', dealer: '深圳某某电子', shipDate: '2026-02-28', firmware: 'v1.0.1', lastHb: '3小时前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: { x: 73, y: 47 } },
+  { sn: 'NL-20260228-0010', status: 'offline', dealer: '广州智充科技', shipDate: '2026-02-28', firmware: 'v1.0.2', lastHb: '1天前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: { x: 67, y: 50 } },
+  { sn: 'NL-20260220-0011', status: 'offline', dealer: '北京绿能充电', shipDate: '2026-02-20', firmware: 'v1.0.1', lastHb: '2天前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: { x: 66, y: 31 } },
+  { sn: 'NL-20260215-0012', status: 'fault', dealer: '上海充点未来', shipDate: '2026-02-15', firmware: 'v1.0.2', lastHb: '30分钟前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [ { sn: 'AT-20260215-0001', status: 'fault', amp: 0 } ], mapPos: { x: 71, y: 41 } },
+  { sn: 'NL-20260218-0013', status: 'fault', dealer: '成都西部充电', shipDate: '2026-02-18', firmware: 'v1.0.1', lastHb: '1小时前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: { x: 59, y: 43 } },
+  { sn: 'NL-20260312-0014', status: 'offline', dealer: '杭州电桩驿站', shipDate: '2026-03-12', firmware: 'v1.0.3', lastHb: '5小时前', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: { x: 72, y: 38 } },
+  { sn: 'NL-20260315-0015', status: 'unactivated', dealer: '深圳某某电子', shipDate: '2026-03-15', firmware: '', lastHb: '', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: null },
+  { sn: 'NL-20260315-0016', status: 'unactivated', dealer: '广州智充科技', shipDate: '2026-03-15', firmware: '', lastHb: '', current: 0, voltage: 0, threshold: 32, hasLedger: true, connectors: [], mapPos: null },
+];
+
+const alerts = [
+  { id: 1, level: 'critical', content: '接地故障检测', sn: 'NL-20260215-0012', time: '2026-03-18 09:12', status: 'active' },
+  { id: 2, level: 'critical', content: '过温保护触发 (85°C)', sn: 'NL-20260218-0013', time: '2026-03-18 08:55', status: 'active' },
+  { id: 3, level: 'important', content: '过流告警 (38A)', sn: 'NL-20260301-0001', time: '2026-03-18 07:30', status: 'active' },
+  { id: 4, level: 'important', content: '过压告警 (255V)', sn: 'NL-20260305-0004', time: '2026-03-17 22:14', status: 'active' },
+  { id: 5, level: 'normal', content: '设备离线', sn: 'NL-20260220-0011', time: '2026-03-17 18:00', status: 'active' },
+  { id: 6, level: 'normal', content: '设备离线', sn: 'NL-20260228-0010', time: '2026-03-17 10:23', status: 'resolved' },
+  { id: 7, level: 'important', content: '欠压告警 (195V)', sn: 'NL-20260308-0006', time: '2026-03-17 09:45', status: 'resolved' },
+  { id: 8, level: 'normal', content: 'DLM 限流频繁触发', sn: 'NL-20260308-0005', time: '2026-03-16 20:11', status: 'resolved' },
+  { id: 9, level: 'info', content: 'OTA 升级成功 v1.0.2→v1.0.3', sn: 'NL-20260305-0003', time: '2026-03-16 14:30', status: 'resolved' },
+  { id: 10, level: 'info', content: '设备首次激活', sn: 'NL-20260310-0008', time: '2026-03-15 11:05', status: 'resolved' },
+  { id: 11, level: 'normal', content: '设备离线', sn: 'NL-20260228-0009', time: '2026-03-15 09:20', status: 'resolved' },
+  { id: 12, level: 'important', content: '过流告警 (41A)', sn: 'NL-20260301-0002', time: '2026-03-14 19:33', status: 'resolved' },
+];
+
+const oplogs = [
+  { time: '2026-03-18 10:23', user: 'Edwin', sn: 'NL-20260301-0001', type: 'OTA升级', content: 'v1.0.2 → v1.0.3', result: 'ok' },
+  { time: '2026-03-18 09:41', user: 'Edwin', sn: 'NL-20260228-0009', type: 'DLM修改', content: '32A → 40A', result: 'ok' },
+  { time: '2026-03-17 16:05', user: 'Admin', sn: 'NL-20260215-0012', type: 'OTA升级', content: 'v1.0.1 → v1.0.2', result: 'fail' },
+  { time: '2026-03-17 14:22', user: 'Edwin', sn: 'NL-20260305-0003', type: 'OTA升级', content: 'v1.0.2 → v1.0.3', result: 'ok' },
+  { time: '2026-03-17 11:10', user: 'Admin', sn: 'NL-20260308-0005', type: 'DLM修改', content: '25A → 32A', result: 'ok' },
+  { time: '2026-03-16 17:48', user: 'Edwin', sn: 'NL-20260301-0002', type: 'OTA升级', content: 'v1.0.2 → v1.0.3', result: 'ok' },
+  { time: '2026-03-16 14:30', user: 'Edwin', sn: 'NL-20260305-0003', type: 'OTA升级', content: 'v1.0.1 → v1.0.2', result: 'ok' },
+  { time: '2026-03-15 16:20', user: 'Admin', sn: 'NL-20260310-0007', type: 'DLM修改', content: '32A → 25A', result: 'ok' },
+  { time: '2026-03-15 10:05', user: 'Edwin', sn: 'NL-20260308-0006', type: 'OTA升级', content: 'v1.0.2 → v1.0.3', result: 'ok' },
+  { time: '2026-03-14 15:33', user: 'Admin', sn: 'NL-20260228-0010', type: 'DLM修改', content: '40A → 32A', result: 'ok' },
+  { time: '2026-03-14 09:12', user: 'Edwin', sn: 'NL-20260305-0004', type: 'OTA升级', content: 'v1.0.1 → v1.0.2', result: 'fail' },
+  { time: '2026-03-13 18:44', user: 'Admin', sn: 'NL-20260301-0001', type: 'DLM修改', content: '40A → 32A', result: 'ok' },
+  { time: '2026-03-13 11:28', user: 'Edwin', sn: 'NL-20260310-0008', type: 'OTA升级', content: 'v1.0.2 → v1.0.3', result: 'ok' },
+];
+
+const firmwares = [
+  { ver: 'v1.0.3', model: 'N3 Lite', size: '1.2 MB', sha: 'a3f2...8c1d', time: '2026-03-10', note: '修复心跳异常，优化 DLM 响应速度' },
+  { ver: 'v1.0.2', model: 'N3 Lite', size: '1.1 MB', sha: 'b7e4...2a9f', time: '2026-02-20', note: 'DLM 稳定性优化' },
+  { ver: 'v1.0.1', model: 'N3 Lite', size: '1.0 MB', sha: 'c5d8...7b3e', time: '2026-01-15', note: '首发版本' },
+];
+
+const accounts = [
+  { name: 'Edwin', account: 'edwin@alwayscontrol.com', status: 'active', lastLogin: '2026-03-18 10:23' },
+  { name: 'Admin', account: 'admin@alwayscontrol.com', status: 'active', lastLogin: '2026-03-17 16:05' },
+  { name: '李明', account: 'liming@alwayscontrol.com', status: 'active', lastLogin: '2026-03-15 09:30' },
+  { name: '张伟', account: 'zhangwei@alwayscontrol.com', status: 'disabled', lastLogin: '2026-02-28 14:20' },
+];
+
+const ledger = [
+  { sn: 'NL-20260301-0001', model: 'N3 Lite', batch: '2026-Q1-001', dealer: '深圳某某电子', shipDate: '2026-03-01', location: '广东省深圳市' },
+  { sn: 'NL-20260301-0002', model: 'N3 Lite', batch: '2026-Q1-001', dealer: '广州智充科技', shipDate: '2026-03-01', location: '广东省广州市' },
+  { sn: 'NL-20260305-0003', model: 'N3 Lite', batch: '2026-Q1-002', dealer: '北京绿能充电', shipDate: '2026-03-05', location: '北京市朝阳区' },
+  { sn: 'NL-20260305-0004', model: 'N3 Lite', batch: '2026-Q1-002', dealer: '上海充点未来', shipDate: '2026-03-05', location: '上海市浦东新区' },
+  { sn: 'NL-20260308-0005', model: 'N3 Lite', batch: '2026-Q1-003', dealer: '成都西部充电', shipDate: '2026-03-08', location: '四川省成都市' },
+  { sn: 'NL-20260308-0006', model: 'N3 Lite', batch: '2026-Q1-003', dealer: '杭州电桩驿站', shipDate: '2026-03-08', location: '浙江省杭州市' },
+  { sn: 'NL-20260310-0008', model: 'N3 Lite', batch: '2026-Q1-004', dealer: '西安新能源服务', shipDate: '2026-03-10', location: '陕西省西安市' },
+  { sn: 'NL-20260228-0009', model: 'N3 Lite', batch: '2026-Q1-001', dealer: '深圳某某电子', shipDate: '2026-02-28', location: '广东省深圳市' },
+  { sn: 'NL-20260228-0010', model: 'N3 Lite', batch: '2026-Q1-001', dealer: '广州智充科技', shipDate: '2026-02-28', location: '广东省广州市' },
+  { sn: 'NL-20260220-0011', model: 'N3 Lite', batch: '2026-Q1-000', dealer: '北京绿能充电', shipDate: '2026-02-20', location: '北京市海淀区' },
+  { sn: 'NL-20260215-0012', model: 'N3 Lite', batch: '2025-Q4-012', dealer: '上海充点未来', shipDate: '2026-02-15', location: '上海市静安区' },
+  { sn: 'NL-20260218-0013', model: 'N3 Lite', batch: '2025-Q4-012', dealer: '成都西部充电', shipDate: '2026-02-18', location: '四川省成都市' },
+  { sn: 'NL-20260312-0014', model: 'N3 Lite', batch: '2026-Q1-004', dealer: '杭州电桩驿站', shipDate: '2026-03-12', location: '浙江省宁波市' },
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentDeviceFilter = 'all';
+let currentDeviceSn = null;
+let deviceListPage = 1;
+const deviceListPageSize = 8;
+let currentDetailTab = 'alert';
+let alertPage = 1; const alertPageSize = 5;
+let oplogPage = 1; const oplogPageSize = 5;
+let ledgerPage = 1; const ledgerPageSize = 5;
+let selectedFirmware = 'v1.0.3';
+let otaTargetSn = null;
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function switchView(name) {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    const map = ['overview','device','alert','oplog','settings'];
+    el.classList.toggle('active', map[i] === name);
+  });
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+
+function switchToDeviceFilter(filter) {
+  switchView('device');
+  setFilter(filter);
+}
+
+// ══════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════
+function countUp(id, target, duration) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(ease * target);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function updateClock() {
+  const now = new Date();
+  const str = now.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+  document.getElementById('overview-clock').textContent = str;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function initOverview() {
+  const active = devices.filter(d => ['online','offline','fault'].includes(d.status));
+  const online = devices.filter(d => d.status === 'online').length;
+  const offline = devices.filter(d => d.status === 'offline').length;
+  const fault = devices.filter(d => d.status === 'fault').length;
+  countUp('stat-total', active.length, 1000);
+  countUp('stat-online', online, 1000);
+  countUp('stat-offline', offline, 1200);
+  countUp('stat-fault', fault, 800);
+
+  // map dots
+  const container = document.getElementById('map-container');
+  devices.filter(d => d.mapPos).forEach(d => {
+    const dot = document.createElement('div');
+    dot.className = `map-dot ${d.status}`;
+    dot.style.left = d.mapPos.x + '%';
+    dot.style.top = d.mapPos.y + '%';
+    dot.dataset.sn = d.sn;
+    dot.dataset.status = d.status;
+    dot.addEventListener('mouseenter', e => showTooltip(e, `${d.sn}  ·  ${statusLabel(d.status)}`));
+    dot.addEventListener('mouseleave', hideTooltip);
+    dot.addEventListener('click', () => { switchView('device'); setFilter('all'); selectDevice(d.sn); });
+    container.appendChild(dot);
+  });
+
+  // alert float
+  const active5 = alerts.filter(a => a.status === 'active').slice(0, 4);
+  const list = document.getElementById('alert-float-list');
+  list.innerHTML = active5.map(a => `
+    <div class="alert-float-item">
+      <span class="level-dot level-${a.level}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${levelColor(a.level)};flex-shrink:0;"></span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.content}</span>
+      <span style="color:var(--muted);margin-left:4px;font-size:11px;">${a.sn.slice(-4)}</span>
+    </div>`).join('');
+
+  // alert badge
+  const unhandled = alerts.filter(a => a.status === 'active').length;
+  document.getElementById('alert-badge').textContent = unhandled;
+}
+
+function levelColor(level) {
+  return { critical: '#dc2626', important: '#f97316', normal: '#3b82f6', info: '#94a3b8' }[level];
+}
+function levelLabel(level) {
+  return { critical: '严重', important: '重要', normal: '一般', info: '信息' }[level];
+}
+function statusLabel(s) {
+  return { online: '在线', offline: '离线', fault: '故障', unactivated: '未激活' }[s] || s;
+}
+
+// ══════════════════════════════════════════
+// DEVICE LIST
+// ══════════════════════════════════════════
+function setFilter(f) {
+  currentDeviceFilter = f;
+  deviceListPage = 1;
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.filter === f));
+  renderDeviceList();
+}
+
+function filterDevices() { deviceListPage = 1; renderDeviceList(); }
+
+function renderDeviceList() {
+  const q = document.getElementById('device-search').value.toLowerCase();
+  const active = devices.filter(d => d.status !== 'unactivated');
+  const unact = devices.filter(d => d.status === 'unactivated');
+
+  let filtered = active.filter(d => {
+    const matchFilter = currentDeviceFilter === 'all' || d.status === currentDeviceFilter;
+    const matchSearch = d.sn.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+
+  let filteredUnact = [];
+  if (currentDeviceFilter === 'all' || currentDeviceFilter === 'unactivated') {
+    filteredUnact = unact.filter(d => d.sn.toLowerCase().includes(q));
+  }
+
+  // 合并后分页（未激活排末尾）
+  const all = [...filtered, ...filteredUnact];
+  const total = all.length;
+  const pages = Math.ceil(total / deviceListPageSize) || 1;
+  deviceListPage = Math.min(deviceListPage, pages);
+  const slice = all.slice((deviceListPage - 1) * deviceListPageSize, deviceListPage * deviceListPageSize);
+
+  const list = document.getElementById('device-list');
+  let html = '';
+  let shownSeparator = false;
+  slice.forEach(d => {
+    if (d.status === 'unactivated' && !shownSeparator) {
+      html += '<div class="device-separator"></div>';
+      shownSeparator = true;
+    }
+    html += `<div class="device-item${currentDeviceSn === d.sn ? ' active' : ''}" onclick="selectDevice('${d.sn}')">
+      <div class="device-dot ${d.status}"></div>
+      <div>
+        <div class="device-item-sn" style="${d.status === 'unactivated' ? 'color:var(--muted)' : ''}">${d.sn}</div>
+        <div class="device-item-sub">${d.status === 'online' ? `在线 · ${d.lastHb}心跳` : d.status === 'offline' ? `离线 · ${d.lastHb}` : d.status === 'fault' ? '故障' : '未激活'}</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+
+  // 分页控件
+  const pg = document.getElementById('device-list-pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+  let pgHtml = `<button class="device-page-btn" ${deviceListPage === 1 ? 'disabled' : ''} onclick="deviceListGoPage(${deviceListPage - 1})">‹</button>`;
+  for (let i = 1; i <= pages; i++) {
+    pgHtml += `<button class="device-page-btn ${i === deviceListPage ? 'active' : ''}" onclick="deviceListGoPage(${i})">${i}</button>`;
+  }
+  pgHtml += `<button class="device-page-btn" ${deviceListPage === pages ? 'disabled' : ''} onclick="deviceListGoPage(${deviceListPage + 1})">›</button>`;
+  pgHtml += `<span class="device-page-info">${total}台</span>`;
+  pg.innerHTML = pgHtml;
+}
+
+function deviceListGoPage(p) { deviceListPage = p; renderDeviceList(); }
+
+function selectDevice(sn) {
+  currentDeviceSn = sn;
+  renderDeviceList();
+  renderDeviceDetail(sn);
+}
+
+function renderDeviceDetail(sn) {
+  const d = devices.find(x => x.sn === sn);
+  const right = document.getElementById('device-right');
+
+  if (d.status === 'unactivated') {
+    right.innerHTML = `
+      <div class="detail-header">
+        <div>
+          <div class="detail-sn">${d.sn}</div>
+          <div class="detail-sub">经销商：${d.dealer} &nbsp;·&nbsp; 出货日期：${d.shipDate}</div>
+        </div>
+        <span class="badge unactivated">未激活</span>
+      </div>
+      <div class="ledger-banner" style="background:#f0f9ff;border-color:#bae6fd;color:#0369a1;">
+        ℹ 设备尚未激活，等待设备首次上线注册后将自动显示运行数据。
+      </div>`;
+    return;
+  }
+
+  const connHtml = d.connectors.length === 0
+    ? '<div style="font-size:13px;color:var(--muted);">暂无下挂充电桩</div>'
+    : d.connectors.map(c => `
+      <div class="charger-row">
+        <div class="device-dot ${c.status === 'charging' ? 'online' : c.status}"></div>
+        <span class="c-sn">${c.sn}</span>
+        <span class="badge ${c.status === 'charging' ? 'charging' : c.status === 'fault' ? 'fault' : 'online'}">${c.status === 'charging' ? '充电中' : c.status === 'fault' ? '故障' : '空闲'}</span>
+        <span class="c-amp">${c.amp > 0 ? c.amp + ' A' : '—'}</span>
+      </div>`).join('');
+
+  const alertsForDevice = alerts.filter(a => a.sn === sn).slice(0, 4);
+  const alertsHtml = alertsForDevice.length === 0
+    ? '<div style="font-size:13px;color:var(--muted);">暂无告警记录</div>'
+    : alertsForDevice.map(a => `<div style="font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;">
+        <span class="level-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${levelColor(a.level)};"></span>
+        <span style="flex:1;">${a.content}</span>
+        <span class="badge ${a.status === 'active' ? 'fault' : 'offline'}">${a.status === 'active' ? '未处理' : '已处理'}</span>
+        <span style="color:var(--muted);font-size:11px;">${a.time.slice(5)}</span>
+      </div>`).join('');
+
+  const logsForDevice = oplogs.filter(o => o.sn === sn).slice(0, 4);
+  const logsHtml = logsForDevice.length === 0
+    ? '<div style="font-size:13px;color:var(--muted);">暂无操作记录</div>'
+    : logsForDevice.map(o => `<div style="font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--muted);flex-shrink:0;">${o.time.slice(5)}</span>
+        <span style="flex:1;">${o.type} &nbsp;<span style="color:var(--muted);">${o.content}</span></span>
+        <span class="${o.result === 'ok' ? 'result-ok' : 'result-fail'}">${o.result === 'ok' ? '✓ 成功' : '✗ 失败'}</span>
+      </div>`).join('');
+
+  right.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-sn">${d.sn}</div>
+        <div class="detail-sub">${d.hasLedger ? `经销商：${d.dealer} &nbsp;·&nbsp; 出货日期：${d.shipDate}` : '⚠ 暂无台账信息 &nbsp;<a href="#" style="color:var(--accent);font-size:12px;" onclick="switchSettingsTab2()">前往补录 →</a>'}</div>
+      </div>
+      <span class="badge ${d.status}">${statusLabel(d.status)}</span>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">设备状态</div>
+      <div class="detail-row"><span class="lbl">在线状态</span><span class="val"><span class="badge ${d.status}">${statusLabel(d.status)}</span></span></div>
+      <div class="detail-row"><span class="lbl">最后心跳</span><span class="val">${d.lastHb}</span></div>
+      <div class="detail-row"><span class="lbl">固件版本</span><span class="val">${d.firmware} &nbsp;<button class="btn-link" onclick="openOtaModal('${d.sn}')">升级</button></span></div>
+    </div>
+
+    ${d.status === 'online' ? `
+    <div class="detail-section">
+      <div class="detail-section-title">家庭电力信息（CT 实时数据）</div>
+      <div class="detail-row"><span class="lbl">入户总电流</span><span class="val">${d.current} A</span></div>
+      <div class="detail-row"><span class="lbl">最大电流阈值</span><span class="val">${d.threshold} A &nbsp;<button class="btn-link">修改</button></span></div>
+      <div class="detail-row"><span class="lbl">电压</span><span class="val">${d.voltage} V</span></div>
+    </div>` : ''}
+
+    <div class="detail-section">
+      <div class="detail-section-title">下挂充电桩</div>
+      ${connHtml}
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-tabs">
+        <div class="detail-tab ${currentDetailTab==='alert'?'active':''}" onclick="switchDetailTab('alert')">最近告警</div>
+        <div class="detail-tab ${currentDetailTab==='log'?'active':''}" onclick="switchDetailTab('log')">操作日志</div>
+      </div>
+      <div id="detail-tab-content">
+        ${currentDetailTab === 'alert' ? alertsHtml : logsHtml}
+      </div>
+    </div>`;
+}
+
+function switchDetailTab(tab) {
+  currentDetailTab = tab;
+  if (currentDeviceSn) renderDeviceDetail(currentDeviceSn);
+}
+
+function switchSettingsTab2() {
+  switchView('settings');
+  switchSettingsTab('ledger');
+}
+
+// ══════════════════════════════════════════
+// ALERT TABLE
+// ══════════════════════════════════════════
+function getFilteredAlerts() {
+  const level = document.getElementById('alert-level-filter').value;
+  const status = document.getElementById('alert-status-filter').value;
+  return alerts.filter(a =>
+    (level === 'all' || a.level === level) &&
+    (status === 'all' || a.status === status)
+  );
+}
+
+function renderAlertTable() {
+  const filtered = getFilteredAlerts();
+  const total = filtered.length;
+  const pages = Math.ceil(total / alertPageSize);
+  alertPage = Math.min(alertPage, pages || 1);
+  const slice = filtered.slice((alertPage - 1) * alertPageSize, alertPage * alertPageSize);
+
+  document.getElementById('alert-tbody').innerHTML = slice.map(a => `
+    <tr>
+      <td><span class="level-dot level-${a.level}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${levelColor(a.level)};margin-right:6px;"></span>${levelLabel(a.level)}</td>
+      <td>${a.content}</td>
+      <td><a href="#" style="color:var(--accent);" onclick="goToDevice('${a.sn}')">${a.sn}</a></td>
+      <td>${a.time}</td>
+      <td><span class="badge ${a.status === 'active' ? 'fault' : 'offline'}">${a.status === 'active' ? '未处理' : '已处理'}</span></td>
+      <td>${a.status === 'active' ? `<button class="btn-sm" onclick="resolveAlert(${a.id})">标记处理</button>` : '<span style="color:var(--muted);font-size:12px;">已完成</span>'}</td>
+    </tr>`).join('');
+  renderPagination('alert-pagination', alertPage, pages, p => { alertPage = p; renderAlertTable(); });
+}
+
+function resolveAlert(id) {
+  const a = alerts.find(x => x.id === id);
+  if (a) { a.status = 'resolved'; renderAlertTable(); initOverviewBadge(); }
+}
+
+function initOverviewBadge() {
+  const unhandled = alerts.filter(a => a.status === 'active').length;
+  document.getElementById('alert-badge').textContent = unhandled;
+}
+
+function goToDevice(sn) {
+  switchView('device');
+  setFilter('all');
+  selectDevice(sn);
+}
+
+// ══════════════════════════════════════════
+// OPLOG TABLE
+// ══════════════════════════════════════════
+function getFilteredOplogs() {
+  const type = document.getElementById('oplog-type-filter').value;
+  return oplogs.filter(o => type === 'all' || o.type === type);
+}
+
+function renderOplogTable() {
+  const filtered = getFilteredOplogs();
+  const total = filtered.length;
+  const pages = Math.ceil(total / oplogPageSize);
+  oplogPage = Math.min(oplogPage, pages || 1);
+  const slice = filtered.slice((oplogPage - 1) * oplogPageSize, oplogPage * oplogPageSize);
+
+  document.getElementById('oplog-tbody').innerHTML = slice.map(o => `
+    <tr>
+      <td>${o.time}</td>
+      <td>${o.user}</td>
+      <td><a href="#" style="color:var(--accent);" onclick="goToDevice('${o.sn}')">${o.sn}</a></td>
+      <td>${o.type}</td>
+      <td>${o.content}</td>
+      <td><span class="result-tag ${o.result === 'ok' ? 'result-ok' : 'result-fail'}">${o.result === 'ok' ? '✓ 成功' : '✗ 失败'}</span></td>
+    </tr>`).join('');
+  renderPagination('oplog-pagination', oplogPage, pages, p => { oplogPage = p; renderOplogTable(); });
+}
+
+// ══════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.settings-tab').forEach((el, i) => {
+    const map = ['firmware','accounts','ledger'];
+    el.classList.toggle('active', map[i] === tab);
+  });
+  document.querySelectorAll('.settings-panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('settings-' + tab).classList.add('active');
+}
+
+function renderFirmware() {
+  document.getElementById('firmware-tbody').innerHTML = firmwares.map(f => `
+    <tr>
+      <td><strong>${f.ver}</strong></td>
+      <td>${f.model}</td>
+      <td>${f.size}</td>
+      <td style="color:var(--muted);font-size:12px;">${f.note}</td>
+      <td>${f.time}</td>
+      <td><button class="btn-sm danger">删除</button></td>
+    </tr>`).join('');
+}
+
+function renderAccounts() {
+  document.getElementById('accounts-tbody').innerHTML = accounts.map(a => `
+    <tr>
+      <td><strong>${a.name}</strong></td>
+      <td>${a.account}</td>
+      <td><span class="badge ${a.status === 'active' ? 'online' : 'offline'}">${a.status === 'active' ? '正常' : '禁用'}</span></td>
+      <td>${a.lastLogin}</td>
+      <td>
+        <button class="btn-sm">重置密码</button>
+        ${a.status === 'active' ? '<button class="btn-sm danger" style="margin-left:4px;">禁用</button>' : '<button class="btn-sm" style="margin-left:4px;">启用</button>'}
+      </td>
+    </tr>`).join('');
+}
+
+function renderLedger() {
+  const total = ledger.length;
+  const pages = Math.ceil(total / ledgerPageSize);
+  const slice = ledger.slice((ledgerPage - 1) * ledgerPageSize, ledgerPage * ledgerPageSize);
+  document.getElementById('ledger-tbody').innerHTML = slice.map(l => `
+    <tr>
+      <td><strong>${l.sn}</strong></td>
+      <td>${l.model}</td>
+      <td>${l.batch}</td>
+      <td>${l.dealer}</td>
+      <td>${l.shipDate}</td>
+      <td>${l.location}</td>
+      <td><button class="btn-sm">编辑</button></td>
+    </tr>`).join('');
+  renderPagination('ledger-pagination', ledgerPage, pages, p => { ledgerPage = p; renderLedger(); });
+}
+
+// ══════════════════════════════════════════
+// PAGINATION
+// ══════════════════════════════════════════
+function renderPagination(containerId, current, total, onChange) {
+  const el = document.getElementById(containerId);
+  if (total <= 1) { el.innerHTML = ''; return; }
+  let html = `<span class="page-info">共 ${total} 页</span>`;
+  html += `<button class="page-btn" ${current === 1 ? 'disabled' : ''} onclick="(${onChange.toString()})(${current - 1})">‹</button>`;
+  for (let i = 1; i <= total; i++) {
+    html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="(${onChange.toString()})(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" ${current === total ? 'disabled' : ''} onclick="(${onChange.toString()})(${current + 1})">›</button>`;
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+// OTA MODAL
+// ══════════════════════════════════════════
+function openOtaModal(sn) {
+  otaTargetSn = sn;
+  const d = devices.find(x => x.sn === sn);
+  selectedFirmware = firmwares.find(f => f.ver !== d.firmware)?.ver || firmwares[0].ver;
+
+  document.getElementById('ota-progress').style.display = 'none';
+  document.getElementById('ota-modal-footer').style.display = 'flex';
+  document.getElementById('ota-firmware-list').innerHTML = firmwares
+    .filter(f => f.ver !== d.firmware)
+    .map(f => `
+      <div class="firmware-option ${f.ver === selectedFirmware ? 'selected' : ''}" onclick="selectFw('${f.ver}', this)">
+        <input type="radio" name="fw" ${f.ver === selectedFirmware ? 'checked' : ''}>
+        <div>
+          <div class="fw-name">${f.ver}</div>
+          <div class="fw-meta">${f.time} &nbsp;·&nbsp; ${f.note}</div>
+        </div>
+      </div>`).join('');
+  document.getElementById('ota-modal').classList.add('open');
+}
+
+function selectFw(ver, el) {
+  selectedFirmware = ver;
+  document.querySelectorAll('.firmware-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function closeOtaModal() {
+  document.getElementById('ota-modal').classList.remove('open');
+}
+
+function startOta() {
+  document.getElementById('ota-modal-footer').style.display = 'none';
+  document.getElementById('ota-progress').style.display = 'block';
+  let pct = 0;
+  const steps = ['正在连接设备...', '正在传输固件...', '设备安装中...', '重启验证中...'];
+  const interval = setInterval(() => {
+    pct += Math.floor(Math.random() * 12) + 6;
+    if (pct >= 100) { pct = 100; clearInterval(interval); finishOta(); }
+    document.getElementById('ota-bar').style.width = pct + '%';
+    document.getElementById('ota-pct').textContent = pct + '%';
+    document.getElementById('ota-status-text').textContent = steps[Math.min(Math.floor(pct / 25), 3)];
+  }, 400);
+}
+
+function finishOta() {
+  document.getElementById('ota-status-text').textContent = '✅ 升级成功';
+  const d = devices.find(x => x.sn === otaTargetSn);
+  const oldVer = d.firmware;
+  d.firmware = selectedFirmware;
+  oplogs.unshift({ time: new Date().toLocaleString('zh-CN').replace(/\//g,'-').replace(',',''), user: 'Edwin', sn: otaTargetSn, type: 'OTA升级', content: `${oldVer} → ${selectedFirmware}`, result: 'ok' });
+  setTimeout(() => {
+    closeOtaModal();
+    if (currentDeviceSn === otaTargetSn) renderDeviceDetail(otaTargetSn);
+  }, 1200);
+}
+
+// ══════════════════════════════════════════
+// TOOLTIP
+// ══════════════════════════════════════════
+function showTooltip(e, text) {
+  const t = document.getElementById('tooltip');
+  t.textContent = text;
+  t.style.display = 'block';
+  t.style.left = (e.clientX + 12) + 'px';
+  t.style.top = (e.clientY - 28) + 'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+initOverview();
+renderDeviceList();
+renderAlertTable();
+renderOplogTable();
+renderFirmware();
+renderAccounts();
+renderLedger();
+</script>
+</body>
+</html>

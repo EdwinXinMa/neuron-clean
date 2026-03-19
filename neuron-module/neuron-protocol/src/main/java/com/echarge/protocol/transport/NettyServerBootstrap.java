@@ -1,5 +1,6 @@
 package com.echarge.protocol.transport;
 
+import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.config.ProtocolProperties;
 import com.echarge.protocol.core.dispatcher.MessageDispatcher;
 import com.echarge.protocol.core.session.SessionManager;
@@ -25,6 +26,7 @@ public class NettyServerBootstrap implements SmartLifecycle {
     private final ProtocolProperties properties;
     private final SessionManager sessionManager;
     private final Map<String, MessageDispatcher> dispatchers;
+    private final DeviceEventPublisher eventPublisher;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -33,11 +35,13 @@ public class NettyServerBootstrap implements SmartLifecycle {
 
     public NettyServerBootstrap(ProtocolProperties properties,
                                 SessionManager sessionManager,
-                                List<MessageDispatcher> dispatcherList) {
+                                List<MessageDispatcher> dispatcherList,
+                                DeviceEventPublisher eventPublisher) {
         this.properties = properties;
         this.sessionManager = sessionManager;
         this.dispatchers = dispatcherList.stream()
                 .collect(Collectors.toMap(MessageDispatcher::supportedProtocol, Function.identity()));
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -55,7 +59,7 @@ public class NettyServerBootstrap implements SmartLifecycle {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new WebSocketInitializer(properties, sessionManager, dispatchers))
+                    .childHandler(new WebSocketInitializer(properties, sessionManager, dispatchers, eventPublisher))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
