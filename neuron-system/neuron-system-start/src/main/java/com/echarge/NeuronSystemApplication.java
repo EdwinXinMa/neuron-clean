@@ -1,10 +1,8 @@
 package com.echarge;
 
-import com.xkcoding.justauth.autoconfigure.JustAuthAutoConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import com.echarge.common.util.oConvertUtils;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -18,12 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* 单体启动类（采用此类启动为单体模式）
-* 报错提醒: 未集成mongo报错，可以打开启动类上面的注释 exclude={MongoAutoConfiguration.class}
-*/
+ * 单体启动类
+ */
 @Slf4j
-@SpringBootApplication(exclude = MongoAutoConfiguration.class, scanBasePackages = {"com.echarge", "org.jeecg"})
-@ImportAutoConfiguration(JustAuthAutoConfiguration.class)  // spring boot 3.x justauth 兼容性处理
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
 public class NeuronSystemApplication extends SpringBootServletInitializer {
 
     @Override
@@ -36,9 +32,8 @@ public class NeuronSystemApplication extends SpringBootServletInitializer {
         Map<String, Object> defaultProperties = new HashMap<>();
         defaultProperties.put("management.health.elasticsearch.enabled", false);
         app.setDefaultProperties(defaultProperties);
-        log.info("[NeuronCloud] Elasticsearch Health Check Enabled: false" );
-        
-        ConfigurableApplicationContext application = app.run(args);;
+
+        ConfigurableApplicationContext application = app.run(args);
         Environment env = application.getEnvironment();
         String ip = InetAddress.getLocalHost().getHostAddress();
         String port = env.getProperty("server.port");
@@ -46,10 +41,7 @@ public class NeuronSystemApplication extends SpringBootServletInitializer {
         log.info("\n----------------------------------------------------------\n\t" +
                 "Application NeuronCloud is running! Access URLs:\n\t" +
                 "Local: \t\thttp://localhost:" + port + path + "\n\t" +
-                "External: \thttp://" + ip + ":" + port + path + "/doc.html\n\t" +
-                "Swagger文档: \thttp://" + ip + ":" + port + path + "/doc.html\n" +
+                "External: \thttp://" + ip + ":" + port + path + "/doc.html\n" +
                 "----------------------------------------------------------");
-
     }
-
 }
