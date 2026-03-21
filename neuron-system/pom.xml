@@ -14,7 +14,7 @@
 
     <modules>
         <module>neuron-system-api</module>
-        <module>neuron-system-biz</module>
+        <module>neuron-system-impl</module>
         <module>neuron-system-start</module>
     </modules>
 

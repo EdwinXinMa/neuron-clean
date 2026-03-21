@@ -15,7 +15,7 @@
         <!-- SYSTEM 系统管理模块 -->
         <dependency>
             <groupId>com.echarge</groupId>
-            <artifactId>neuron-system-biz</artifactId>
+            <artifactId>neuron-system-impl</artifactId>
             <version>${neuron.version}</version>
         </dependency>
         <!-- NeuronCloud 业务模块 -->
@@ -24,14 +24,10 @@
             <artifactId>neuron-device</artifactId>
             <version>${neuron.version}</version>
         </dependency>
+        <!-- 告警管理 -->
         <dependency>
             <groupId>com.echarge</groupId>
-            <artifactId>neuron-station</artifactId>
-            <version>${neuron.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.echarge</groupId>
-            <artifactId>neuron-data</artifactId>
+            <artifactId>neuron-alert</artifactId>
             <version>${neuron.version}</version>
         </dependency>
         <!-- OCPP 协议网关 -->

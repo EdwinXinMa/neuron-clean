@@ -17,7 +17,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: metrics,httpexchanges,neuronhttptrace
+        include: metrics,httpexchanges
+  health:
+    mail:
+      enabled: false
 
 spring:
 #  main:
@@ -27,7 +30,7 @@ spring:
     # 是否启用flyway
     enabled: false
     # 迁移sql脚本存放路径
-    locations: classpath:flyway/sql/mysql
+    locations: classpath:flyway/sql/postgresql
     # 是否关闭要清除已有库下的表功能,生产环境必须为true,否则会删库，非常重要！！！
     clean-disabled: true
   servlet:
@@ -66,7 +69,7 @@ spring:
             instanceId: AUTO
           jobStore:
             class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
             tablePrefix: QRTZ_
             isClustered: true
             misfireThreshold: 12000
@@ -151,10 +154,10 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/neuron_cloud?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-          username: root
+          url: jdbc:postgresql://127.0.0.1:5432/neuron_cloud?stringtype=unspecified
+          username: postgres
           password: 123456
-          driver-class-name: com.mysql.cj.jdbc.Driver
+          driver-class-name: org.postgresql.Driver
 #        # shardingjdbc数据源
 #        sharding-db:
 #          driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
@@ -168,7 +171,7 @@ spring:
       password:
 #mybatis plus 设置
 mybatis-plus:
-  mapper-locations: classpath*:com/echarge/**/xml/*Mapper.xml,classpath*:org/jeecg/**/xml/*Mapper.xml
+  mapper-locations: classpath*:com/echarge/**/xml/*Mapper.xml
   global-config:
     # 关闭MP3.0自带的banner
     banner: false
@@ -182,10 +185,10 @@ mybatis-plus:
     #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     # 返回类型为Map,显示null对应的字段
     call-setters-on-nulls: true
-#jeecg专用配置
-minidao:
-  base-package: com.echarge.modules.jmreport.*,com.echarge.modules.drag.*
 neuron:
+  # Kafka 开关（false=直连模式，true=走Kafka投递）
+  kafka:
+    enabled: false
   # OCPP 协议网关
   protocol:
     enabled: true
@@ -230,7 +233,12 @@ neuron:
   #签名拦截接口
   signUrls: /sys/dict/getDictItems/*,/sys/dict/loadDict/*,/sys/dict/loadDictOrderByValue/*,/sys/dict/loadDictItem/*,/sys/dict/loadTreeData,/sys/api/queryTableDictItemsByCode,/sys/api/queryFilterTableDictInfo,/sys/api/queryTableDictByKeys,/sys/api/translateDictFromTable,/sys/api/translateDictFromTableByKeys,/sys/sendChangePwdSms,/sys/user/sendChangePhoneSms,/sys/sms,/desform/api/sendVerifyCode
   # 本地：local、Minio：minio、阿里云：alioss
-  uploadType: local
+  uploadType: minio
+  minio:
+    minio_url: http://127.0.0.1:9000
+    minio_name: neuron
+    minio_pass: neuron123
+    bucketName: neuron-firmware
   # 前端访问地址
   domainUrl:
     pc: http://localhost:3100
@@ -242,85 +250,12 @@ neuron:
     webapp: /opt/webapp
   shiro:
     excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/bigscreen/category/**,/bigscreen/visual/**,/bigscreen/map/**,/jmreport/bigscreen2/**
-  # 短信发送方式 aliyun阿里云短信 tencent腾讯云短信
-  smsSendType: aliyun
-  #阿里云oss存储和大鱼短信秘钥配置
-  oss:
-    accessKey: ??
-    secretKey: ??
-    endpoint: oss-cn-beijing.aliyuncs.com
-    bucketName: jeecgdev
-    # 短信模板
-    sms-template:
-      # 签名
-      signature:
-      # 模板code
-      templateCode:
-        # 登录短信、忘记密码模板编码
-        SMS_175435174:
-        # 修改密码短信模板编码
-        SMS_465391221:
-        # 注册账号短信模板编码
-        SMS_175430166:
-  #腾讯短信秘钥配置
-  tencent:
-    # 接入域名
-    endpoint: sms.tencentcloudapi.com
-    secretId: ??
-    secretKey: ??
-    # 应用ID
-    sdkAppId: ??
-    # 地域信息
-    region: ap-beijing
-  # 在线预览文件服务器地址配置
-  file-view-domain: http://fileview.jeecg.com
-  # minio文件上传
-  minio:
-    minio_url: http://minio.jeecg.com
-    minio_name: ??
-    minio_pass: ??
-    bucketName: otatest
-  #大屏报表参数设置
-  jmreport:
-    #多租户模式，默认值为空(created:按照创建人隔离、tenant:按照租户隔离) (v1.6.2+ 新增)
-    saasMode: 
-    # 平台上线安全配置(v1.6.2+ 新增)
-    firewall:
-      # 数据源安全 (开启后，不允许使用平台数据源、SQL解析加签并且不允许查询数据库)
-      dataSourceSafe: false
-      # 低代码开发模式（dev:开发模式，prod:发布模式—关闭在线报表设计功能，分配角色admin、lowdeveloper可以放开限制）
-      lowCodeMode: dev
-    # 高德地图Api配置(v2.1.3+ BI新增高德地图)
-    gao-de-api:
-      # 应用key
-      api-key: ??
-      # 应用秘钥
-      secret-key: ??
-  #xxl-job配置
-  xxljob:
-    enabled: false
-    adminAddresses: http://127.0.0.1:9080/xxl-job-admin
-    appname: ${spring.application.name}
-    accessToken: ''
-    address: 127.0.0.1:30007
-    ip: 127.0.0.1
-    port: 30007
-    logPath: logs/neuron/job/jobhandler/
-    logRetentionDays: 30
   #分布式锁配置
   redisson:
     address: 127.0.0.1:6379
     password:
     type: STANDALONE
     enabled: true
-  # 百度开放API配置
-  baidu-api:
-    app-id: ??
-    api-key: ??
-    secret-key: ??
-#cas单点登录
-cas:
-  prefixUrl: http://cas.example.org:8443/cas
 #Mybatis输出sql日志
 logging:
   level:
@@ -328,6 +263,7 @@ logging:
     org.flywaydb: debug
     com.echarge.modules.system.mapper: info
     com.echarge.modules.demo.test.mapper: info
+    com.echarge.modules.device.mapper: debug
 #swagger
 knife4j:
   #开启增强配置
@@ -338,34 +274,3 @@ knife4j:
     enable: false
     username: jeecg
     password: jeecg1314
-#第三方登录
-justauth:
-  enabled: true
-  type:
-    GITHUB:
-      client-id: ??
-      client-secret: ??
-      redirect-uri: http://sso.test.com:8080/api/sys/thirdLogin/github/callback
-    WECHAT_ENTERPRISE:
-      client-id: ??
-      client-secret: ??
-      redirect-uri: http://sso.test.com:8080/api/sys/thirdLogin/wechat_enterprise/callback
-      agent-id: ??
-    DINGTALK:
-      client-id: ??
-      client-secret: ??
-      redirect-uri: http://sso.test.com:8080/api/sys/thirdLogin/dingtalk/callback
-    WECHAT_OPEN:
-      client-id: ??
-      client-secret: ??
-      redirect-uri: http://sso.test.com:8080/api/sys/thirdLogin/wechat_open/callback
-  cache:
-    type: default
-    prefix: 'demo::'
-    timeout: 1h
-
-# Compatibility properties for hibernate-re jar (hardcoded ${jeecg.*} references)
-jeecg:
-  path:
-    upload: ${neuron.path.upload}
-  uploadType: ${neuron.uploadType}
