@@ -13,9 +13,8 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>neuron-alert</module>
         <module>neuron-device</module>
-        <module>neuron-station</module>
-        <module>neuron-data</module>
         <module>neuron-protocol</module>
     </modules>
 
