@@ -1,6 +1,5 @@
 package com.echarge.modules.alert.listener;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
 import com.echarge.modules.alert.service.INcAlertService;
@@ -11,8 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 告警事件监听 — 接收 protocol 模块发来的设备事件，处理告警逻辑
- * 与 DeviceEventHandler 并行工作，各自处理各自的业务
+ * 告警事件监听（v3.0 精简版：只插入告警记录，不做状态流转）
  */
 @Slf4j
 @Component
@@ -31,28 +29,24 @@ public class AlertEventHandler implements DeviceEventListener {
     }
 
     /**
-     * 处理 StatusNotification — 故障触发告警，恢复自动关闭告警
+     * StatusNotification 故障时插入告警记录
      */
     private void handleStatusNotification(DeviceEvent event) {
         String chargePointId = event.getChargePointId();
         JsonObject payload = gson.fromJson(event.getPayload(), JsonObject.class);
 
-        String status = getJsonString(payload, "status");
-        String errorCode = getJsonString(payload, "errorCode");
-        String vendorErrorCode = getJsonString(payload, "vendorErrorCode");
-        String info = getJsonString(payload, "info");
+        String status = getStr(payload, "status");
+        String errorCode = getStr(payload, "errorCode");
+        String vendorErrorCode = getStr(payload, "vendorErrorCode");
+        String info = getStr(payload, "info");
         Integer connectorId = payload.has("connectorId") ? payload.get("connectorId").getAsInt() : null;
 
         if ("Faulted".equals(status) && errorCode != null && !"NoError".equals(errorCode)) {
-            // 故障 → 触发告警
-            ncAlertService.triggerAlert(chargePointId, connectorId, errorCode, vendorErrorCode, info);
-        } else if (!"Faulted".equals(status)) {
-            // 恢复正常 → 自动关闭该设备/枪的告警
-            ncAlertService.resolveAlertAuto(chargePointId, connectorId);
+            ncAlertService.recordAlert(chargePointId, connectorId, errorCode, vendorErrorCode, info);
         }
     }
 
-    private String getJsonString(JsonObject obj, String key) {
+    private String getStr(JsonObject obj, String key) {
         return obj != null && obj.has(key) && !obj.get(key).isJsonNull()
                 ? obj.get(key).getAsString() : null;
     }

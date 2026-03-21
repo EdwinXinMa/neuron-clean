@@ -7,6 +7,7 @@ import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.common.util.RedisUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -15,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -374,6 +377,26 @@ public class DeviceEventHandler implements DeviceEventListener {
         String lower = model.toLowerCase();
         if (lower.contains("atp")) return "ATP_III";
         return "N3_LITE";
+    }
+
+    /**
+     * 随机生成模拟坐标（深圳 50% / 悉尼 50%）
+     */
+    private BigDecimal[] randomCoords() {
+        double lat, lng;
+        if (Math.random() < 0.5) {
+            // 深圳区域
+            lat = 22.4 + Math.random() * 0.4;
+            lng = 113.7 + Math.random() * 0.7;
+        } else {
+            // 澳大利亚悉尼周边
+            lat = -34.5 + Math.random() * 1.0;
+            lng = 150.5 + Math.random() * 1.0;
+        }
+        return new BigDecimal[]{
+            BigDecimal.valueOf(lat).setScale(7, RoundingMode.HALF_UP),
+            BigDecimal.valueOf(lng).setScale(7, RoundingMode.HALF_UP)
+        };
     }
 
     private String getJsonString(JsonObject obj, String key) {

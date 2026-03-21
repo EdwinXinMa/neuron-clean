@@ -11,40 +11,33 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * 告警 Service 实现（v3.0 精简版：只读，只插入，无状态流转）
+ */
 @Slf4j
 @Service
 public class NcAlertServiceImpl extends ServiceImpl<NcAlertMapper, NcAlert> implements INcAlertService {
 
     /**
-     * 错误码 → 告警级别映射
+     * OCPP 错误码 → 告警级别映射
+     * CRITICAL: 需立即感知（接地故障、过温）
+     * IMPORTANT: 当日关注（过流、过压、欠压、内部错误）
+     * NORMAL: 记录跟踪（锁枪失败、其他错误）
      */
     private static final Map<String, String> ERROR_LEVEL_MAP = Map.of(
-            "GroundFailure", "CRITICAL",
-            "HighTemperature", "CRITICAL",
-            "OverCurrentFailure", "IMPORTANT",
-            "OverVoltage", "IMPORTANT",
-            "UnderVoltage", "IMPORTANT",
-            "PowerSwitchFailure", "IMPORTANT",
-            "InternalError", "IMPORTANT",
+            "GroundFailure",        "CRITICAL",
+            "HighTemperature",      "CRITICAL",
+            "OverCurrentFailure",   "IMPORTANT",
+            "OverVoltage",          "IMPORTANT",
+            "UnderVoltage",         "IMPORTANT",
+            "PowerSwitchFailure",   "IMPORTANT",
+            "InternalError",        "IMPORTANT",
             "ConnectorLockFailure", "NORMAL",
-            "OtherError", "NORMAL"
+            "OtherError",           "NORMAL"
     );
 
     @Override
-    public void triggerAlert(String deviceSn, Integer connectorId, String errorCode, String vendorErrorCode, String description) {
-        // 检查是否已有同设备同枪的未处理告警（避免重复）
-        LambdaQueryWrapper<NcAlert> wrapper = new LambdaQueryWrapper<NcAlert>()
-                .eq(NcAlert::getDeviceSn, deviceSn)
-                .eq(NcAlert::getStatus, "ACTIVE")
-                .eq(NcAlert::getErrorCode, errorCode);
-        if (connectorId != null) {
-            wrapper.eq(NcAlert::getConnectorId, connectorId);
-        }
-        if (this.count(wrapper) > 0) {
-            log.debug("[Alert] Duplicate alert ignored: deviceSn={}, connectorId={}, errorCode={}", deviceSn, connectorId, errorCode);
-            return;
-        }
-
+    public void recordAlert(String deviceSn, Integer connectorId, String errorCode, String vendorErrorCode, String description) {
         NcAlert alert = new NcAlert();
         alert.setDeviceSn(deviceSn);
         alert.setConnectorId(connectorId);
@@ -52,45 +45,19 @@ public class NcAlertServiceImpl extends ServiceImpl<NcAlertMapper, NcAlert> impl
         alert.setErrorCode(errorCode);
         alert.setVendorErrorCode(vendorErrorCode);
         alert.setDescription(description);
-        alert.setStatus("ACTIVE");
         alert.setAlertTime(new Date());
         alert.setCreateTime(new Date());
         this.save(alert);
-        log.info("[Alert] New alert: deviceSn={}, connectorId={}, level={}, errorCode={}", deviceSn, connectorId, alert.getAlertLevel(), errorCode);
+        log.info("[Alert] Recorded: deviceSn={}, connectorId={}, level={}, errorCode={}",
+                deviceSn, connectorId, alert.getAlertLevel(), errorCode);
     }
 
     @Override
-    public void resolveAlertAuto(String deviceSn, Integer connectorId) {
-        LambdaQueryWrapper<NcAlert> wrapper = new LambdaQueryWrapper<NcAlert>()
-                .eq(NcAlert::getDeviceSn, deviceSn)
-                .eq(NcAlert::getStatus, "ACTIVE");
-        if (connectorId != null) {
-            wrapper.eq(NcAlert::getConnectorId, connectorId);
-        }
-
-        NcAlert update = new NcAlert();
-        update.setStatus("RESOLVED");
-        update.setResolveTime(new Date());
-        this.update(update, wrapper);
-        log.info("[Alert] Auto resolved: deviceSn={}, connectorId={}", deviceSn, connectorId);
-    }
-
-    @Override
-    public void resolveAlertManual(String alertId, String resolveBy, String remark) {
-        NcAlert alert = this.getById(alertId);
-        if (alert == null || !"ACTIVE".equals(alert.getStatus())) {
-            return;
-        }
-        alert.setStatus("RESOLVED");
-        alert.setResolveTime(new Date());
-        alert.setResolveBy(resolveBy);
-        alert.setResolveRemark(remark);
-        this.updateById(alert);
-        log.info("[Alert] Manual resolved: alertId={}, by={}", alertId, resolveBy);
-    }
-
-    @Override
-    public long countActive() {
-        return this.count(new LambdaQueryWrapper<NcAlert>().eq(NcAlert::getStatus, "ACTIVE"));
+    public long countRecentCritical() {
+        // 最近 24 小时的 CRITICAL + IMPORTANT 告警数量（导航角标用）
+        Date since = new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000L);
+        return this.count(new LambdaQueryWrapper<NcAlert>()
+                .in(NcAlert::getAlertLevel, "CRITICAL", "IMPORTANT")
+                .ge(NcAlert::getAlertTime, since));
     }
 }

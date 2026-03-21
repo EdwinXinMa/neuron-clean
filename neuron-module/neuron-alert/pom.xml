@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>com.echarge</groupId>
-            <artifactId>neuron-base-core</artifactId>
+            <artifactId>neuron-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

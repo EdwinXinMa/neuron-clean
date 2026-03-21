@@ -13,11 +13,17 @@
     <dependencies>
         <dependency>
             <groupId>com.echarge</groupId>
-            <artifactId>neuron-base-core</artifactId>
+            <artifactId>neuron-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.echarge</groupId>
+            <artifactId>neuron-alert</artifactId>
+            <version>${neuron.version}</version>
         </dependency>
     </dependencies>
 </project>

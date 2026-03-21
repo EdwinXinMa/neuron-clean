@@ -15,7 +15,7 @@
         <!-- SYSTEM 系统管理模块 -->
         <dependency>
             <groupId>com.echarge</groupId>
-            <artifactId>neuron-system-biz</artifactId>
+            <artifactId>neuron-system-impl</artifactId>
             <version>${neuron.version}</version>
         </dependency>
         <!-- NeuronCloud 业务模块 -->

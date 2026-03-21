@@ -14,6 +14,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 告警记录（v3.0 精简版：只读，无状态流转）
+ */
 @Data
 @TableName("nc_alert")
 @EqualsAndHashCode(callSuper = false)
@@ -33,7 +36,7 @@ public class NcAlert implements Serializable {
     @Schema(description = "枪号，0=设备本体，null=设备级别")
     private Integer connectorId;
 
-    @Schema(description = "级别：CRITICAL/IMPORTANT/NORMAL/INFO")
+    @Schema(description = "级别：CRITICAL / IMPORTANT / NORMAL / INFO")
     private String alertLevel;
 
     @Schema(description = "OCPP错误码")
@@ -45,24 +48,10 @@ public class NcAlert implements Serializable {
     @Schema(description = "告警描述")
     private String description;
 
-    @Schema(description = "状态：ACTIVE/RESOLVED")
-    private String status;
-
     @Schema(description = "告警触发时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date alertTime;
-
-    @Schema(description = "处理时间")
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date resolveTime;
-
-    @Schema(description = "处理人")
-    private String resolveBy;
-
-    @Schema(description = "处理备注")
-    private String resolveRemark;
 
     @Schema(description = "创建时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

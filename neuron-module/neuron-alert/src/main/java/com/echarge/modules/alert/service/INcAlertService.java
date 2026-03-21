@@ -3,25 +3,18 @@ package com.echarge.modules.alert.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.echarge.modules.alert.entity.NcAlert;
 
+/**
+ * 告警 Service（v3.0 精简版：只读，只插入，无状态流转）
+ */
 public interface INcAlertService extends IService<NcAlert> {
 
     /**
-     * 触发告警（StatusNotification 故障时调用）
+     * 记录告警（StatusNotification 故障时调用）
      */
-    void triggerAlert(String deviceSn, Integer connectorId, String errorCode, String vendorErrorCode, String description);
+    void recordAlert(String deviceSn, Integer connectorId, String errorCode, String vendorErrorCode, String description);
 
     /**
-     * 自动恢复告警（StatusNotification 恢复正常时调用）
+     * 查询最近 24h 严重+重要告警数量（导航角标用）
      */
-    void resolveAlertAuto(String deviceSn, Integer connectorId);
-
-    /**
-     * 手动处理告警（运维人员操作）
-     */
-    void resolveAlertManual(String alertId, String resolveBy, String remark);
-
-    /**
-     * 查询未处理告警数量
-     */
-    long countActive();
+    long countRecentCritical();
 }

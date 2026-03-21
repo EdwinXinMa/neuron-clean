@@ -1,61 +1,80 @@
 package com.echarge.modules.alert.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
-import com.echarge.common.system.query.QueryGenerator;
 import com.echarge.modules.alert.entity.NcAlert;
 import com.echarge.modules.alert.service.INcAlertService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
+
+/**
+ * 告警记录（v3.0 只读）
+ */
 @Slf4j
-@Tag(name = "告警管理")
+@Tag(name = "告警记录")
 @RestController
-@RequestMapping("/alert/ncAlert")
+@RequestMapping("/alert")
 public class NcAlertController {
 
     @Autowired
     private INcAlertService ncAlertService;
 
-    @Operation(summary = "分页查询告警列表")
+    /**
+     * 告警列表（分页 + 筛选）
+     * 支持：级别筛选、设备SN搜索、时间范围
+     */
+    @Operation(summary = "告警列表")
     @GetMapping("/list")
-    public Result<IPage<NcAlert>> list(NcAlert ncAlert,
-                                       @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
-                                       @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-                                       HttpServletRequest req) {
-        QueryWrapper<NcAlert> queryWrapper = QueryGenerator.initQueryWrapper(ncAlert, req.getParameterMap());
-        queryWrapper.orderByDesc("alert_time");
-        Page<NcAlert> page = new Page<>(pageNo, pageSize);
-        IPage<NcAlert> pageList = ncAlertService.page(page, queryWrapper);
-        return Result.OK(pageList);
+    public Result<IPage<NcAlert>> list(
+            @RequestParam(required = false) String deviceSn,
+            @RequestParam(required = false) String alertLevel,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(defaultValue = "1") Integer pageNo,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+
+        LambdaQueryWrapper<NcAlert> query = new LambdaQueryWrapper<>();
+
+        if (StringUtils.isNotBlank(deviceSn)) {
+            query.like(NcAlert::getDeviceSn, deviceSn);
+        }
+        if (StringUtils.isNotBlank(alertLevel)) {
+            query.eq(NcAlert::getAlertLevel, alertLevel);
+        }
+        // 时间范围筛选
+        if (StringUtils.isNotBlank(startTime)) {
+            try {
+                Date start = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startTime);
+                query.ge(NcAlert::getAlertTime, start);
+            } catch (Exception ignored) {}
+        }
+        if (StringUtils.isNotBlank(endTime)) {
+            try {
+                Date end = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(endTime);
+                query.le(NcAlert::getAlertTime, end);
+            } catch (Exception ignored) {}
+        }
+
+        query.orderByDesc(NcAlert::getAlertTime);
+
+        IPage<NcAlert> page = ncAlertService.page(new Page<>(pageNo, pageSize), query);
+        return Result.OK(page);
     }
 
-    @Operation(summary = "查询未处理告警数量")
-    @GetMapping("/activeCount")
-    public Result<Long> activeCount() {
-        return Result.OK(ncAlertService.countActive());
-    }
-
-    @Operation(summary = "手动处理告警")
-    @PostMapping("/resolve")
-    public Result<String> resolve(@RequestParam String id,
-                                  @RequestParam(required = false) String remark) {
-        // TODO: 从登录用户信息中获取操作人
-        ncAlertService.resolveAlertManual(id, "admin", remark);
-        return Result.OK("处理成功");
-    }
-
-    @Operation(summary = "根据设备序列号查询告警记录")
-    @GetMapping("/listByDevice")
-    public Result<?> listByDevice(@RequestParam String deviceSn) {
-        return Result.OK(ncAlertService.list(
-                new QueryWrapper<NcAlert>().eq("device_sn", deviceSn).orderByDesc("alert_time")
-        ));
+    /**
+     * 导航角标：最近 24h 严重+重要告警数
+     */
+    @Operation(summary = "导航角标告警数")
+    @GetMapping("/badge")
+    public Result<Long> badge() {
+        return Result.OK(ncAlertService.countRecentCritical());
     }
 }

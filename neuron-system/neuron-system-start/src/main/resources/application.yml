@@ -5,3 +5,6 @@ spring:
     import: optional:classpath:config/application-liteflow.yml
   profiles:
     active: '@profile.name@'
+
+minidao:
+  base-package: com.echarge.minidao.dao

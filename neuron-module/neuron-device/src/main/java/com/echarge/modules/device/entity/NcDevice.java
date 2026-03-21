@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -23,6 +24,8 @@ import java.util.Date;
 public class NcDevice extends NeuronEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+
+    // ==================== 台账字段（人工录入） ====================
 
     @Excel(name = "设备序列号", width = 20)
     @Schema(description = "设备序列号")
@@ -64,6 +67,14 @@ public class NcDevice extends NeuronEntity implements Serializable {
     @Schema(description = "MAC地址")
     private String macAddress;
 
+    @Schema(description = "纬度（地图标点，自动模拟生成）")
+    private BigDecimal lat;
+
+    @Schema(description = "经度（地图标点，自动模拟生成）")
+    private BigDecimal lng;
+
+    // ==================== 运行状态字段（设备自动上报） ====================
+
     @Excel(name = "固件版本", width = 15)
     @Schema(description = "当前固件版本")
     private String firmwareVersion;
@@ -92,6 +103,13 @@ public class NcDevice extends NeuronEntity implements Serializable {
 
     @Schema(description = "父设备ID（ATP III指向N3 Lite）")
     private String parentDeviceId;
+
+    // ==================== DLM 配置字段（持久化，变化少） ====================
+
+    @Schema(description = "断路器档位（A）: 20/25/32/40/50/63，DLM 设置持久化")
+    private Integer breakerRating;
+
+    // ==================== 业务控制字段 ====================
 
     @Excel(name = "状态", width = 10)
     @Schema(description = "业务状态: NORMAL / DISABLED")
