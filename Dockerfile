@@ -17,5 +17,5 @@ ENTRYPOINT ["java", \
   "-Xms256m", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-Dfile.encoding=UTF-8", \
-  "-Dspring.profiles.active=prod", \
+  "-Dspring.profiles.active=dev", \
   "-jar", "app.jar"]
