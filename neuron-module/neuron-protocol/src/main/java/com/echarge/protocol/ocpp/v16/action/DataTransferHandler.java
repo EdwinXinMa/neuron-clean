@@ -33,10 +33,8 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
         log.info("[OCPP1.6] DataTransfer from {}: vendor={}, messageId={}",
                 session.getChargePointId(), request.getVendorId(), request.getMessageId());
 
-        String messageId = request.getMessageId();
-
-        if ("TopologyReport".equals(messageId)) {
-            // 拓扑上报：N3 Lite 上报下挂 ATP III 桩和枪信息
+        // 根据 messageId 路由到不同业务
+        if ("TopologyReport".equals(request.getMessageId())) {
             DeviceEvent event = new DeviceEvent(
                     DeviceEvent.TOPOLOGY_REPORT,
                     session.getChargePointId(),
@@ -46,18 +44,7 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
             return new DataTransferResp("Accepted", null);
         }
 
-        if ("DLMStatus".equals(messageId)) {
-            // DLM 运行数据上报：CT 电流、电压、功率、温度等
-            DeviceEvent event = new DeviceEvent(
-                    DeviceEvent.DLM_STATUS,
-                    session.getChargePointId(),
-                    request.getData()
-            );
-            eventPublisher.publish(event);
-            return new DataTransferResp("Accepted", null);
-        }
-
-        log.warn("[OCPP1.6] Unknown DataTransfer messageId: {}", messageId);
+        log.warn("[OCPP1.6] Unknown DataTransfer messageId: {}", request.getMessageId());
         return new DataTransferResp("Accepted", null);
     }
 }
