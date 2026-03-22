@@ -50,8 +50,4 @@ public class NeuronBaseConfig {
      * minio配置
      */
     private NeuronMinio minio;
-    /**
-     * oss配置
-     */
-    private NeuronOSS oss;
 }
