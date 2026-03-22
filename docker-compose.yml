@@ -1,82 +1,94 @@
-version: '2'
+version: '3.8'
+
 services:
-  neuron-mysql:
-    build:
-      context: ./db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_ROOT_HOST: '%'
-      TZ: Asia/Shanghai
-    restart: always
-    container_name: neuron-mysql
-    image: neuron-mysql
-    command:
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_general_ci
-      --explicit_defaults_for_timestamp=true
-      --lower_case_table_names=1
-      --max_allowed_packet=128M
-      --default-authentication-plugin=caching_sha2_password
-    ports:
-      - 13306:3306
-    networks:
-      - neuron-net
 
-  neuron-redis:
-    image: registry.cn-hangzhou.aliyuncs.com/jeecgdocker/redis:5.0
-#    ports:
-#      - 6379:6379
-    restart: always
-    hostname: neuron-redis
-    container_name: neuron-redis
-    networks:
-      - neuron-net
-
-  neuron-pgvector:
-    image: registry.cn-hangzhou.aliyuncs.com/jeecgdocker/pgvector
-    container_name: neuron-pgvector
+  postgres:
+    image: postgres:15-alpine
+    container_name: neuron-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vector_db
-#    ports:
-#      - 5432:5432
-    restart: always
-    networks:
-      - neuron-net
-
-#  neuron-rabbitmq:
-#    image: rabbitmq:3.7.7-management
-##    ports:
-##      - 5672:5672
-##      - 15672:15672
-#    restart: always
-#    container_name: neuron-rabbitmq
-#    hostname: neuron-rabbitmq
-#    environment:
-#      RABBITMQ_DEFAULT_USER: guest
-#      RABBITMQ_DEFAULT_PASS: guest
-#    networks:
-#      - neuron-net
-
-  neuron-system:
-    build:
-      context: ./neuron-system/neuron-system-start
-    restart: on-failure
-    mac_address: 02:42:ac:11:00:02
-    depends_on:
-      - neuron-mysql
-      - neuron-redis
-    container_name: neuron-system
-    image: neuron-system
-    hostname: neuron-system
-    ports:
-      - 8080:8080
-    networks:
-      - neuron-net
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: neuron_system
+      TZ: Asia/Shanghai
     volumes:
-      - ./config:/neuron-system/config
+      - /data/neuron/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d neuron_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: neuron-redis
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/neuron/redis:/data
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: neuron-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: neuron
+      MINIO_ROOT_PASSWORD: neuron123
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/neuron/minio:/data
+    ports:
+      - "9000:9000"
+      - "9002:9002"
+    command: server /data --console-address ":9002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: neuron-backend:latest
+    container_name: neuron-backend
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL: "jdbc:postgresql://postgres:5432/neuron_system?stringtype=unspecified"
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME: postgres
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD: postgres123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      NEURON_REDISSON_ADDRESS: "redis:6379"
+      NEURON_MINIO_MINIO_URL: "http://minio:9000"
+      NEURON_MINIO_MINIO_NAME: neuron
+      NEURON_MINIO_MINIO_PASS: neuron123
+      NEURON_MINIO_BUCKET_NAME: neuron-firmware
+    ports:
+      - "8080:8080"
+      - "9001:9001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - /data/neuron/logs:/app/logs
+      - /data/neuron/uploads:/opt/upFiles
 
 networks:
-  neuron-net:
-    name: neuron_net
+  default:
+    name: neuron-net

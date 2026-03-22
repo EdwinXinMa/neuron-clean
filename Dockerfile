@@ -1,0 +1,20 @@
+FROM openjdk:21-jre-slim
+
+WORKDIR /app
+
+COPY neuron-system-start-*.jar app.jar
+
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN mkdir -p /opt/upFiles /opt/webapp
+
+EXPOSE 8080 9001
+
+ENTRYPOINT ["java", \
+  "-Xmx512m", \
+  "-Xms256m", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-Dfile.encoding=UTF-8", \
+  "-Dspring.profiles.active=prod", \
+  "-jar", "app.jar"]
