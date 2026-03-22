@@ -74,17 +74,6 @@ public class NeuronBootExceptionHandler {
 		log.error(e.getMessage());
 		return Result.error(e.getErrCode(), e.getMessage());
 	}
-
-	/**
-	 * 处理自定义微服务异常
-	 */
-	@ExceptionHandler(NeuronCloudException.class)
-	public Result<?> handleNeuronCloudException(NeuronCloudException e){
-		log.error(e.getMessage(), e);
-		addSysLog(e);
-		return Result.error(e.getMessage());
-	}
-
 	/**
 	 * 处理自定义异常
 	 */
