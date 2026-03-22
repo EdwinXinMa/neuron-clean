@@ -41,7 +41,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * @author: Scott
+ * @author: Edwin
  * @date: 2018/2/7
  * @description: shiro 配置类
  */
@@ -216,7 +216,7 @@ public class ShiroConfig {
      * 所以需要用spring的FilterRegistrationBean再代理一下shiro的filter.为他扩展异步支持. <br/>
      * 后续所有异步的接口都需要再这里增加registration.addUrlPatterns("/xxx/xxx");
      * @return
-     * @author chenrui
+     * @author Edwin
      * @date 2024/12/3 19:49
      */
     @Bean

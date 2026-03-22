@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * 异常处理器
  * 
- * @Author scott
+ * @Author Edwin
  * @Date 2019
  */
 @RestControllerAdvice
@@ -113,7 +113,7 @@ public class NeuronBootExceptionHandler {
 	}
 	
 	/**
-	 * @Author 政辉
+	 * @Author Edwin
 	 * @param e
 	 * @return
 	 */
@@ -153,7 +153,7 @@ public class NeuronBootExceptionHandler {
 	 * for [QQYUN-11716]上传大图片失败没有精确提示
 	 * @param e
 	 * @return
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2025/4/8 16:13
 	 */
 	@ExceptionHandler(MultipartException.class)
@@ -207,7 +207,7 @@ public class NeuronBootExceptionHandler {
 	/**
 	 * 添加异常新系统日志
 	 * @param e 异常
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2024/4/22 17:16
 	 */
     private void addSysLog(Throwable e) {
@@ -259,7 +259,7 @@ public class NeuronBootExceptionHandler {
 	 * for [QQYUN-11716]上传大图片失败没有精确提示
 	 * @param e
 	 * @return
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2025/4/8 20:21
 	 */
 	private static boolean isTooBigException(Throwable e) {

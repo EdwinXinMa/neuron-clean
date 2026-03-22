@@ -5,7 +5,7 @@ import com.echarge.common.constant.CommonConstant;
 /**
  * @Description: 业务提醒异常(用于操作业务提醒)
  * @date: 2024-04-26
- * @author: scott
+ * @author: Edwin
  */
 public class NeuronBootBizTipException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

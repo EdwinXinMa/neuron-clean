@@ -18,7 +18,7 @@ import lombok.experimental.Accessors;
  * 系统日志表
  * </p>
  *
- * @Author zhangweijian
+ * @Author Edwin
  * @since 2018-12-26
  */
 @Data

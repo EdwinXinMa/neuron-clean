@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 /**
  *   接口返回数据格式
- * @author scott
+ * @author Edwin
  * @email jeecgos@163.com
  * @date  2019年1月19日
  */

@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 /**
  * 
- * @Author  张代浩
+ * @Author  Edwin
  *
  */
 @Slf4j
@@ -810,7 +810,7 @@ public class oConvertUtils {
 	 *
 	 * @param obj
 	 * @return
-	 * @author yaomy
+	 * @author Edwin
 	 * @date 2018年2月5日 下午5:03:00
 	 */
 	public static boolean isArray(Object obj) {
@@ -1084,7 +1084,7 @@ public class oConvertUtils {
 	 * for for [QQYUN-10990]AIRAG
 	 * @param obj
 	 * @return
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2025/2/13 18:34
 	 */
 	public static boolean isObjectEmpty(Object obj) {
@@ -1122,7 +1122,7 @@ public class oConvertUtils {
 	 * for for [QQYUN-10990]AIRAG
 	 * @param object
 	 * @return
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2025/2/13 18:35
 	 */
 	public static boolean isObjectNotEmpty(Object object) {
@@ -1135,7 +1135,7 @@ public class oConvertUtils {
 	 * @param src
 	 * @param des
 	 * @return
-	 * @author: chenrui
+	 * @author: Edwin
 	 * @date: 2018/9/19 15:30
 	 */
 	public static boolean isGt(Number src, Number des) {
@@ -1154,7 +1154,7 @@ public class oConvertUtils {
 	 * @param src
 	 * @param des
 	 * @return
-	 * @author: chenrui
+	 * @author: Edwin
 	 * @date: 2018/9/19 15:30
 	 */
 	public static boolean isGe(Number src, Number des) {
@@ -1175,7 +1175,7 @@ public class oConvertUtils {
 	 * @param objs
 	 * @param <T>
 	 * @return
-	 * @author chenrui
+	 * @author Edwin
 	 * @date 2020/9/12 15:50
 	 */
 	public static <T> boolean isIn(T obj, T... objs) {

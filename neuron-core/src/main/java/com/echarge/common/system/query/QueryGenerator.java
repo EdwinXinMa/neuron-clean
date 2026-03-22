@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Description: 查询生成器
- * @author: jeecg-boot
+ * @author: Edwin
  */
 @Slf4j
 public class QueryGenerator {
@@ -806,7 +806,7 @@ public class QueryGenerator {
 	}
 
 	/**
-	* @author: scott
+	* @author: Edwin
 	* @Description: 去掉值前后单引号
 	* @date: 2020/3/19 21:26
 	* @param ruleValue: 
