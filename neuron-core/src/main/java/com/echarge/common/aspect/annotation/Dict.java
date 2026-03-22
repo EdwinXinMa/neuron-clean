@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * 字典注解
- * @author: dangzhenghui
+ * @author: Edwin
  * @date: 2026-03-22
  */
 @Target(ElementType.FIELD)
