@@ -14,8 +14,8 @@ import java.util.Map;
 /**
  * 启动程序修改DruidWallConfig配置
  * 允许SELECT语句的WHERE子句是一个永真条件
- * @author eightmonth
- * @date 2024/4/8 11:37
+ * @author Edwin
+ * @date 2026-03-22
  */
 public class DruidWallConfigRegister implements SpringApplicationRunListener {
 

@@ -14,7 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * @Description: spring上下文工具类
- * @author: jeecg-boot
+ * @author Edwin
  */
 @Component
 @Lazy(false)

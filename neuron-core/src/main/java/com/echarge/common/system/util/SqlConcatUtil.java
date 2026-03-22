@@ -21,8 +21,8 @@ import java.util.List;
 
 /**
  * @Description: 查询过滤器，SQL拼接写法拆成独立工具类
- * @author:qinfeng
- * @date 20230904
+ * @author Edwin
+ * @date 2026-03-22
  */
 @Slf4j
 public class SqlConcatUtil {

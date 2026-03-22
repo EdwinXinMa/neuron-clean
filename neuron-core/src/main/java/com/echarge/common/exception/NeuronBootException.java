@@ -4,7 +4,7 @@ import com.echarge.common.constant.CommonConstant;
 
 /**
  * @Description: jeecg-boot自定义异常
- * @author: jeecg-boot
+ * @author Edwin
  */
 public class NeuronBootException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

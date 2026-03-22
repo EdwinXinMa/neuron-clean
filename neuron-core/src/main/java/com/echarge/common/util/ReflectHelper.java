@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * @author 张代浩
+ * @author Edwin
  * @desc 通过反射来动态调用get 和 set 方法
  */
 @Slf4j

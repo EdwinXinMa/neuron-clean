@@ -17,7 +17,7 @@ import com.alibaba.druid.util.Utils;
 
 /**
  * @Description: DruidConfig配置类
- * @author: jeecg-boot
+ * @author Edwin
  */
 @Configuration
 @AutoConfigureAfter(DruidDataSourceAutoConfigure.class)
@@ -65,7 +65,7 @@ public class DruidConfig {
     /**
      * 删除druid的广告过滤器
      *
-     * @author BBF
+     * @author Edwin
      */
     private class RemoveAdFilter implements Filter {
 

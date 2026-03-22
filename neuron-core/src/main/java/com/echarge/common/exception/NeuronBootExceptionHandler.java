@@ -153,8 +153,8 @@ public class NeuronBootExceptionHandler {
 	 * for [QQYUN-11716]上传大图片失败没有精确提示
 	 * @param e
 	 * @return
-	 * @author chenrui
-	 * @date 2025/4/8 16:13
+	 * @author Edwin
+	 * @date 2026-03-22
 	 */
 	@ExceptionHandler(MultipartException.class)
 	public Result<?> handleMaxUploadSizeExceededException(MultipartException e) {
@@ -207,8 +207,8 @@ public class NeuronBootExceptionHandler {
 	/**
 	 * 添加异常新系统日志
 	 * @param e 异常
-	 * @author chenrui
-	 * @date 2024/4/22 17:16
+	 * @author Edwin
+	 * @date 2026-03-22
 	 */
     private void addSysLog(Throwable e) {
         LogDTO log = new LogDTO();
@@ -259,8 +259,8 @@ public class NeuronBootExceptionHandler {
 	 * for [QQYUN-11716]上传大图片失败没有精确提示
 	 * @param e
 	 * @return
-	 * @author chenrui
-	 * @date 2025/4/8 20:21
+	 * @author Edwin
+	 * @date 2026-03-22
 	 */
 	private static boolean isTooBigException(Throwable e) {
 		boolean isTooBigException = false;

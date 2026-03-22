@@ -5,7 +5,7 @@ import com.echarge.common.system.vo.LoginUser;
 
 /**
  * common接口
- * @author: jeecg-boot
+ * @author Edwin
  */
 public interface BaseCommonService {
 

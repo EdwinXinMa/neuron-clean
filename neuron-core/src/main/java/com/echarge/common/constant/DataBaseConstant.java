@@ -1,7 +1,7 @@
 package com.echarge.common.constant;
 /**
  * 数据库上下文常量
- * @author: jeecg-boot
+ * @author Edwin
  */
 public interface DataBaseConstant {
 

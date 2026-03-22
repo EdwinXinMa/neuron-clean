@@ -2,7 +2,7 @@ package com.echarge.common.constant;
 
 /**
  * @Description: 通用常量
- * @author: jeecg-boot
+ * @author Edwin
  */
 public interface CommonConstant {
 

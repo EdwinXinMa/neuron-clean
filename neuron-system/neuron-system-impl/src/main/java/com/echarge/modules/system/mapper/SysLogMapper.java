@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * </p>
  *
  * @Author zhangweijian
- * @since 2018-12-26
+ * @since 2026-03-22
  */
 import org.apache.ibatis.annotations.Mapper;
 

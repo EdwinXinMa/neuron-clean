@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Lazy;
 
 /**
  * Minio文件上传配置文件
- * @author: jeecg-boot
+ * @author Edwin
  */
 @Lazy(false)
 @Slf4j

@@ -6,7 +6,7 @@ import com.echarge.common.api.dto.LogDTO;
 
 /**
  * @Description: BaseCommonMapper
- * @author: jeecg-boot
+ * @author Edwin
  */
 import org.apache.ibatis.annotations.Mapper;
 

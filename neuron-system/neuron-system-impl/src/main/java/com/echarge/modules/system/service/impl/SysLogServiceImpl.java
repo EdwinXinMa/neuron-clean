@@ -24,7 +24,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  * </p>
  *
  * @Author zhangweijian
- * @since 2018-12-26
+ * @since 2026-03-22
  */
 @Service
 public class SysLogServiceImpl extends ServiceImpl<SysLogMapper, SysLog> implements ISysLogService {

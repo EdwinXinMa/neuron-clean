@@ -11,7 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * 提供 ThreadPoolTaskScheduler Bean 用于 AI RAG 流程调度等功能
  * 仅当容器中不存在 ThreadPoolTaskScheduler 时才创建
  *
- * @author jeecg
+ * @author Edwin
  */
 @Slf4j
 @Configuration

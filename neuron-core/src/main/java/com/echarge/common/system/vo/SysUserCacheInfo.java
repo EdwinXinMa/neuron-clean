@@ -6,7 +6,7 @@ import com.echarge.common.util.DateUtils;
 
 /**
  * @Description: 用户缓存信息
- * @author: jeecg-boot
+ * @author Edwin
  */
 public class SysUserCacheInfo {
 
