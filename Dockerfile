@@ -1,4 +1,4 @@
-FROM openjdk:21-jre-slim
+FROM registry.cn-hangzhou.aliyuncs.com/library/openjdk:21-jre-slim
 
 WORKDIR /app
 
