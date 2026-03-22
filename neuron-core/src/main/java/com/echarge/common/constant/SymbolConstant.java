@@ -2,7 +2,7 @@ package com.echarge.common.constant;
 
 /**
  * @Description: 符号和特殊符号常用类
- * @author: wangshuai
+ * @author: Edwin
  * @date: 2026-03-22
  */
 public class SymbolConstant {
