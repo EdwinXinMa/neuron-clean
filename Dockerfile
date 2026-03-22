@@ -1,4 +1,5 @@
-FROM eclipse-temurin:21-jre
+# 使用腾讯云镜像加速器地址（已经在你的服务器上验证成功）
+FROM mirror.ccs.tencentyun.com/library/eclipse-temurin:21-jre
 
 WORKDIR /app
 
