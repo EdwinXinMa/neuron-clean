@@ -4,7 +4,7 @@ import com.echarge.common.constant.CommonConstant;
 
 /**
  * @Description: 业务提醒异常(用于操作业务提醒)
- * @date: 2024-04-26
+ * @date: 2026-03-22
  * @author: Edwin
  */
 public class NeuronBootBizTipException extends RuntimeException {

@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * websocket 前端将token放到子协议里传入 与后端建立连接时需要用到http协议，此处用于校验token的有效性
  * @Author Edwin
- * @DateTimeFormat/4/21 17:01
+ * @Date2026-03-22
  **/
 @Slf4j
 public class WebsocketFilter implements Filter {

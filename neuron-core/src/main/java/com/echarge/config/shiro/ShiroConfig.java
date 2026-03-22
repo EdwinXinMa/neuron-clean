@@ -42,7 +42,7 @@ import java.util.*;
 
 /**
  * @author: Edwin
- * @date: 2018/2/7
+ * @date: 2026-03-22
  * @description: shiro 配置类
  */
 
@@ -217,7 +217,7 @@ public class ShiroConfig {
      * 后续所有异步的接口都需要再这里增加registration.addUrlPatterns("/xxx/xxx");
      * @return
      * @author Edwin
-     * @date 2024/12/3 19:49
+     * @date 2026-03-22
      */
     @Bean
     public FilterRegistrationBean shiroFilterRegistration() {

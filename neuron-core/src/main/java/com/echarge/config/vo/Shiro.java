@@ -3,7 +3,7 @@ package com.echarge.config.vo;
 /**
  * @Description: TODO
  * @author: Edwin
- * @date: 2022年01月21日 14:23
+ * @date: 2026-03-22
  */
 public class Shiro {
     private String excludeUrls = "";

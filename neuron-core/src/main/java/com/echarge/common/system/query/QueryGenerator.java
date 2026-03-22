@@ -808,7 +808,7 @@ public class QueryGenerator {
 	/**
 	* @author: Edwin
 	* @Description: 去掉值前后单引号
-	* @date: 2020/3/19 21:26
+	* @date: 2026-03-22
 	* @param ruleValue: 
 	* @Return: java.lang.String
 	*/

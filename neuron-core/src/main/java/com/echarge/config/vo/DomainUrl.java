@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * @Author Edwin
- * @DateTimeFormat/7/5 21:16
+ * @Date2026-03-22
  **/
 @Data
 public class DomainUrl {

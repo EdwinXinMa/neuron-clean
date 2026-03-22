@@ -811,7 +811,7 @@ public class oConvertUtils {
 	 * @param obj
 	 * @return
 	 * @author Edwin
-	 * @date 2018年2月5日 下午5:03:00
+	 * @date 2026-03-22
 	 */
 	public static boolean isArray(Object obj) {
 		if (obj == null) {
@@ -1085,7 +1085,7 @@ public class oConvertUtils {
 	 * @param obj
 	 * @return
 	 * @author Edwin
-	 * @date 2025/2/13 18:34
+	 * @date 2026-03-22
 	 */
 	public static boolean isObjectEmpty(Object obj) {
 		if (null == obj) {
@@ -1123,7 +1123,7 @@ public class oConvertUtils {
 	 * @param object
 	 * @return
 	 * @author Edwin
-	 * @date 2025/2/13 18:35
+	 * @date 2026-03-22
 	 */
 	public static boolean isObjectNotEmpty(Object object) {
 		return !isObjectEmpty(object);
@@ -1136,7 +1136,7 @@ public class oConvertUtils {
 	 * @param des
 	 * @return
 	 * @author: Edwin
-	 * @date: 2018/9/19 15:30
+	 * @date: 2026-03-22
 	 */
 	public static boolean isGt(Number src, Number des) {
 		if (null == src || null == des) {
@@ -1155,7 +1155,7 @@ public class oConvertUtils {
 	 * @param des
 	 * @return
 	 * @author: Edwin
-	 * @date: 2018/9/19 15:30
+	 * @date: 2026-03-22
 	 */
 	public static boolean isGe(Number src, Number des) {
 		if (null == src || null == des) {
@@ -1176,7 +1176,7 @@ public class oConvertUtils {
 	 * @param <T>
 	 * @return
 	 * @author Edwin
-	 * @date 2020/9/12 15:50
+	 * @date 2026-03-22
 	 */
 	public static <T> boolean isIn(T obj, T... objs) {
 		if (isEmpty(objs)) {

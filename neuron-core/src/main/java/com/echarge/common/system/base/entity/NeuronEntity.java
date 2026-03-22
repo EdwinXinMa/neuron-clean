@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: Entity基类
  * @Author: Edwin@163.com
- * @Date: 2019-4-28
+ * @Date: 2026-03-22
  * @Version: 1.1
  */
 @Data

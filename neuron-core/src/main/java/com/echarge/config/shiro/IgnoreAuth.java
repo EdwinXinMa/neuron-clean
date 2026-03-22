@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * 
  * 认证系统结合spring MVC的@RequestMapping获取请求路径进行免登录配置
  * @author eightmonth
- * @date 2024/2/28 9:58
+ * @date 2026-03-22
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
