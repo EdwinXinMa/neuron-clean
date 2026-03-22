@@ -18,8 +18,8 @@ import lombok.experimental.Accessors;
  * 系统日志表
  * </p>
  *
- * @Author Edwin
- * @since 2026-03-22
+ * @Author zhangweijian
+ * @since 2018-12-26
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -44,7 +44,7 @@ public class SysLog implements Serializable {
 	 */
 	@Excel(name = "创建时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-	@DateTimeFormat
+	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date createTime;
 
 	/**
