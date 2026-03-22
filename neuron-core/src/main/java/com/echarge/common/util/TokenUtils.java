@@ -12,8 +12,8 @@ import com.echarge.common.system.vo.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * @Author scott
- * @Date 2019/9/23 14:12
+ * @Author Edwin
+ * @Date 2026-03-22/9/23 14:12
  * @Description: 编程校验token有效性
  */
 @Slf4j

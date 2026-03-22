@@ -23,7 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  * 系统日志表 服务实现类
  * </p>
  *
- * @Author zhangweijian
+ * @Author Edwin
  * @since 2026-03-22
  */
 @Service

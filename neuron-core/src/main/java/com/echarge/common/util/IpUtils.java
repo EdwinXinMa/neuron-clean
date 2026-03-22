@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 /**
  * IP地址
  * 
- * @Author scott
+ * @Author Edwin
  * @email jeecgos@163.com
- * @Date 2019年01月14日
+ * @Date 2026-03-22
  */
 public class IpUtils {
 	private static Logger logger = LoggerFactory.getLogger(IpUtils.class);

@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 登录表单
  *
- * @Author scott
+ * @Author Edwin
  * @since  2019-01-18
  */
 @Schema(description="登录对象")

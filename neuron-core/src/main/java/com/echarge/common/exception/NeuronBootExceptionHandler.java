@@ -39,8 +39,8 @@ import java.util.stream.Collectors;
 /**
  * 异常处理器
  * 
- * @Author scott
- * @Date 2019
+ * @Author Edwin
+ * @Date 2026-03-22
  */
 @RestControllerAdvice
 @Slf4j
@@ -113,7 +113,7 @@ public class NeuronBootExceptionHandler {
 	}
 	
 	/**
-	 * @Author 政辉
+	 * @Author Edwin
 	 * @param e
 	 * @return
 	 */

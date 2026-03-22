@@ -4,8 +4,8 @@ import com.echarge.common.util.oConvertUtils;
 
 /**
  * Query 规则 常量
- * @Author Scott
- * @Date 2019年02月14日
+ * @Author Edwin
+ * @Date 2026-03-22
  */
 public enum QueryRuleEnum {
 

@@ -33,8 +33,8 @@ import com.echarge.common.util.SpringContextUtils;
 import com.echarge.common.util.oConvertUtils;
 
 /**
- * @Author Scott
- * @Date 2018-07-12 14:23
+ * @Author Edwin
+ * @Date 2026-03-22
  * @Desc JWT工具类
  **/
 @Slf4j

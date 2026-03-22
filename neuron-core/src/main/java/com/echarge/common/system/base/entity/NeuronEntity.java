@@ -16,8 +16,8 @@ import lombok.experimental.Accessors;
 
 /**
  * @Description: Entity基类
- * @Author: dangzhenghui@163.com
- * @Date: 2019-4-28
+ * @Author: Edwin
+ * @Date: 2026-03-22
  * @Version: 1.1
  */
 @Data
@@ -46,7 +46,7 @@ public class NeuronEntity implements Serializable {
     @Schema(description = "创建时间")
     @Excel(name = "创建时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private java.util.Date createTime;
 
     /**
@@ -62,7 +62,7 @@ public class NeuronEntity implements Serializable {
     @Schema(description = "更新时间")
     @Excel(name = "更新时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private java.util.Date updateTime;
 
 }

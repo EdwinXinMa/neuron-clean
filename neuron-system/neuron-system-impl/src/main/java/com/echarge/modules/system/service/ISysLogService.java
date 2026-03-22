@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * 系统日志表 服务类
  * </p>
  *
- * @Author zhangweijian
+ * @Author Edwin
  * @since 2026-03-22
  */
 public interface ISysLogService extends IService<SysLog> {

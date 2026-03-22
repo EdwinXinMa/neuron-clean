@@ -54,9 +54,9 @@ public class CommonUtils {
     public static String uploadOnlineImage(byte[] data,String basePath,String bizPath,String uploadType){
         String dbPath = null;
         String fileName = "image" + Math.round(Math.random() * 100000000000L);
-        //update-begin---author:wangshuai---date:2026-01-08---for:【QQYUN-14535】ai生成图片的后缀不一致的，导致不展示---
+        //update-begin---author:Edwin
         fileName += "." + PoiPublicUtil.getFileExtendName(data).toLowerCase();
-        //update-end---author:wangshuai---date:2026-01-08---for:【QQYUN-14535】ai生成图片的后缀不一致的，导致不展示---
+        //update-end---author:Edwin
         try {
             if(CommonConstant.UPLOAD_TYPE_LOCAL.equals(uploadType)){
                 File file = new File(basePath + File.separator + bizPath + File.separator );
@@ -102,9 +102,9 @@ public class CommonUtils {
                 .replace("#", "").replace("“", "").replace("”", "");
         //替换上传文件名字中的空格
         fileName=fileName.replaceAll("\\s","");
-        //update-beign-author:taoyan date:20220302 for: /issues/3381 online 在线表单 使用文件组件时，上传文件名中含%，下载异常
+        //update-beign-author:Edwin/issues/3381 online 在线表单 使用文件组件时，上传文件名中含%，下载异常
         fileName = fileName.replaceAll(FILE_NAME_REGEX, "");
-        //update-end-author:taoyan date:20220302 for: /issues/3381 online 在线表单 使用文件组件时，上传文件名中含%，下载异常
+        //update-end-author:Edwin/issues/3381 online 在线表单 使用文件组件时，上传文件名中含%，下载异常
         return fileName;
     }
 
@@ -351,11 +351,11 @@ public class CommonUtils {
 
         //返回 host domain
         String baseDomainPath = null;
-        //update-begin---author:wangshuai---date:2024-03-15---for:【QQYUN-8561】企业微信登陆请求接口设置上下文不一致，导致接口404---
+        //update-begin---author:Edwin
         int httpPort = 80;
         int httpsPort = 443;
         if(httpPort == serverPort || httpsPort == serverPort){
-        //update-end---author:wangshuai---date:2024-03-15---for:【QQYUN-8561】企业微信登陆请求接口设置上下文不一致，导致接口404---~
+        //update-end---author:Edwin
             baseDomainPath = scheme + "://" + serverName  + contextPath ;
         }else{
             baseDomainPath = scheme + "://" + serverName + ":" + serverPort + contextPath ;

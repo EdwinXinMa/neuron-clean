@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Spring Boot 2.0 解决跨域问题
  *
- * @Author qinfeng
+ * @Author Edwin
  *
  */
 @Slf4j

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * 系统日志表 Mapper 接口
  * </p>
  *
- * @Author zhangweijian
+ * @Author Edwin
  * @since 2026-03-22
  */
 import org.apache.ibatis.annotations.Mapper;

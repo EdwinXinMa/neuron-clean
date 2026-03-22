@@ -5,7 +5,7 @@ import com.echarge.common.util.oConvertUtils;
 /**
  * 查询链接规则
  *
- * @Author Sunjianlei
+ * @Author Edwin
  */
 public enum MatchTypeEnum {
 

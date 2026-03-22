@@ -3,8 +3,8 @@ package com.echarge.config.vo;
 import lombok.Data;
 
 /**
- * @Author taoYan
- * @Date 2022/7/5 21:16
+ * @Author Edwin
+ * @Date 2026-03-22/7/5 21:16
  **/
 @Data
 public class DomainUrl {

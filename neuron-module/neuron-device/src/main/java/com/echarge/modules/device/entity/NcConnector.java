@@ -48,7 +48,7 @@ public class NcConnector implements Serializable {
 
     @Schema(description = "创建时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private Date createTime;
 
     @Schema(description = "更新人")
@@ -56,6 +56,6 @@ public class NcConnector implements Serializable {
 
     @Schema(description = "更新时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private Date updateTime;
 }

@@ -22,8 +22,8 @@ import java.util.GregorianCalendar;
 /**
  * 类描述：时间操作定义类
  *
- * @Author: 张代浩
- * @Date:2012-12-8 12:15:03
+ * @Author: Edwin
+ * @Date:2026-03-22
  * @Version 1.0
  */
 public class DateUtils extends PropertyEditorSupport {

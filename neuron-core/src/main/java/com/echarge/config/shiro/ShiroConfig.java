@@ -352,7 +352,7 @@ public class ShiroConfig {
             RedisClusterManager redisManager = new RedisClusterManager();
             Set<HostAndPort> portSet = new HashSet<>();
             lettuceConnectionFactory.getClusterConfiguration().getClusterNodes().forEach(node -> portSet.add(new HostAndPort(node.getHost() , node.getPort())));
-            //update-begin--Author:scott Date:20210531 for：修改集群模式下未设置redis密码的bug issues/I3QNIC
+            //update-begin--Author:Edwin/I3QNIC
             if (oConvertUtils.isNotEmpty(lettuceConnectionFactory.getPassword())) {
                 JedisCluster jedisCluster = new JedisCluster(portSet, 2000, 2000, 5,
                     lettuceConnectionFactory.getPassword(), new GenericObjectPoolConfig());

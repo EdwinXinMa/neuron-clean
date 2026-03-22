@@ -50,13 +50,13 @@ public class NcDevice extends NeuronEntity implements Serializable {
     @Excel(name = "生产日期", width = 15, format = "yyyy-MM-dd")
     @Schema(description = "生产日期")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Date2026-03-22
     private Date productionDate;
 
     @Excel(name = "出货日期", width = 15, format = "yyyy-MM-dd")
     @Schema(description = "出货日期")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Date2026-03-22
     private Date shipDate;
 
     @Excel(name = "硬件版本号", width = 15)
@@ -85,17 +85,17 @@ public class NcDevice extends NeuronEntity implements Serializable {
 
     @Schema(description = "最后心跳时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private Date lastHeartbeat;
 
     @Schema(description = "首次上线时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private Date firstOnlineTime;
 
     @Schema(description = "最近上线时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Date2026-03-22
     private Date lastOnlineTime;
 
     @Schema(description = "设备IP地址")
