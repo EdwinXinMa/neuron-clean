@@ -3,7 +3,7 @@ FROM mirror.ccs.tencentyun.com/library/eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY neuron-system-start-*.jar app.jar
+COPY neuron-system-start.jar app.jar
 
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
