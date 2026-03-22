@@ -3,7 +3,6 @@ package com.echarge.config.shiro.filters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
-import com.echarge.common.config.TenantContext;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.system.util.JwtUtil;
 import com.echarge.common.util.oConvertUtils;
@@ -109,10 +108,6 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
             httpServletResponse.setStatus(HttpStatus.OK.value());
             return false;
         }
-        // 代码逻辑说明: 多租户用到
-        String tenantId = httpServletRequest.getHeader(CommonConstant.TENANT_ID);
-        TenantContext.setTenant(tenantId);
-
         return super.preHandle(request, response);
     }
 
@@ -126,7 +121,6 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
      */
     @Override
     public void afterCompletion(ServletRequest request, ServletResponse response, Exception exception) throws Exception {
-        //log.info("------清空线程中多租户的ID={}------",TenantContext.getTenant());
-        TenantContext.clear();
+        // no-op
     }
 }

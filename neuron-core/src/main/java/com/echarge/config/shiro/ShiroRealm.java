@@ -10,7 +10,6 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import com.echarge.common.api.CommonAPI;
-import com.echarge.common.config.TenantContext;
 import com.echarge.common.constant.CacheConstant;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.system.util.JwtUtil;
@@ -143,42 +142,6 @@ public class ShiroRealm extends AuthorizingRealm {
             // 用户登录Token过期提示信息
             String userLoginTokenErrorMsg = oConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN_ERROR_MSG + token));
             throw new AuthenticationException(oConvertUtils.isEmpty(userLoginTokenErrorMsg)? CommonConstant.TOKEN_IS_INVALID_MSG: userLoginTokenErrorMsg);
-        }
-        // 代码逻辑说明: 校验用户的tenant_id和前端传过来的是否一致
-        String userTenantIds = null; // tenant removed
-        if(false && oConvertUtils.isNotEmpty(userTenantIds)){
-            String contextTenantId = TenantContext.getTenant();
-            log.debug("登录租户：" + contextTenantId);
-            log.debug("用户拥有那些租户：" + userTenantIds);
-             //登录用户无租户，前端header中租户ID值为 0
-            String str ="0";
-            if(oConvertUtils.isNotEmpty(contextTenantId) && !str.equals(contextTenantId)){
-                // 代码逻辑说明: /issues/I4O14W 用户租户信息变更判断漏洞
-                String[] arr = userTenantIds.split(",");
-                if(!oConvertUtils.isIn(contextTenantId, arr)){
-                    boolean isAuthorization = false;
-                    //========================================================================
-                    // 查询用户信息（如果租户不匹配从数据库中重新查询一次用户信息）
-                    String loginUserKey = CacheConstant.SYS_USERS_CACHE + "::" + username;
-                    redisUtil.del(loginUserKey);
-                    LoginUser loginUserFromDb = commonApi.getUserByName(username);
-                    if (false) {
-                        // tenant removed
-                        if (false) { 
-                            isAuthorization = true;
-                        }
-                    }
-                    //========================================================================
-
-                    //*********************************************
-                    if(!isAuthorization){
-                        log.info("租户异常——登录租户：" + contextTenantId);
-                        log.info("租户异常——用户拥有租户组：" + userTenantIds);
-                        throw new AuthenticationException("登录租户授权变更，请重新登陆!");
-                    }
-                    //*********************************************
-                }
-            }
         }
         return loginUser;
     }
