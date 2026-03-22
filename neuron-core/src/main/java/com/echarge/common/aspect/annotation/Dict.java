@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 /**
  * 字典注解
- * @author Edwin
- * @date 2026-03-22
+ * @author: dangzhenghui
+ * @date: 2019年03月17日-下午9:37:16
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

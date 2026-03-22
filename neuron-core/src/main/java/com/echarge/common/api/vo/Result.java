@@ -10,9 +10,9 @@ import java.io.Serializable;
 
 /**
  *   接口返回数据格式
- * @author Edwin
+ * @author scott
  * @email jeecgos@163.com
- * @date 2026-03-22
+ * @date  2019年1月19日
  */
 @Data
 @Schema(description="接口返回对象")

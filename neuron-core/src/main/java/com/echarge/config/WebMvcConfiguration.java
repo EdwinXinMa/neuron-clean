@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Spring Boot 2.0 解决跨域问题
  *
- * @Author Edwin
+ * @Author qinfeng
  *
  */
 @Slf4j
@@ -155,8 +155,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     /**
      * 在Bean初始化完成后立即配置PrometheusMeterRegistry，避免在Meter注册后才配置MeterFilter
      * for [QQYUN-12558]【监控】系统监控的头两个tab不好使，接口404
-     * @author Edwin
-     * @date 2026-03-22
+     * @author chenrui
+     * @date 2025/5/26 16:46
      */
     @PostConstruct
     public void initPrometheusMeterRegistry() {

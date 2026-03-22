@@ -14,8 +14,8 @@ import java.util.List;
 
 /**
  * @Description: 校验文件敏感后缀
- * @author Edwin
- * @date 2026-03-22
+ * @author: lsq
+ * @date: 2023年09月12日 15:29
  */
 @Slf4j
 public class SsrfFileTypeFilter {

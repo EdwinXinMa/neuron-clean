@@ -41,8 +41,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * @author Edwin
- * @date 2026-03-22
+ * @author: Scott
+ * @date: 2018/2/7
  * @description: shiro 配置类
  */
 
@@ -216,8 +216,8 @@ public class ShiroConfig {
      * 所以需要用spring的FilterRegistrationBean再代理一下shiro的filter.为他扩展异步支持. <br/>
      * 后续所有异步的接口都需要再这里增加registration.addUrlPatterns("/xxx/xxx");
      * @return
-     * @author Edwin
-     * @date 2026-03-22
+     * @author chenrui
+     * @date 2024/12/3 19:49
      */
     @Bean
     public FilterRegistrationBean shiroFilterRegistration() {
@@ -352,7 +352,7 @@ public class ShiroConfig {
             RedisClusterManager redisManager = new RedisClusterManager();
             Set<HostAndPort> portSet = new HashSet<>();
             lettuceConnectionFactory.getClusterConfiguration().getClusterNodes().forEach(node -> portSet.add(new HostAndPort(node.getHost() , node.getPort())));
-            //update-begin--Author:Edwin/I3QNIC
+            //update-begin--Author:scott Date:20210531 for：修改集群模式下未设置redis密码的bug issues/I3QNIC
             if (oConvertUtils.isNotEmpty(lettuceConnectionFactory.getPassword())) {
                 JedisCluster jedisCluster = new JedisCluster(portSet, 2000, 2000, 5,
                     lettuceConnectionFactory.getPassword(), new GenericObjectPoolConfig());

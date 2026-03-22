@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 
 /**
  * 在spring boot初始化时，根据@RestController注解获取当前spring容器中的bean
- * @author Edwin
- * @date 2026-03-22
+ * @author eightmonth
+ * @date 2024/4/18 11:35
  */
 @Slf4j
 @Lazy(false)
