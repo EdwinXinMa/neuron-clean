@@ -44,7 +44,7 @@ public class SysLog implements Serializable {
 	 */
 	@Excel(name = "创建时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-	@Date2026-03-22
+	@DateTimeFormat
 	private Date createTime;
 
 	/**

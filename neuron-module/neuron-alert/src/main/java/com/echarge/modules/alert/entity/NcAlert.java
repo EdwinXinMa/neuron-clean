@@ -50,11 +50,11 @@ public class NcAlert implements Serializable {
 
     @Schema(description = "告警触发时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date alertTime;
 
     @Schema(description = "创建时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date createTime;
 }

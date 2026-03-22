@@ -48,12 +48,12 @@ public class NcOpLog implements Serializable {
 
     @Schema(description = "操作时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date opTime;
 
     @Schema(description = "创建时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date createTime;
 
     // ==================== 操作类型常量 ====================

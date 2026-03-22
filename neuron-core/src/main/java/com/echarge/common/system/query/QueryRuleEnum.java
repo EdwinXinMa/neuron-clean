@@ -5,7 +5,7 @@ import com.echarge.common.util.oConvertUtils;
 /**
  * Query 规则 常量
  * @Author Edwin
- * @Date 2026-03-22
+ * @DateTimeFormat
  */
 public enum QueryRuleEnum {
 

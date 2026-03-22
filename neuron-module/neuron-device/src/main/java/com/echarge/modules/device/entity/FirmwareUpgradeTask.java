@@ -39,11 +39,11 @@ public class FirmwareUpgradeTask extends NeuronEntity implements Serializable {
 
     @Schema(description = "开始时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date startTime;
 
     @Schema(description = "完成时间")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Date2026-03-22
+    @DateTimeFormat
     private Date finishTime;
 }
