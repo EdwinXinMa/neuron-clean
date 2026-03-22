@@ -16,8 +16,7 @@ import lombok.experimental.Accessors;
 
 /**
  * @Description: Entity基类
- * @Author: Edwin
- * @Date: 2026-03-22
+ * @Author: Edwin* @Date: 2026-03-22
  * @Version: 1.1
  */
 @Data

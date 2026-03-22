@@ -19,8 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @Description: 鉴权登录拦截器
- * @Author: Edwin
- * @Date: 2026-03-22/10/7
+ * @Author: Edwin* @Date: 2026-03-22/10/7
  **/
 @Slf4j
 public class JwtFilter extends BasicHttpAuthenticationFilter {

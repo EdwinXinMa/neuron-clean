@@ -29,8 +29,7 @@ import java.util.Set;
 
 /**
  * @Description: 用户登录鉴权和获取用户授权
- * @Author: Edwin
- * @Date: 2026-03-22
+ * @Author: Edwin* @Date: 2026-03-22
  * @Version: 1.1
  */
 @Component
