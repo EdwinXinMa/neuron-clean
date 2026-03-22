@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * @Description: 校验文件敏感后缀
- * @author: lsq
+ * @author: Edwin
  * @date: 2026-03-22
  */
 @Slf4j

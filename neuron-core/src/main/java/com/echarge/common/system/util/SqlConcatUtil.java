@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * @Description: 查询过滤器，SQL拼接写法拆成独立工具类
- * @author:qinfeng
+ * @author:Edwin
  * @date 2026-03-22
  */
 @Slf4j
