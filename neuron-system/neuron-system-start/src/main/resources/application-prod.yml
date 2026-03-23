@@ -118,39 +118,10 @@ mybatis-plus:
     # 返回类型为Map,显示null对应的字段
     call-setters-on-nulls: true
 neuron:
-  # AI集成
-  ai-chat:
-    enabled: true
-    model: deepseek-chat
-    apiKey: ??
-    apiHost: https://api.deepseek.com
-    timeout: 60
-  # AIRag向量库
-  ai-rag:
-    # AI流程敏感节点(stdio=命令行节点, sql=SQL节点)
-    allow-sensitive-nodes: sql,stdio
-    embed-store:
-      host: 127.0.0.1
-      port: 5432
-      database: postgres
-      user: postgres
-      password: postgres
-      table: embeddings
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
-  #签名拦截接口
-  signUrls: /sys/dict/getDictItems/*,/sys/dict/loadDict/*,/sys/dict/loadDictOrderByValue/*,/sys/dict/loadDictItem/*,/sys/dict/loadTreeData,/sys/api/queryTableDictItemsByCode,/sys/api/queryFilterTableDictInfo,/sys/api/queryTableDictByKeys,/sys/api/translateDictFromTable,/sys/api/translateDictFromTableByKeys,/sys/sendChangePwdSms,/sys/user/sendChangePhoneSms,/sys/sms,/desform/api/sendVerifyCode
   # local\minio\alioss
   uploadType: alioss
-  # 前端访问地址
-  domainUrl:
-    pc: http://localhost:3100
-    app: http://localhost:8051
-  path:
-    #文件上传根目录 设置
-    upload: /opt/neuron/upload
-    #webapp文件路径
-    webapp: /opt/neuron/webapp
   shiro:
     excludeUrls:
 #Mybatis输出sql日志

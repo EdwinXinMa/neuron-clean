@@ -1,7 +1,6 @@
 package com.echarge.modules.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.echarge.common.api.CommonAPI;
 import com.echarge.common.system.api.ISysBaseAPI;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.system.vo.SysUserCacheInfo;

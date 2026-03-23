@@ -7,8 +7,6 @@ package com.echarge.common.constant;
 public interface CommonConstant {
 
 	// ======================== 状态标记 ========================
-	Integer STATUS_NORMAL = 0;
-	Integer STATUS_DISABLE = -1;
 	Integer DEL_FLAG_1 = 1;
 	Integer DEL_FLAG_0 = 0;
 
@@ -18,8 +16,6 @@ public interface CommonConstant {
 	Integer USER_FREEZE = 2;
 
 	// ======================== 系统日志类型 ========================
-	int LOG_TYPE_1 = 1;
-	int LOG_TYPE_2 = 2;
 	int LOG_TYPE_4 = 4;
 
 	// ======================== HTTP 状态码 ========================
@@ -61,5 +57,4 @@ public interface CommonConstant {
 	String STR_HTTP = "http";
 	String STRING_NULL = "null";
 	String DICT_TEXT_SUFFIX = "_dictText";
-	String X_MINI_FLOW_EXCLUSION_FIELD_MODE = "X-Miniflowexclusionfieldmode";
 }

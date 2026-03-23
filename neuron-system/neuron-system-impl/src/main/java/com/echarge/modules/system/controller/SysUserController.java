@@ -116,7 +116,7 @@ public class SysUserController {
         }
         user.setStatus(status);
         sysUserService.updateById(user);
-        return Result.OK(status == CommonConstant.USER_FREEZE ? "已禁用" : "已启用");
+        return Result.OK(CommonConstant.USER_FREEZE.equals(status) ? "已禁用" : "已启用");
     }
 
     /**
