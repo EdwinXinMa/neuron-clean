@@ -42,12 +42,6 @@
             <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
         
-        <!-- 分库分表示例 -->
-     <!--  <dependency>
-           <groupId>com.echarge</groupId>
-           <artifactId>jeecg-cloud-test-shardingsphere</artifactId>
-           <version>1.0.0</version>
-       </dependency>-->
     </dependencies>
 
     <build>

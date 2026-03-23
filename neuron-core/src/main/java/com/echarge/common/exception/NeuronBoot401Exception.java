@@ -1,7 +1,7 @@
 package com.echarge.common.exception;
 
 /**
- * @Description: jeecg-boot自定义401异常
+ * @Description: NeuronCloud 认证失败异常(401)
  * @author Edwin
  */
 public class NeuronBoot401Exception extends RuntimeException {

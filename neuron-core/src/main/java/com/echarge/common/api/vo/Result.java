@@ -11,7 +11,6 @@ import java.io.Serializable;
 /**
  *   接口返回数据格式
  * @author Edwin
- * @email jeecgos@163.com
  * @date  2026-03-22
  */
 @Data
@@ -168,7 +167,7 @@ public class Result<T> implements Serializable {
 	 * 无权限访问返回结果
 	 */
 	public static<T> Result<T> noauth(String msg) {
-		return error(CommonConstant.SC_JEECG_NO_AUTHZ, msg);
+		return error(CommonConstant.SC_NO_AUTHZ, msg);
 	}
 
 	@JsonIgnore

@@ -223,9 +223,6 @@ public class ShiroConfig {
     }
 
     /**
-     * RedisConfig在项目starter项目中
-     * jeecg-boot-starter-github\jeecg-boot-common\src\main\java\org\jeecg\common\modules\redis\config\RedisConfig.java
-     * 
      * 配置shiro redisManager
      * 使用的是shiro-redis开源插件
      *

@@ -18,8 +18,4 @@ public class StrAttackFilter {
         return m.replaceAll("").trim();
     }
 
-//    public static void main(String[] args) {
-//        String filter = filter("@#jeecg/《》【bo】￥%……&*（o）)))！@t<>,.,/?'\'~~`");
-//        System.out.println(filter);
-//    }
 }

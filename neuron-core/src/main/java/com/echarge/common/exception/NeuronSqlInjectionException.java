@@ -1,7 +1,7 @@
 package com.echarge.common.exception;
 
 /**
- * @Description: jeecg-boot自定义SQL注入异常
+ * @Description: NeuronCloud SQL注入检测异常
  * @author Edwin
  */
 public class NeuronSqlInjectionException extends RuntimeException {

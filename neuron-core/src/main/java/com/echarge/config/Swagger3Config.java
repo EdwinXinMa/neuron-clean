@@ -42,13 +42,8 @@ public class Swagger3Config implements WebMvcConfigurer {
     private static final Set<String> EXCLUDED_PATHS = new HashSet<>(Arrays.asList(
             "/sys/randomImage/**",
             "/sys/login",
-            "/sys/phoneLogin",
-            "/sys/mLogin",
-            "/sys/sms",
-            "/sys/cas/client/validateLogin",
-            "/test/jeecgDemo/demo3",
-            "/sys/thirdLogin/**",
-            "/sys/user/register"
+            "/sys/logout",
+            "/sys/randomImage/**"
     ));
     // 预处理通配符模式，提高匹配效率
     private static final Set<String> WILDCARD_PATTERNS = new HashSet<>();
@@ -135,12 +130,10 @@ public class Swagger3Config implements WebMvcConfigurer {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("JeecgBoot 后台服务API接口文档")
-                        .version("3.9.1")
-                        .contact(new Contact().name("北京国炬信息技术有限公司").url("www.jeccg.com").email("jeecgos@163.com"))
-                        .description("后台API接口")
-                        .termsOfService("NO terms of service")
-                        .license(new License().name("Apache 2.0").url("http://www.apache.org/licenses/LICENSE-2.0.html")))
+                        .title("NeuronCloud API 接口文档")
+                        .version("1.0.0")
+                        .contact(new Contact().name("旭衡电子(深圳)").url("www.alwayscontrol.com").email("dev@alwayscontrol.net"))
+                        .description("N3 Lite 智能充电云平台后端 API"))
                 .addSecurityItem(new SecurityRequirement().addList(CommonConstant.X_ACCESS_TOKEN))
                 .components(new Components().addSecuritySchemes(CommonConstant.X_ACCESS_TOKEN,
                         new SecurityScheme()

@@ -22,7 +22,7 @@ public interface CommonConstant {
 	Integer SC_OK_200 = 200;
 	Integer SC_INTERNAL_SERVER_ERROR_500 = 500;
 	/** 访问权限认证未通过 */
-	Integer SC_JEECG_NO_AUTHZ = 510;
+	Integer SC_NO_AUTHZ = 510;
 
 	// ======================== Token / 认证 ========================
 	String X_ACCESS_TOKEN = "X-Access-Token";

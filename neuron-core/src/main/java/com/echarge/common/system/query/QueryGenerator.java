@@ -111,8 +111,8 @@ public class QueryGenerator {
 	 * <p>使用此方法 需要有如下几点注意:   
 	 * <br>1.使用QueryWrapper 而非LambdaQueryWrapper;
 	 * <br>2.实例化QueryWrapper时不可将实体传入参数   
-	 * <br>错误示例:如QueryWrapper<JeecgDemo> queryWrapper = new QueryWrapper<JeecgDemo>(jeecgDemo);
-	 * <br>正确示例:QueryWrapper<JeecgDemo> queryWrapper = new QueryWrapper<JeecgDemo>();
+	 * <br>错误示例:如QueryWrapper&lt;T&gt; queryWrapper = new QueryWrapper&lt;T&gt;(entity);
+	 * <br>正确示例:QueryWrapper&lt;T&gt; queryWrapper = new QueryWrapper&lt;T&gt;();
 	 * <br>3.也可以不使用这个方法直接调用 {@link #initQueryWrapper}直接获取实例
 	 */
 	private static void installMplus(QueryWrapper<?> queryWrapper, Object searchObj, Map<String, String[]> parameterMap, Map<String, QueryRuleEnum> customRuleMap) {
@@ -779,7 +779,7 @@ public class QueryGenerator {
 	private static boolean judgedIsUselessField(String name) {
 		return "class".equals(name) || "ids".equals(name)
 				|| "page".equals(name) || "rows".equals(name)
-//// https://github.com/jeecgboot/JeecgBoot/issues/6937
+// sort/order 字段不再跳过
 //				|| "sort".equals(name) || "order".equals(name)
 				;
 	}

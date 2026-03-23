@@ -63,7 +63,11 @@
       "Bash(echo:*)",
       "Bash(cat:*)",
       "Bash(for const:*)",
-      "Bash(for dep:*)"
+      "Bash(for dep:*)",
+      "Bash(head:*)",
+      "Bash(python3:*)",
+      "Bash(/d/Edwin/MyTol/node/node -e \"\nconst fs = require\\('fs'\\);\nconst data = JSON.parse\\(fs.readFileSync\\('/c/Users/Administrator/.claude/projects/D--Edwin-projectXh-JeecgBoot-neuron-clean/845c9ddd-4919-4763-98b1-46124973d8c5/tool-results/toolu_01WGhXokUv1yRXgYuGfJikJz.json','utf8'\\)\\);\nlet text = data[0].text;\nlet idx = text.indexOf\\('## DETAILED'\\);\nlet content = idx >= 0 ? text.substring\\(idx\\) : text;\nlet header = '# NeuronCloud 后端模块详细设计文档\\\\n\\\\n> 旭衡电子\\(深圳\\) AlwaysControl Technology\\\\n>\\\\n> 文档生成日期：2026-03-23\\\\n\\\\n';\nfs.writeFileSync\\('/d/Edwin/projectXh/JeecgBoot/neuron-clean/docs/neuron-clean-module-guide.md', header + content, 'utf8'\\);\nconsole.log\\('done: ' + content.split\\('\\\\n'\\).length + ' lines'\\);\n\")",
+      "Bash(/d/Edwin/MyTol/node/node -e \"\nconst fs = require\\('fs'\\);\nconst data = JSON.parse\\(fs.readFileSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Administrator\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\projects\\\\\\\\\\\\\\\\D--Edwin-projectXh-JeecgBoot-neuron-clean\\\\\\\\\\\\\\\\845c9ddd-4919-4763-98b1-46124973d8c5\\\\\\\\\\\\\\\\tool-results\\\\\\\\\\\\\\\\toolu_01WGhXokUv1yRXgYuGfJikJz.json','utf8'\\)\\);\nlet text = data[0].text;\nlet idx = text.indexOf\\('## DETAILED'\\);\nlet content = idx >= 0 ? text.substring\\(idx\\) : text;\nlet header = '# NeuronCloud 后端模块详细设计文档\\\\n\\\\n> 旭衡电子\\(深圳\\) AlwaysControl Technology\\\\n>\\\\n> 文档生成日期：2026-03-23\\\\n\\\\n';\nfs.writeFileSync\\('D:\\\\\\\\\\\\\\\\Edwin\\\\\\\\\\\\\\\\projectXh\\\\\\\\\\\\\\\\JeecgBoot\\\\\\\\\\\\\\\\neuron-clean\\\\\\\\\\\\\\\\docs\\\\\\\\\\\\\\\\neuron-clean-module-guide.md', header + content, 'utf8'\\);\nconsole.log\\('done: ' + content.split\\('\\\\n'\\).length + ' lines'\\);\n\")"
     ]
   }
 }

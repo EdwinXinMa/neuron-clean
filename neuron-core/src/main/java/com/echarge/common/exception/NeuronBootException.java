@@ -3,7 +3,7 @@ package com.echarge.common.exception;
 import com.echarge.common.constant.CommonConstant;
 
 /**
- * @Description: jeecg-boot自定义异常
+ * @Description: NeuronCloud 业务异常
  * @author Edwin
  */
 public class NeuronBootException extends RuntimeException {
