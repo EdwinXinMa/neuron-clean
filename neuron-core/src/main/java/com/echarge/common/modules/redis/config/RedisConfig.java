@@ -155,10 +155,14 @@ extends CachingConfigurerSupport {
      * Lifted jumps to return sites
      */
     private static Jackson2JsonRedisSerializer<Object> getJacksonSerializer() {
-        if (cachedJacksonSerializer != null) return cachedJacksonSerializer;
+        if (cachedJacksonSerializer != null) {
+            return cachedJacksonSerializer;
+        }
         Class<RedisConfig> clazz = RedisConfig.class;
         synchronized (RedisConfig.class) {
-            if (cachedJacksonSerializer != null) return cachedJacksonSerializer;
+            if (cachedJacksonSerializer != null) {
+                return cachedJacksonSerializer;
+            }
             cachedJacksonSerializer = RedisConfig.jacksonSerializer();
             // ** MonitorExit[var0] (shouldn't be in output)
             return cachedJacksonSerializer;
@@ -166,14 +170,14 @@ extends CachingConfigurerSupport {
     }
 
     private static Jackson2JsonRedisSerializer<Object> jacksonSerializer() {
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        objectMapper.activateDefaultTyping(
+                objectMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL);
         objectMapper.registerModule((Module)new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-        return jackson2JsonRedisSerializer;
+        return new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
     }
 
     public static class RedisConfigCacheManager

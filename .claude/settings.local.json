@@ -51,7 +51,19 @@
       "Bash(git remote:*)",
       "Bash(git push:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cp:*)",
+      "Bash(mvn compile:*)",
+      "Bash(ls /c/apache-maven*/bin/mvn)",
+      "Bash(ls /d/apache-maven*/bin/mvn)",
+      "Read(//d/Edwin/**)",
+      "Read(//c//**)",
+      "Read(//proc/**)",
+      "Bash(echo $PATH)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(for const:*)",
+      "Bash(for dep:*)"
     ]
   }
 }

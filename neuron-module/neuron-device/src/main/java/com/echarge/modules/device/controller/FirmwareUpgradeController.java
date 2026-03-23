@@ -16,17 +16,37 @@ import com.echarge.modules.device.websocket.OtaWebSocket;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Tag(name = "固件升级")
 @RestController
 @RequestMapping("/firmware/upgrade")
 public class FirmwareUpgradeController {
+
+    private static final ExecutorService UPGRADE_EXECUTOR = new ThreadPoolExecutor(
+            2, 4, 60, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100),
+            new ThreadFactory() {
+                private final java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger(0);
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r, "firmware-upgrade-" + count.incrementAndGet());
+                    t.setDaemon(true);
+                    return t;
+                }
+            },
+            new ThreadPoolExecutor.CallerRunsPolicy()
+    );
 
     @Autowired
     private IFirmwareUpgradeTaskService upgradeTaskService;
@@ -79,7 +99,7 @@ public class FirmwareUpgradeController {
         String taskId = task.getId();
 
         // 异步模拟升级流程
-        new Thread(() -> simulateUpgrade(taskId, deviceSn)).start();
+        UPGRADE_EXECUTOR.submit(() -> simulateUpgrade(taskId, deviceSn));
 
         return Result.OK("升级任务已创建", taskId);
     }

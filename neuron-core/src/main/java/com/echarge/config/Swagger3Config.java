@@ -39,7 +39,7 @@ public class Swagger3Config implements WebMvcConfigurer {
     // 路径匹配结果缓存，避免重复计算
     private static final Map<String, Boolean> EXCLUDED_PATHS_CACHE = new ConcurrentHashMap<>();
     // 定义不需要注入安全要求的路径集合
-    private static final Set<String> excludedPaths = new HashSet<>(Arrays.asList(
+    private static final Set<String> EXCLUDED_PATHS = new HashSet<>(Arrays.asList(
             "/sys/randomImage/**",
             "/sys/login",
             "/sys/phoneLogin",
@@ -51,15 +51,15 @@ public class Swagger3Config implements WebMvcConfigurer {
             "/sys/user/register"
     ));
     // 预处理通配符模式，提高匹配效率
-    private static final Set<String> wildcardPatterns = new HashSet<>();
-    private static final Set<String> exactPatterns = new HashSet<>();
+    private static final Set<String> WILDCARD_PATTERNS = new HashSet<>();
+    private static final Set<String> EXACT_PATTERNS = new HashSet<>();
     static {
         // 初始化时分离精确匹配和通配符匹配
-        for (String pattern : excludedPaths) {
+        for (String pattern : EXCLUDED_PATHS) {
             if (pattern.endsWith("/**")) {
-                wildcardPatterns.add(pattern.substring(0, pattern.length() - 3));
+                WILDCARD_PATTERNS.add(pattern.substring(0, pattern.length() - 3));
             } else {
-                exactPatterns.add(pattern);
+                EXACT_PATTERNS.add(pattern);
             }
         }
     }
@@ -123,11 +123,11 @@ public class Swagger3Config implements WebMvcConfigurer {
         // 使用缓存避免重复计算
         return EXCLUDED_PATHS_CACHE.computeIfAbsent(path, p -> {
             // 精确匹配
-            if (exactPatterns.contains(p)) {
+            if (EXACT_PATTERNS.contains(p)) {
                 return true;
             }
             // 通配符匹配
-            return wildcardPatterns.stream().anyMatch(p::startsWith);
+            return WILDCARD_PATTERNS.stream().anyMatch(p::startsWith);
         });
     }
     

@@ -370,7 +370,7 @@ public class SqlInjectionUtil {
 	 *
 	 * @param field
 	 */
-	static final Pattern fieldPattern = Pattern.compile("^[a-zA-Z0-9_]+$");
+	static final Pattern FIELD_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
 	public static String getSqlInjectField(String field) {
 		if(oConvertUtils.isEmpty(field)){
 			return field;
@@ -387,7 +387,7 @@ public class SqlInjectionUtil {
 		 *
 		 * 字段定义只能是是字母 数字 下划线的组合（不允许有空格、转义字符串等）
 		 */
-		boolean isValidField = fieldPattern.matcher(field).matches();
+		boolean isValidField = FIELD_PATTERN.matcher(field).matches();
 		if (!isValidField) {
 			String errorMsg = "字段不合法，存在SQL注入风险!--->" + field;
 			log.error(errorMsg);

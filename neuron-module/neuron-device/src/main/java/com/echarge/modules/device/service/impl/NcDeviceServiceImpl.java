@@ -5,7 +5,7 @@ import com.echarge.common.exception.NeuronBootException;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.mapper.NcDeviceMapper;
 import com.echarge.modules.device.service.INcDeviceService;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 

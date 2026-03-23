@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class NeuronMinio {
 
-    private String minio_url;
+    private String minioUrl;
     private String bucketName;
 
 }

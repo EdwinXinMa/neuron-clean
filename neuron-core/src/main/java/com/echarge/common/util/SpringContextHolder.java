@@ -54,7 +54,9 @@ implements ApplicationContextAware {
                     t = applicationContext.getBean(name, cls);
                 }
                 catch (Exception e) {
-                    if (isWarningLogged) break block3;
+                    if (isWarningLogged) {
+                        break block3;
+                    }
                     log.warn("Customize redis listener handle [ " + name + " ], does not exist\uff01");
                     isWarningLogged = true;
                 }

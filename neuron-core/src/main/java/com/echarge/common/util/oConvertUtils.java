@@ -228,7 +228,7 @@ public class oConvertUtils {
 		Integer[] result = new Integer[len];
 		try {
 			for (int i = 0; i < len; i++) {
-				result[i] = new Integer(object[i].trim());
+				result[i] = Integer.valueOf(object[i].trim());
 			}
 			return result;
 		} catch (NumberFormatException e) {
@@ -293,7 +293,7 @@ public class oConvertUtils {
 	}
 
 	public static long stringToLong(String str) {
-		Long test = new Long(0);
+		Long test = 0L;
 		try {
 			test = Long.valueOf(str);
 		} catch (Exception e) {
@@ -788,8 +788,8 @@ public class oConvertUtils {
 					if (isEmpty(newVal) && (oldVal == null || ((JSONArray) oldVal).size() == 0)) {
 						return true;
 					}
-					List<Object> arrayStr = Arrays.asList(newVal.toString().split(","));
-					JSONArray newValArray = new JSONArray(arrayStr);
+					JSONArray newValArray = new JSONArray();
+					newValArray.addAll(Arrays.asList(newVal.toString().split(",")));
 					return equalityOfJSONArray((JSONArray) oldVal, newValArray);
 				}
 			}else{

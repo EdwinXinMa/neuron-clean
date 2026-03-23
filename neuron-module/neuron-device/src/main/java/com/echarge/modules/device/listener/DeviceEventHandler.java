@@ -141,7 +141,9 @@ public class DeviceEventHandler implements DeviceEventListener {
         NcDevice n3lite = ncDeviceService.getOne(
                 new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, chargePointId)
         );
-        if (n3lite == null) return;
+        if (n3lite == null) {
+            return;
+        }
 
         if (connectorId == 0) {
             // N3 Lite 本体状态
@@ -243,7 +245,9 @@ public class DeviceEventHandler implements DeviceEventListener {
 
         JsonObject payload = gson.fromJson(event.getPayload(), JsonObject.class);
         JsonArray chargePoints = payload.getAsJsonArray("chargePoints");
-        if (chargePoints == null) return;
+        if (chargePoints == null) {
+            return;
+        }
 
         Date now = new Date();
 
@@ -257,7 +261,9 @@ public class DeviceEventHandler implements DeviceEventListener {
             String sn = getJsonString(cp, "sn");
             String model = getJsonString(cp, "model");
 
-            if (sn == null) continue;
+            if (sn == null) {
+                continue;
+            }
             reportedPileSns.add(sn);
 
             // 处理桩
@@ -292,7 +298,9 @@ public class DeviceEventHandler implements DeviceEventListener {
                     int connectorId = conn.has("connectorId") ? conn.get("connectorId").getAsInt() : 0;
                     String connStatus = getJsonString(conn, "status");
 
-                    if (connectorId == 0) continue;
+                    if (connectorId == 0) {
+                        continue;
+                    }
                     connectorIds.add(connectorId);
 
                     NcConnector connector = ncConnectorService.getOne(
@@ -348,7 +356,9 @@ public class DeviceEventHandler implements DeviceEventListener {
      * OCPP connector 状态映射到设备在线状态
      */
     private String mapConnectorStatus(String ocppStatus) {
-        if (ocppStatus == null) return "ONLINE";
+        if (ocppStatus == null) {
+            return "ONLINE";
+        }
         switch (ocppStatus) {
             case "Available":
             case "Charging":
@@ -370,9 +380,13 @@ public class DeviceEventHandler implements DeviceEventListener {
      * 根据型号猜测设备类型
      */
     private String guessDeviceType(String model) {
-        if (model == null) return "N3_LITE";
+        if (model == null) {
+            return "N3_LITE";
+        }
         String lower = model.toLowerCase();
-        if (lower.contains("atp")) return "ATP_III";
+        if (lower.contains("atp")) {
+            return "ATP_III";
+        }
         return "N3_LITE";
     }
 

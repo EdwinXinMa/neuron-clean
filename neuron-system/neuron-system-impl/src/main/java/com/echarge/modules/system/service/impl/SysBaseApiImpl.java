@@ -59,7 +59,9 @@ public class SysBaseApiImpl implements ISysBaseAPI {
     @Override
     public LoginUser getUserByName(String username) {
         SysUser user = getUserEntityByName(username);
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         return toLoginUser(user);
     }
 
@@ -72,7 +74,9 @@ public class SysBaseApiImpl implements ISysBaseAPI {
     @Override
     public LoginUser getUserById(String id) {
         SysUser user = userMapper.selectById(id);
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         return toLoginUser(user);
     }
 

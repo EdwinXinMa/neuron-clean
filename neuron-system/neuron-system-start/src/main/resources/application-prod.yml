@@ -18,60 +18,13 @@ management:
     web:
       exposure:
         include: metrics,httpexchanges
-  health:
-    mail:
-      enabled: false
+  health: {}
 
 spring:
-  flyway:
-    # 是否启用flyway
-    enabled: false
-    # 是否关闭要清除已有库下的表功能,生产环境必须为true,否则会删库，非常重要！！！
-    clean-disabled: true
-    # 迁移sql脚本存放路径
-    locations: classpath:flyway/sql/postgresql
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-  mail:
-    # 定时任务发送邮件
-    timeJobSend: false
-    host: smtp.163.com
-    username: jeecgos@163.com
-    password: ??
-    properties:
-      mail.smtp.auth: true
-      smtp.ssl.enable: true
-  ## quartz定时任务,采用数据库方式
-  quartz:
-    job-store-type: jdbc
-    jdbc:
-      initialize-schema: embedded
-    #定时任务开关，true-开  false-关
-    auto-startup: true
-    #延迟1秒启动定时任务
-    startup-delay: 1s
-    #启动时更新己存在的Job
-    overwrite-existing-jobs: true
-    properties:
-      org:
-        quartz:
-          scheduler:
-            instanceName: MyScheduler
-            instanceId: AUTO
-          jobStore:
-            class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            tablePrefix: QRTZ_
-            isClustered: true
-            misfireThreshold: 12000
-            clusterCheckinInterval: 15000
-          threadPool:
-            class: org.quartz.simpl.SimpleThreadPool
-            threadCount: 10
-            threadPriority: 5
-            threadsInheritContextClassLoaderOfInitializingThread: true
   #json 时间戳统一转换
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -80,21 +33,6 @@ spring:
     open-in-view: false
   aop:
     proxy-target-class: true
-  #配置freemarker
-  freemarker:
-    # 设置模板后缀名
-    suffix: .ftl
-    # 设置文档类型
-    content-type: text/html
-    # 设置页面编码格式
-    charset: UTF-8
-    # 设置页面缓存
-    cache: false
-    prefer-file-system-access: false
-    # 设置ftl文件路径
-    template-loader-path:
-      - classpath:/templates
-    template_update_delay: 0
   # 设置静态文件路径，js,css等
   mvc:
     static-path-pattern: /**
@@ -106,7 +44,6 @@ spring:
   autoconfigure:
     exclude:
       - com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure
-      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
   datasource:
     druid:
       stat-view-servlet:
@@ -199,17 +136,6 @@ neuron:
       user: postgres
       password: postgres
       table: embeddings
-  #  Unipush配置 云函数调用 URL 化地址
-  unicloud:
-    pushUrl:
-  # 平台上线安全配置
-  firewall:
-    # 数据源安全 (开启后，Online报表和图表的数据源为必填)
-    dataSourceSafe: true
-    # 低代码模式（dev:开发模式，prod:发布模式——关闭所有在线开发配置能力）
-    lowCodeMode: prod
-    # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
-    is-concurrent: true
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
   #签名拦截接口
@@ -226,26 +152,9 @@ neuron:
     #webapp文件路径
     webapp: /opt/neuron/webapp
   shiro:
-    excludeUrls: /test/jeecgDemo/demo3,/test/jeecgDemo/redisDemo/**,/bigscreen/category/**,/bigscreen/visual/**,/bigscreen/map/**,/jmreport/bigscreen2/**,/api/getUserInfo
-  #分布式锁配置
-  redisson:
-    address: 127.0.0.1:6379
-    password:
-    type: STANDALONE
-    enabled: true
+    excludeUrls:
 #Mybatis输出sql日志
 logging:
   level:
     org.springframework.context.support.PostProcessorRegistrationDelegate: error
-    org.flywaydb: debug
     com.echarge.modules.system.mapper: info
-#swagger
-knife4j:
-  #开启增强配置
-  enable: true
-  #开启生产环境屏蔽
-  production: true
-  basic:
-    enable: true
-    username: jeecg
-    password: jeecg1314

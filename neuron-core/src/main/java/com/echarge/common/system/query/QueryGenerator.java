@@ -71,14 +71,10 @@ public class QueryGenerator {
 	public static final String TO_DATE = "to_date";
 
 	/**时间格式化 */
-	private static final ThreadLocal<SimpleDateFormat> LOCAL = new ThreadLocal<SimpleDateFormat>();
+	private static final java.time.format.DateTimeFormatter DATE_TIME_FORMATTER =
+			java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static SimpleDateFormat getTime(){
-		SimpleDateFormat time = LOCAL.get();
-		if(time == null){
-			time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            LOCAL.set(time);
-		}
-		return time;
+		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	}
 	
 	/**

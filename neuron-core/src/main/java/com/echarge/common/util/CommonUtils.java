@@ -6,7 +6,7 @@ import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSour
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.toolkit.JdbcUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.constant.DataBaseConstant;
 import com.echarge.common.constant.SymbolConstant;
