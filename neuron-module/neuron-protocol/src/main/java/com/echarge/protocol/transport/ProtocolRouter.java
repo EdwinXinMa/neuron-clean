@@ -14,6 +14,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.util.Map;
 
@@ -77,24 +78,30 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
             return;
         }
 
-        // Handle CALLRESULT/CALLERROR responses to server-initiated requests
-        if (msg.getMessageType() == 3 || msg.getMessageType() == 4) {
-            PendingCallManager.complete(msg.getMessageId(), msg);
-            return;
-        }
+        // 设置 MDC 设备标签，后续所有日志自动带上 SN
+        MDC.put("deviceSn", session.getChargePointId());
+        try {
+            // Handle CALLRESULT/CALLERROR responses to server-initiated requests
+            if (msg.getMessageType() == 3 || msg.getMessageType() == 4) {
+                PendingCallManager.complete(msg.getMessageId(), msg);
+                return;
+            }
 
-        // Handle CALL requests
-        MessageDispatcher dispatcher = dispatchers.get(session.getProtocolVersion());
-        if (dispatcher == null) {
-            log.error("No dispatcher for protocol: {}", session.getProtocolVersion());
-            ctx.writeAndFlush(OutboundMessage.callError(msg.getMessageId(),
-                    OcppErrorCode.NOT_SUPPORTED.getCode(), "Protocol not supported"));
-            return;
-        }
+            // Handle CALL requests
+            MessageDispatcher dispatcher = dispatchers.get(session.getProtocolVersion());
+            if (dispatcher == null) {
+                log.error("No dispatcher for protocol: {}", session.getProtocolVersion());
+                ctx.writeAndFlush(OutboundMessage.callError(msg.getMessageId(),
+                        OcppErrorCode.NOT_SUPPORTED.getCode(), "Protocol not supported"));
+                return;
+            }
 
-        OutboundMessage response = dispatcher.dispatch(session, msg);
-        if (response != null) {
-            ctx.writeAndFlush(response);
+            OutboundMessage response = dispatcher.dispatch(session, msg);
+            if (response != null) {
+                ctx.writeAndFlush(response);
+            }
+        } finally {
+            MDC.remove("deviceSn");
         }
     }
 
@@ -112,14 +119,19 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
     private void handleDisconnect(ChannelHandlerContext ctx) {
         Session session = sessionManager.getByChannel(ctx.channel());
         if (session != null) {
-            log.info("Device disconnected: chargePointId={}", session.getChargePointId());
-            DeviceEvent event = new DeviceEvent(
-                    DeviceEvent.DEVICE_OFFLINE,
-                    session.getChargePointId(),
-                    null
-            );
-            eventPublisher.publish(event);
-            sessionManager.unregister(ctx.channel());
+            MDC.put("deviceSn", session.getChargePointId());
+            try {
+                log.info("Device disconnected: chargePointId={}", session.getChargePointId());
+                DeviceEvent event = new DeviceEvent(
+                        DeviceEvent.DEVICE_OFFLINE,
+                        session.getChargePointId(),
+                        null
+                );
+                eventPublisher.publish(event);
+                sessionManager.unregister(ctx.channel());
+            } finally {
+                MDC.remove("deviceSn");
+            }
         }
     }
 

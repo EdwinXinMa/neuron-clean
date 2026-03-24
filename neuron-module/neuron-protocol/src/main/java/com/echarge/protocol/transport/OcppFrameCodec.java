@@ -28,7 +28,7 @@ public class OcppFrameCodec extends MessageToMessageCodec<TextWebSocketFrame, Ou
     @Override
     protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame frame, List<Object> out) {
         String text = frame.text();
-        log.debug("OCPP IN: {}", text);
+        log.info("OCPP IN: {}", text);
 
         try {
             JsonArray array = JsonParser.parseString(text).getAsJsonArray();
@@ -74,7 +74,7 @@ public class OcppFrameCodec extends MessageToMessageCodec<TextWebSocketFrame, Ou
         }
 
         String text = array.toString();
-        log.debug("OCPP OUT: {}", text);
+        log.info("OCPP OUT: {}", text);
         out.add(new TextWebSocketFrame(text));
     }
 }
