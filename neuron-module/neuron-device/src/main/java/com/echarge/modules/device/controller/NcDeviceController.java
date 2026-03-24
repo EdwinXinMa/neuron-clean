@@ -6,13 +6,20 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
 import com.echarge.common.exception.NeuronBootException;
+import com.echarge.common.ocpp.OcppCommandSender;
+import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.RedisUtil;
 import com.echarge.modules.alert.entity.NcAlert;
 import com.echarge.modules.alert.service.INcAlertService;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
+import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.INcOpLogService;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.apache.shiro.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +49,12 @@ public class NcDeviceController {
 
     @Autowired
     private RedisUtil redisClient;
+
+    @Autowired
+    private OcppCommandSender ocppCommandSender;
+
+    @Autowired
+    private INcOpLogService opLogService;
 
     @Operation(summary = "设备列表")
     @GetMapping("/list")
@@ -297,6 +310,85 @@ public class NcDeviceController {
         result.put("skipped", skipped);
         result.put("errors", errors);
         return Result.OK(result);
+    }
+
+    /**
+     * DLM 修改（修改断路器额定电流）
+     * 通过 OCPP DataTransfer 下发配置到设备，同时更新数据库
+     */
+    @Operation(summary = "DLM 修改")
+    @PostMapping("/{sn}/dlm")
+    public Result<?> updateDlm(@PathVariable String sn, @RequestBody JSONObject params) {
+        Integer breakerRating = params.getInteger("breakerRating");
+        if (breakerRating == null || breakerRating <= 0) {
+            return Result.error("breakerRating 参数无效");
+        }
+
+        NcDevice device = ncDeviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
+        );
+        if (device == null) {
+            return Result.error("设备不存在: " + sn);
+        }
+
+        Integer oldRating = device.getBreakerRating();
+
+        // 更新数据库
+        device.setBreakerRating(breakerRating);
+        ncDeviceService.updateById(device);
+
+        // 同步更新 Redis 中的 DLM 数据
+        String redisKey = "device:dlm:" + sn;
+        Object dlmRaw = redisClient.get(redisKey);
+        if (dlmRaw != null) {
+            try {
+                JSONObject dlm = JSONObject.parseObject(dlmRaw.toString());
+                dlm.put("breakerRating", breakerRating);
+                redisClient.set(redisKey, dlm.toJSONString(), 300);
+            } catch (Exception e) {
+                log.warn("更新 Redis DLM 数据失败: {}", e.getMessage());
+            }
+        }
+
+        // 如果设备在线，通过 OCPP 下发配置
+        if (ocppCommandSender.isDeviceConnected(sn)) {
+            String messageId = "dlm-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            JsonObject payload = new JsonObject();
+            payload.addProperty("breakerRating", breakerRating);
+
+            JsonArray call = new JsonArray();
+            call.add(2);
+            call.add(messageId);
+            call.add("DataTransfer");
+
+            JsonObject dtPayload = new JsonObject();
+            dtPayload.addProperty("vendorId", "AlwaysControl");
+            dtPayload.addProperty("messageId", "SetDLMConfig");
+            dtPayload.addProperty("data", payload.toString());
+            call.add(dtPayload);
+
+            ocppCommandSender.sendCall(sn, call.toString());
+            log.info("[DLM] Config sent to {}: breakerRating={}A", sn, breakerRating);
+        }
+
+        // 记录操作日志
+        String opUser = "system";
+        try {
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser != null) opUser = loginUser.getUsername();
+        } catch (Exception ignored) {}
+
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.DLM_CONFIG);
+        opLog.setOpContent((oldRating != null ? oldRating : "?") + "A → " + breakerRating + "A");
+        opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
+
+        return Result.OK("DLM 配置已更新");
     }
 
     private Map<String, String> buildError(int row, String sn, String reason) {

@@ -36,4 +36,5 @@ public class DeviceEvent implements Serializable {
     public static final String DEVICE_OFFLINE = "DEVICE_OFFLINE";
     public static final String TOPOLOGY_REPORT = "TOPOLOGY_REPORT";
     public static final String DLM_STATUS = "DLM_STATUS";
+    public static final String FIRMWARE_STATUS = "FIRMWARE_STATUS";
 }

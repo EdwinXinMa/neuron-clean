@@ -6,13 +6,21 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
 import com.echarge.common.exception.NeuronBootException;
+import com.echarge.common.util.MinioUtil;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.entity.FirmwareVersion;
 import com.echarge.modules.device.entity.NcDevice;
+import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
 import com.echarge.modules.device.service.IFirmwareVersionService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.modules.device.websocket.OtaWebSocket;
+import com.echarge.common.ocpp.OcppCommandSender;
+import com.echarge.common.system.vo.LoginUser;
+import org.apache.shiro.SecurityUtils;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -20,33 +28,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 @Slf4j
 @Tag(name = "固件升级")
 @RestController
 @RequestMapping("/firmware/upgrade")
 public class FirmwareUpgradeController {
-
-    private static final ExecutorService UPGRADE_EXECUTOR = new ThreadPoolExecutor(
-            2, 4, 60, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(100),
-            new ThreadFactory() {
-                private final java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger(0);
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread t = new Thread(r, "firmware-upgrade-" + count.incrementAndGet());
-                    t.setDaemon(true);
-                    return t;
-                }
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy()
-    );
 
     @Autowired
     private IFirmwareUpgradeTaskService upgradeTaskService;
@@ -56,6 +46,12 @@ public class FirmwareUpgradeController {
 
     @Autowired
     private INcDeviceService ncDeviceService;
+
+    @Autowired
+    private OcppCommandSender ocppCommandSender;
+
+    @Autowired
+    private INcOpLogService opLogService;
 
     @Operation(summary = "发起升级")
     @PostMapping("/start")
@@ -87,6 +83,24 @@ public class FirmwareUpgradeController {
             throw new NeuronBootException("设备不在线，无法升级");
         }
 
+        // 校验 OCPP 会话
+        if (!ocppCommandSender.isDeviceConnected(deviceSn)) {
+            throw new NeuronBootException("设备 OCPP 连接不存在，无法下发升级指令");
+        }
+
+        // 生成固件下载 URL（MinIO presigned URL，1小时有效）
+        String downloadUrl;
+        try {
+            String fileUrl = firmware.getFileUrl();
+            String bucketName = MinioUtil.getBucketName();
+            String minioUrl = MinioUtil.getMinioUrl();
+            String objectName = fileUrl.replace(minioUrl + bucketName + "/", "");
+            downloadUrl = MinioUtil.getObjectUrl(bucketName, objectName, 3600);
+        } catch (Exception e) {
+            log.error("生成固件下载链接失败", e);
+            throw new NeuronBootException("生成固件下载链接失败: " + e.getMessage());
+        }
+
         // 创建任务
         FirmwareUpgradeTask task = new FirmwareUpgradeTask();
         task.setFirmwareId(firmwareId);
@@ -98,8 +112,38 @@ public class FirmwareUpgradeController {
 
         String taskId = task.getId();
 
-        // 异步模拟升级流程
-        UPGRADE_EXECUTOR.submit(() -> simulateUpgrade(taskId, deviceSn));
+        // 获取当前操作人
+        String opUser = "system";
+        try {
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser != null) {
+                opUser = loginUser.getUsername();
+            }
+        } catch (Exception ignored) {}
+
+        String opContent = device.getFirmwareVersion() + " → " + firmware.getVersion();
+
+        // 通过 OCPP 1.6 下发 UpdateFirmware 命令
+        try {
+            sendUpdateFirmware(deviceSn, downloadUrl, taskId);
+        } catch (Exception e) {
+            log.error("下发 UpdateFirmware 失败, taskId={}", taskId, e);
+            task.setStatus("FAILED");
+            task.setErrorMsg("下发指令失败: " + e.getMessage());
+            task.setFinishTime(new Date());
+            upgradeTaskService.updateById(task);
+
+            // 记录失败日志
+            saveOpLog(deviceSn, opUser, NcOpLog.OTA_UPGRADE, opContent, NcOpLog.FAIL, "下发指令失败: " + e.getMessage());
+
+            throw new NeuronBootException("下发升级指令失败: " + e.getMessage());
+        }
+
+        // 记录发起日志（结果待设备回报后由 DeviceEventHandler 更新）
+        saveOpLog(deviceSn, opUser, NcOpLog.OTA_UPGRADE, opContent, NcOpLog.SUCCESS, null);
+
+        // 推送初始状态到前端
+        pushMessage(taskId, deviceSn, "PENDING", 0, "升级指令已下发，等待设备响应");
 
         return Result.OK("升级任务已创建", taskId);
     }
@@ -131,54 +175,42 @@ public class FirmwareUpgradeController {
         return Result.OK(page);
     }
 
-    private void simulateUpgrade(String taskId, String deviceSn) {
-        try {
-            // DOWNLOADING 阶段
-            sleep(1000);
-            updateAndPush(taskId, deviceSn, "DOWNLOADING", 0, "开始下载固件");
-            for (int p = 20; p <= 100; p += 20) {
-                sleep(500);
-                updateAndPush(taskId, deviceSn, "DOWNLOADING", p, "下载中");
-            }
+    /**
+     * 通过 OCPP 1.6 发送 UpdateFirmware CALL 到设备
+     * OCPP 1.6 UpdateFirmware.req: { location: string, retrieveDate: string, retries?: int, retryInterval?: int }
+     */
+    private void sendUpdateFirmware(String deviceSn, String downloadUrl, String taskId) {
+        String messageId = "ota-" + UUID.randomUUID().toString().substring(0, 8);
 
-            // INSTALLING 阶段
-            updateAndPush(taskId, deviceSn, "INSTALLING", 0, "开始安装固件");
-            for (int p = 25; p <= 100; p += 25) {
-                sleep(500);
-                updateAndPush(taskId, deviceSn, "INSTALLING", p, "安装中");
-            }
+        // 构建 OCPP CALL: [2, messageId, "UpdateFirmware", { location, retrieveDate }]
+        JsonObject payload = new JsonObject();
+        payload.addProperty("location", downloadUrl);
+        payload.addProperty("retrieveDate", Instant.now().toString());
+        payload.addProperty("retries", 1);
+        payload.addProperty("retryInterval", 30);
 
-            // COMPLETED
-            FirmwareUpgradeTask task = upgradeTaskService.getById(taskId);
-            if (task != null) {
-                task.setStatus("COMPLETED");
-                task.setProgress(100);
-                task.setFinishTime(new Date());
-                upgradeTaskService.updateById(task);
-            }
-            pushMessage(taskId, deviceSn, "COMPLETED", 100, "升级完成");
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("UpdateFirmware");
+        call.add(payload);
 
-        } catch (Exception e) {
-            log.error("OTA升级模拟异常, taskId={}", taskId, e);
-            FirmwareUpgradeTask task = upgradeTaskService.getById(taskId);
-            if (task != null) {
-                task.setStatus("FAILED");
-                task.setErrorMsg(e.getMessage());
-                task.setFinishTime(new Date());
-                upgradeTaskService.updateById(task);
-            }
-            pushMessage(taskId, deviceSn, "FAILED", 0, "升级失败: " + e.getMessage());
-        }
+        String message = call.toString();
+        log.info("[OTA] Sending UpdateFirmware to {}: messageId={}, url={}", deviceSn, messageId, downloadUrl);
+        ocppCommandSender.sendCall(deviceSn, message);
     }
 
-    private void updateAndPush(String taskId, String deviceSn, String status, int progress, String message) {
-        FirmwareUpgradeTask task = upgradeTaskService.getById(taskId);
-        if (task != null) {
-            task.setStatus(status);
-            task.setProgress(progress);
-            upgradeTaskService.updateById(task);
-        }
-        pushMessage(taskId, deviceSn, status, progress, message);
+    private void saveOpLog(String deviceSn, String opUser, String opType, String opContent, String opResult, String failReason) {
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(deviceSn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(opType);
+        opLog.setOpContent(opContent);
+        opLog.setOpResult(opResult);
+        opLog.setFailReason(failReason);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
     }
 
     private void pushMessage(String taskId, String deviceSn, String status, int progress, String message) {
@@ -189,14 +221,5 @@ public class FirmwareUpgradeController {
         msg.put("progress", progress);
         msg.put("message", message);
         OtaWebSocket.sendMessage(deviceSn, msg.toJSONString());
-    }
-
-    private void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        }
     }
 }

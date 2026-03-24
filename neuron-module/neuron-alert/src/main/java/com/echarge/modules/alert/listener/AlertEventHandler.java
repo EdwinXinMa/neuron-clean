@@ -3,6 +3,7 @@ package com.echarge.modules.alert.listener;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
 import com.echarge.modules.alert.service.INcAlertService;
+import com.echarge.common.websocket.FrontendPushChannel;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,15 @@ public class AlertEventHandler implements DeviceEventListener {
 
         if ("Faulted".equals(status) && errorCode != null && !"NoError".equals(errorCode)) {
             ncAlertService.recordAlert(chargePointId, connectorId, errorCode, vendorErrorCode, info);
+
+            // 广播告警事件到前端
+            JsonObject msg = new JsonObject();
+            msg.addProperty("type", "ALERT");
+            msg.addProperty("deviceSn", chargePointId);
+            msg.addProperty("errorCode", errorCode);
+            msg.addProperty("detail", info != null ? info : errorCode);
+            msg.addProperty("timestamp", java.time.Instant.now().toString());
+            FrontendPushChannel.broadcast(msg.toString());
         }
     }
 

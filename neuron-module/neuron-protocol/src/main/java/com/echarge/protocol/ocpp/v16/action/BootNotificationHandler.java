@@ -48,6 +48,6 @@ public class BootNotificationHandler implements Ocpp16ActionHandler<BootNotifica
         );
         eventPublisher.publish(event);
 
-        return new BootNotificationResp("Accepted", Instant.now().toString(), 300);
+        return new BootNotificationResp("Accepted", Instant.now().toString(), 60);
     }
 }

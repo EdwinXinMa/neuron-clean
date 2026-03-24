@@ -23,6 +23,8 @@ public final class OcppAction {
     public static final String CHANGE_CONFIGURATION = "ChangeConfiguration";
     public static final String CLEAR_CACHE = "ClearCache";
     public static final String UNLOCK_CONNECTOR = "UnlockConnector";
+    public static final String UPDATE_FIRMWARE = "UpdateFirmware";
+    public static final String FIRMWARE_STATUS_NOTIFICATION = "FirmwareStatusNotification";
 
     // OCPP 2.0.1 specific
     public static final String TRANSACTION_EVENT = "TransactionEvent";

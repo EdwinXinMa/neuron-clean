@@ -33,6 +33,6 @@ public class BootNotificationHandler implements Ocpp201ActionHandler<BootNotific
                 request.getReason());
 
         // TODO: persist charging station info
-        return new BootNotificationResp("Accepted", Instant.now().toString(), 300);
+        return new BootNotificationResp("Accepted", Instant.now().toString(), 60);
     }
 }

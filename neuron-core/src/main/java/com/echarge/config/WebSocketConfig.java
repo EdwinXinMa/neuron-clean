@@ -31,6 +31,7 @@ public class WebSocketConfig {
         FilterRegistrationBean bean = new FilterRegistrationBean();
         bean.setFilter(websocketFilter());
         //TODO 临时注释掉，测试下线上socket总断的问题
+        // deviceSocket 是广播端点，不需要 token 校验，不加入此 filter
         bean.addUrlPatterns("/taskCountSocket/*", "/websocket/*","/eoaSocket/*","/eoaNewChatSocket/*", "/newsWebsocket/*", "/dragChannelSocket/*", "/vxeSocket/*", "/otaSocket/*");
         return bean;
     }

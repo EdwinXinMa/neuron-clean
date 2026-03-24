@@ -3,10 +3,17 @@ package com.echarge.modules.device.listener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
+import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
+import com.echarge.modules.device.entity.NcOpLog;
+import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.INcOpLogService;
+import com.echarge.common.websocket.FrontendPushChannel;
+import com.echarge.modules.device.websocket.OtaWebSocket;
+import com.echarge.common.util.RedisUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -32,6 +39,15 @@ public class DeviceEventHandler implements DeviceEventListener {
     @Autowired
     private INcConnectorService ncConnectorService;
 
+    @Autowired
+    private IFirmwareUpgradeTaskService upgradeTaskService;
+
+    @Autowired
+    private INcOpLogService opLogService;
+
+    @Autowired
+    private RedisUtil redisUtil;
+
     private final Gson gson = new Gson();
 
     @Override
@@ -51,6 +67,12 @@ public class DeviceEventHandler implements DeviceEventListener {
                 break;
             case DeviceEvent.TOPOLOGY_REPORT:
                 handleTopologyReport(event);
+                break;
+            case DeviceEvent.FIRMWARE_STATUS:
+                handleFirmwareStatus(event);
+                break;
+            case DeviceEvent.DLM_STATUS:
+                handleDlmStatus(event);
                 break;
             default:
                 log.warn("[DeviceEvent] Unknown event type: {}", event.getEventType());
@@ -106,6 +128,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             ncDeviceService.save(device);
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }
+        broadcastDeviceStatus(chargePointId, "ONLINE", "设备上线");
     }
 
     /**
@@ -150,6 +173,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             n3lite.setOnlineStatus("Faulted".equals(status) ? "FAULT" : "ONLINE");
             ncDeviceService.updateById(n3lite);
             log.info("[DeviceEvent] N3 Lite status updated: sn={}, status={}", chargePointId, status);
+            broadcastDeviceStatus(chargePointId, "Faulted".equals(status) ? "FAULT" : "ONLINE", status);
         } else if (connectorId > 0) {
             // 更新枪状态
             NcConnector connector = ncConnectorService.getOne(
@@ -191,6 +215,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             device.setOnlineStatus("OFFLINE");
             ncDeviceService.updateById(device);
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
+            broadcastDeviceStatus(chargePointId, "OFFLINE", "设备离线");
 
             // N3 Lite 离线 → 下挂桩也全部离线，桩下的枪状态改为 Unavailable
             List<NcDevice> children = ncDeviceService.list(
@@ -353,6 +378,149 @@ public class DeviceEventHandler implements DeviceEventListener {
     }
 
     /**
+     * 处理 FirmwareStatusNotification — 设备上报固件升级状态
+     * OCPP 1.6 status: Downloading, Downloaded, Installing, Installed, DownloadFailed, InstallationFailed, Idle
+     */
+    /**
+     * 处理 DlmReport — 设备周期上报 CT 实时数据，写入 Redis
+     * payload 格式:
+     * {
+     *   "totalCurrent": 28.5,
+     *   "voltage": 230.1,
+     *   "totalPower": 6555,
+     *   "deviceTemp": 42.3,
+     *   "wifiRssi": -55,
+     *   "breakerRating": 32,
+     *   "pileAllocations": [
+     *     { "sn": "AT-xxx-01", "allocatedCurrent": 16.0 },
+     *     { "sn": "AT-xxx-02", "allocatedCurrent": 12.5 }
+     *   ]
+     * }
+     */
+    private void handleDlmStatus(DeviceEvent event) {
+        String chargePointId = event.getChargePointId();
+        String payload = event.getPayload();
+        log.info("[DeviceEvent] DlmReport from {}: {}", chargePointId, payload);
+
+        // 直接将整个 JSON 写入 Redis，key 过期时间 5 分钟（设备应每 60s 上报一次）
+        String redisKey = "device:dlm:" + chargePointId;
+        redisUtil.set(redisKey, payload, 300);
+
+        // 同步 breakerRating 到数据库（持久化配置值）
+        try {
+            JsonObject data = gson.fromJson(payload, JsonObject.class);
+            if (data.has("breakerRating")) {
+                int breakerRating = data.get("breakerRating").getAsInt();
+                NcDevice device = ncDeviceService.getOne(
+                        new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, chargePointId)
+                );
+                if (device != null && (device.getBreakerRating() == null || device.getBreakerRating() != breakerRating)) {
+                    device.setBreakerRating(breakerRating);
+                    ncDeviceService.updateById(device);
+                    log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[DeviceEvent] Failed to sync breakerRating for {}: {}", chargePointId, e.getMessage());
+        }
+    }
+
+    private void handleFirmwareStatus(DeviceEvent event) {
+        String chargePointId = event.getChargePointId();
+        JsonObject payload = gson.fromJson(event.getPayload(), JsonObject.class);
+        String status = getJsonString(payload, "status");
+        log.info("[DeviceEvent] FirmwareStatusNotification: sn={}, status={}", chargePointId, status);
+
+        // 查找该设备正在进行中的升级任务
+        FirmwareUpgradeTask task = upgradeTaskService.getOne(
+                new LambdaQueryWrapper<FirmwareUpgradeTask>()
+                        .eq(FirmwareUpgradeTask::getDeviceSn, chargePointId)
+                        .in(FirmwareUpgradeTask::getStatus, "PENDING", "DOWNLOADING", "INSTALLING")
+                        .orderByDesc(FirmwareUpgradeTask::getCreateTime)
+                        .last("LIMIT 1")
+        );
+        if (task == null) {
+            log.warn("[DeviceEvent] No active upgrade task for device: {}", chargePointId);
+            return;
+        }
+
+        // 映射 OCPP 状态到任务状态
+        String taskStatus = task.getStatus();
+        int progress = task.getProgress();
+        String msg = "";
+
+        switch (status) {
+            case "Downloading":
+                taskStatus = "DOWNLOADING";
+                progress = 30;
+                msg = "设备正在下载固件";
+                break;
+            case "Downloaded":
+                taskStatus = "DOWNLOADING";
+                progress = 100;
+                msg = "固件下载完成";
+                break;
+            case "Installing":
+                taskStatus = "INSTALLING";
+                progress = 50;
+                msg = "设备正在安装固件";
+                break;
+            case "Installed":
+                taskStatus = "COMPLETED";
+                progress = 100;
+                msg = "固件升级完成";
+                task.setFinishTime(new Date());
+                break;
+            case "DownloadFailed":
+                taskStatus = "FAILED";
+                msg = "固件下载失败";
+                task.setErrorMsg(msg);
+                task.setFinishTime(new Date());
+                break;
+            case "InstallationFailed":
+                taskStatus = "FAILED";
+                msg = "固件安装失败";
+                task.setErrorMsg(msg);
+                task.setFinishTime(new Date());
+                break;
+            case "Idle":
+                // 设备空闲，忽略
+                return;
+            default:
+                log.warn("[DeviceEvent] Unknown firmware status: {}", status);
+                return;
+        }
+
+        task.setStatus(taskStatus);
+        task.setProgress(progress);
+        upgradeTaskService.updateById(task);
+
+        // 升级失败时补记操作日志
+        if ("FAILED".equals(taskStatus)) {
+            NcOpLog failLog = new NcOpLog();
+            failLog.setDeviceSn(chargePointId);
+            failLog.setOpUser("system");
+            failLog.setOpType(NcOpLog.OTA_UPGRADE);
+            failLog.setOpContent(msg);
+            failLog.setOpResult(NcOpLog.FAIL);
+            failLog.setFailReason(msg);
+            failLog.setOpTime(new Date());
+            failLog.setCreateTime(new Date());
+            opLogService.save(failLog);
+            log.info("[DeviceEvent] OTA failure logged: sn={}, reason={}", chargePointId, msg);
+        }
+
+        // 推送到前端 WebSocket
+        JsonObject wsMsg = new JsonObject();
+        wsMsg.addProperty("taskId", task.getId());
+        wsMsg.addProperty("deviceSn", chargePointId);
+        wsMsg.addProperty("status", taskStatus);
+        wsMsg.addProperty("progress", progress);
+        wsMsg.addProperty("message", msg);
+        OtaWebSocket.sendMessage(chargePointId, wsMsg.toString());
+    }
+
+    /**
      * OCPP connector 状态映射到设备在线状态
      */
     private String mapConnectorStatus(String ocppStatus) {
@@ -388,6 +556,19 @@ public class DeviceEventHandler implements DeviceEventListener {
             return "ATP_III";
         }
         return "N3_LITE";
+    }
+
+    /**
+     * 广播设备状态变化到前端
+     * @param eventType ONLINE / OFFLINE / FAULT / ALERT
+     */
+    private void broadcastDeviceStatus(String sn, String eventType, String detail) {
+        JsonObject msg = new JsonObject();
+        msg.addProperty("type", eventType);
+        msg.addProperty("deviceSn", sn);
+        msg.addProperty("detail", detail);
+        msg.addProperty("timestamp", java.time.Instant.now().toString());
+        FrontendPushChannel.broadcast(msg.toString());
     }
 
     private String getJsonString(JsonObject obj, String key) {

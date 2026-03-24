@@ -115,6 +115,7 @@ public class ShiroConfig {
         // === WebSocket ===
         filterChainDefinitionMap.put("/websocket/**", "anon");
         filterChainDefinitionMap.put("/otaSocket/**", "anon");
+        filterChainDefinitionMap.put("/deviceSocket", "anon");
 
         // === 错误页 ===
         filterChainDefinitionMap.put("/error", "anon");
