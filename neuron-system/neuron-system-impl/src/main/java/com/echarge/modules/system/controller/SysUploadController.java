@@ -30,6 +30,7 @@ public class SysUploadController {
     public Result<?> uploadMinio(HttpServletRequest request) throws Exception {
         Result<?> result = new Result<>();
         String bizPath = request.getParameter("biz");
+        String bucket = request.getParameter("bucket");
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
         MultipartFile file = multipartRequest.getFile("file");
 
@@ -40,7 +41,12 @@ public class SysUploadController {
         }
         String orgName = file.getOriginalFilename();
         orgName = CommonUtils.getFileName(orgName);
-        String fileUrl = MinioUtil.upload(file, bizPath);
+        String fileUrl;
+        if (oConvertUtils.isNotEmpty(bucket)) {
+            fileUrl = MinioUtil.upload(file, bizPath, bucket);
+        } else {
+            fileUrl = MinioUtil.upload(file, bizPath);
+        }
         if(oConvertUtils.isEmpty(fileUrl)){
             return Result.error("上传失败,请检查配置信息是否正确!");
         }

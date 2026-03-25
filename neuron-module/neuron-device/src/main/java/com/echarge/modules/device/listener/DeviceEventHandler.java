@@ -5,6 +5,7 @@ import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.entity.NcConnector;
+import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
@@ -125,6 +126,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             device.setFirstOnlineTime(now);
             device.setLastOnlineTime(now);
             device.setLastHeartbeat(now);
+            NcDeviceServiceImpl.assignRandomLocation(device);
             ncDeviceService.save(device);
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }

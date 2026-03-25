@@ -1,4 +1,4 @@
-#!/bin/bash
+a#!/bin/bash
 set -e
 
 APP_DIR="/app/neuron"

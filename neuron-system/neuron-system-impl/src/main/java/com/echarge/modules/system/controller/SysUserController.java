@@ -167,6 +167,26 @@ public class SysUserController {
     }
 
     /**
+     * 更新当前用户头像
+     */
+    @PutMapping("/updateAvatar")
+    public Result<String> updateAvatar(@RequestBody com.alibaba.fastjson.JSONObject json) {
+        String avatar = json.getString("avatar");
+        if (StringUtils.isBlank(avatar)) {
+            return Result.error("头像地址不能为空");
+        }
+        LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+        if (loginUser == null) {
+            return Result.error("请先登录");
+        }
+        SysUser update = new SysUser();
+        update.setId(loginUser.getId());
+        update.setAvatar(avatar);
+        sysUserService.updateById(update);
+        return Result.OK(avatar);
+    }
+
+    /**
      * 获取当前登录用户信息
      */
     @GetMapping("/getUserInfo")

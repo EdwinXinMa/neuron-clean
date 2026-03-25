@@ -54,7 +54,7 @@ spring:
       web-stat-filter:
         enabled: true
     dynamic:
-      druid: # 全局druid参数，绝大部分值和默认保持一致。(现已支持的参数如下,不清楚含义不要乱设置)
+      druid:
         # 连接池的配置信息
         # 初始化大小，最小，最大
         initial-size: 5
@@ -84,16 +84,10 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:postgresql://127.0.0.1:5432/neuron_system?stringtype=unspecified
+          url: jdbc:postgresql://127.0.0.1:5432/neuron_cloud?stringtype=unspecified
           username: postgres
-          password: postgres123
+          password: 123456
           driver-class-name: org.postgresql.Driver
-          # 多数据源配置
-          #multi-datasource1:
-          #url: jdbc:mysql://localhost:3306/neuron_system2?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-          #username: root
-          #password: root
-          #driver-class-name: com.mysql.cj.jdbc.Driver
   #redis 配置
   data:
     redis:
@@ -118,10 +112,26 @@ mybatis-plus:
     # 返回类型为Map,显示null对应的字段
     call-setters-on-nulls: true
 neuron:
+  # Kafka 开关（false=直连模式，true=走Kafka投递）
+  kafka:
+    enabled: false
+  # OCPP 协议网关
+  protocol:
+    enabled: true
+    port: 9001
+    path: /ocpp
+    boss-threads: 1
+    worker-threads: 0
+    max-frame-size: 65536
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
-  # local\minio\alioss
-  uploadType: alioss
+  # 文件上传方式：minio
+  uploadType: minio
+  minio:
+    minio_url: http://127.0.0.1:9000
+    minio_name: neuron
+    minio_pass: neuron123
+    bucketName: neuron-firmware
   shiro:
     excludeUrls:
 #Mybatis输出sql日志
@@ -129,3 +139,4 @@ logging:
   level:
     org.springframework.context.support.PostProcessorRegistrationDelegate: error
     com.echarge.modules.system.mapper: info
+    com.echarge.modules.device.mapper: debug

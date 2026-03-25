@@ -16,6 +16,7 @@ import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -189,6 +190,7 @@ public class NcDeviceController {
                         .eq(NcDevice::getDelFlag, 0)
                         .isNull(NcDevice::getParentDeviceId)
                         .isNotNull(NcDevice::getLat)
+                        .ne(NcDevice::getOnlineStatus, "UNACTIVATED")
                         .select(NcDevice::getSn, NcDevice::getOnlineStatus,
                                 NcDevice::getLat, NcDevice::getLng,
                                 NcDevice::getDeviceModel)
@@ -296,6 +298,7 @@ public class NcDeviceController {
                 device.setOnlineStatus("UNACTIVATED");
                 device.setStatus("NORMAL");
                 device.setDelFlag(0);
+                NcDeviceServiceImpl.assignRandomLocation(device);
 
                 ncDeviceService.save(device);
                 success++;
