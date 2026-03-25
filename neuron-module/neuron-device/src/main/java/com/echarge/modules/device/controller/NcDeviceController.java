@@ -391,6 +391,57 @@ public class NcDeviceController {
         return Result.OK("DLM 配置已更新");
     }
 
+    /**
+     * 远程重启设备
+     * 通过 OCPP Reset 命令下发到设备
+     */
+    @Operation(summary = "远程重启")
+    @PostMapping("/{sn}/reset")
+    public Result<?> resetDevice(@PathVariable String sn,
+                                 @RequestParam(defaultValue = "Soft") String type) {
+        NcDevice device = ncDeviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
+        );
+        if (device == null) {
+            return Result.error("设备不存在: " + sn);
+        }
+        if (!ocppCommandSender.isDeviceConnected(sn)) {
+            return Result.error("设备离线，无法下发重启命令");
+        }
+
+        // 构建 OCPP CALL: [2, messageId, "Reset", {"type": "Soft"}]
+        String messageId = "reset-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("Reset");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("type", type);
+        call.add(payload);
+
+        ocppCommandSender.sendCall(sn, call.toString());
+        log.info("[Reset] Command sent to {}: type={}", sn, type);
+
+        // 记录操作日志
+        String opUser = "system";
+        try {
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser != null) opUser = loginUser.getUsername();
+        } catch (Exception ignored) {}
+
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.REMOTE_REBOOT);
+        opLog.setOpContent("远程重启（" + type + "）");
+        opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
+
+        return Result.OK("重启命令已下发");
+    }
+
     private Map<String, String> buildError(int row, String sn, String reason) {
         Map<String, String> err = new LinkedHashMap<>();
         err.put("row", String.valueOf(row));
