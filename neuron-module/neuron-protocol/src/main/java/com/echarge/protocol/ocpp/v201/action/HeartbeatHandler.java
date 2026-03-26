@@ -16,16 +16,19 @@ import java.time.Instant;
 @Component("v201HeartbeatHandler")
 public class HeartbeatHandler implements Ocpp201ActionHandler<Object, HeartbeatResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.HEARTBEAT;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<Object> requestType() {
         return Object.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public HeartbeatResp handle(Session session, Object request) {
         log.debug("[OCPP2.0.1] Heartbeat from {}", session.getChargePointId());

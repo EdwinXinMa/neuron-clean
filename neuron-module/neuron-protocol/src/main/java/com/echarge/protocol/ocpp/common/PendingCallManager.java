@@ -24,7 +24,10 @@ public final class PendingCallManager {
     private PendingCallManager() {}
 
     /**
-     * Register a pending call and return a future that will be completed when the response arrives.
+     * 注册待处理的OCPP请求，返回一个Future用于等待响应
+     * @param messageId      消息ID
+     * @param timeoutSeconds 超时秒数
+     * @return 响应Future
      */
     public static CompletableFuture<InboundMessage> register(String messageId, long timeoutSeconds) {
         CompletableFuture<InboundMessage> future = new CompletableFuture<>();
@@ -41,7 +44,9 @@ public final class PendingCallManager {
     }
 
     /**
-     * Complete a pending call with the received response.
+     * 完成待处理的OCPP请求，将收到的响应传递给等待方
+     * @param messageId 消息ID
+     * @param response  响应消息
      */
     public static void complete(String messageId, InboundMessage response) {
         CompletableFuture<InboundMessage> future = PENDING.remove(messageId);

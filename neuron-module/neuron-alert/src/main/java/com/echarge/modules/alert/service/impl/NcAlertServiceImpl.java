@@ -37,6 +37,7 @@ public class NcAlertServiceImpl extends ServiceImpl<NcAlertMapper, NcAlert> impl
             "OtherError",           "NORMAL"
     );
 
+    /** {@inheritDoc} */
     @Override
     public void recordAlert(String deviceSn, Integer connectorId, String errorCode, String vendorErrorCode, String description) {
         NcAlert alert = new NcAlert();
@@ -53,6 +54,7 @@ public class NcAlertServiceImpl extends ServiceImpl<NcAlertMapper, NcAlert> impl
                 deviceSn, connectorId, alert.getAlertLevel(), errorCode);
     }
 
+    /** {@inheritDoc} */
     @Override
     public long countRecentCritical() {
         // 最近 24 小时的 CRITICAL + IMPORTANT 告警数量（导航角标用）

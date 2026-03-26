@@ -14,16 +14,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class MeterValuesHandler implements Ocpp16ActionHandler<MeterValuesReq, Object> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.METER_VALUES;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<MeterValuesReq> requestType() {
         return MeterValuesReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Object handle(Session session, MeterValuesReq request) {
         log.debug("[OCPP1.6] MeterValues from {}: connector={}, txId={}, values={}",

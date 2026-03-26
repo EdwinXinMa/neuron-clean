@@ -19,6 +19,7 @@ public class LocalDeviceEventPublisher implements DeviceEventPublisher {
     @Autowired(required = false)
     private List<DeviceEventListener> listeners;
 
+    /** {@inheritDoc} */
     @Override
     public void publish(DeviceEvent event) {
         log.debug("[LOCAL] Publishing event: type={}, chargePointId={}", event.getEventType(), event.getChargePointId());

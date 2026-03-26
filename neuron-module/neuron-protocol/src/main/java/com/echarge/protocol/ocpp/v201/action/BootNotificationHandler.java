@@ -17,16 +17,19 @@ import java.time.Instant;
 @Component("v201BootNotificationHandler")
 public class BootNotificationHandler implements Ocpp201ActionHandler<BootNotificationReq, BootNotificationResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.BOOT_NOTIFICATION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<BootNotificationReq> requestType() {
         return BootNotificationReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public BootNotificationResp handle(Session session, BootNotificationReq request) {
         log.info("[OCPP2.0.1] BootNotification from {}: vendor={}, model={}, reason={}",

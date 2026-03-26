@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> implements INcDeviceService {
 
+    /** {@inheritDoc} */
     @Override
     public void register(NcDevice device) {
         String sn = device.getSn();
@@ -46,6 +47,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         this.save(device);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void disable(String id) {
         NcDevice device = this.getById(id);
@@ -56,6 +58,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         this.updateById(device);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void enable(String id) {
         NcDevice device = this.getById(id);
@@ -66,6 +69,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         this.updateById(device);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean existsBySn(String sn) {
         return this.count(new LambdaQueryWrapper<NcDevice>()

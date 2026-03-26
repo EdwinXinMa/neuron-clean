@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements ISysUserService {
 
+    /** {@inheritDoc} */
     @Override
     public SysUser getUserByName(String username) {
         return baseMapper.selectOne(
@@ -25,6 +26,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         );
     }
 
+    /** {@inheritDoc} */
     @Override
     public Result checkUserIsEffective(SysUser sysUser) {
         // 校验用户是否有效

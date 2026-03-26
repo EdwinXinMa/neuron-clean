@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class FirmwareVersionServiceImpl extends ServiceImpl<FirmwareVersionMapper, FirmwareVersion>
         implements IFirmwareVersionService {
 
+    /** {@inheritDoc} */
     @Override
     public void release(String id) {
         FirmwareVersion fw = getById(id);
@@ -27,6 +28,7 @@ public class FirmwareVersionServiceImpl extends ServiceImpl<FirmwareVersionMappe
         updateById(fw);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void deprecate(String id) {
         FirmwareVersion fw = getById(id);

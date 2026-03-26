@@ -16,16 +16,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthorizeHandler implements Ocpp16ActionHandler<AuthorizeReq, AuthorizeResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.AUTHORIZE;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<AuthorizeReq> requestType() {
         return AuthorizeReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public AuthorizeResp handle(Session session, AuthorizeReq request) {
         log.info("[OCPP1.6] Authorize from {}: idTag={}", session.getChargePointId(), request.getIdTag());

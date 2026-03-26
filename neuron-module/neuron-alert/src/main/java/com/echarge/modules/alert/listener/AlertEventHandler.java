@@ -43,6 +43,7 @@ public class AlertEventHandler implements DeviceEventListener {
 
     // ==================== 直连模式入口 ====================
 
+    /** {@inheritDoc} */
     @Override
     public void onDeviceEvent(DeviceEvent event) {
         // 直连模式：只处理 STATUS_NOTIFICATION 中的故障

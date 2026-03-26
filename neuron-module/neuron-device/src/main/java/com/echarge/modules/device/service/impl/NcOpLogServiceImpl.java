@@ -16,6 +16,7 @@ import java.util.Date;
 @Service
 public class NcOpLogServiceImpl extends ServiceImpl<NcOpLogMapper, NcOpLog> implements INcOpLogService {
 
+    /** {@inheritDoc} */
     @Override
     public void record(String deviceSn, String opType, String opContent, String opUser) {
         NcOpLog opLog = new NcOpLog();
@@ -30,6 +31,7 @@ public class NcOpLogServiceImpl extends ServiceImpl<NcOpLogMapper, NcOpLog> impl
         log.info("[OpLog] {} | {} | {} | {} | SUCCESS", opUser, deviceSn, opType, opContent);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void recordFail(String deviceSn, String opType, String opContent, String opUser, String failReason) {
         NcOpLog opLog = new NcOpLog();

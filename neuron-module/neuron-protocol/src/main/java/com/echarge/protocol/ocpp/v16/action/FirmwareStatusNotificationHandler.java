@@ -23,16 +23,19 @@ public class FirmwareStatusNotificationHandler implements Ocpp16ActionHandler<Fi
 
     private final Gson gson = new Gson();
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.FIRMWARE_STATUS_NOTIFICATION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<FirmwareStatusNotificationReq> requestType() {
         return FirmwareStatusNotificationReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Object handle(Session session, FirmwareStatusNotificationReq request) {
         log.info("[OCPP1.6] FirmwareStatusNotification from {}: status={}",

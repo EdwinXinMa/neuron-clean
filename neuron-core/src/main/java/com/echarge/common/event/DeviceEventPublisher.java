@@ -6,5 +6,10 @@ package com.echarge.common.event;
  * @author Edwin
  */
 public interface DeviceEventPublisher {
+
+    /**
+     * 发布设备事件
+     * @param event 设备事件对象
+     */
     void publish(DeviceEvent event);
 }

@@ -16,16 +16,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class TransactionEventHandler implements Ocpp201ActionHandler<TransactionEventReq, TransactionEventResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.TRANSACTION_EVENT;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<TransactionEventReq> requestType() {
         return TransactionEventReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public TransactionEventResp handle(Session session, TransactionEventReq request) {
         log.info("[OCPP2.0.1] TransactionEvent from {}: type={}, trigger={}, txId={}",

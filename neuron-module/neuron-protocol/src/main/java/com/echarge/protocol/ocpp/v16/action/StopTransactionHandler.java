@@ -16,16 +16,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class StopTransactionHandler implements Ocpp16ActionHandler<StopTransactionReq, StopTransactionResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.STOP_TRANSACTION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<StopTransactionReq> requestType() {
         return StopTransactionReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public StopTransactionResp handle(Session session, StopTransactionReq request) {
         log.info("[OCPP1.6] StopTransaction from {}: txId={}, meterStop={}, reason={}",

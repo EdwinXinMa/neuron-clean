@@ -12,11 +12,15 @@ public interface ISysUserService extends IService<SysUser> {
 
     /**
      * 根据用户名查询用户
+     * @param username 用户账号
+     * @return 用户实体
      */
     SysUser getUserByName(String username);
 
     /**
      * 校验用户是否有效
+     * @param sysUser 用户实体
+     * @return 校验结果
      */
     Result checkUserIsEffective(SysUser sysUser);
 }

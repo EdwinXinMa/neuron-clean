@@ -21,16 +21,19 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
     @Autowired
     private DeviceEventPublisher eventPublisher;
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.DATA_TRANSFER;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<DataTransferReq> requestType() {
         return DataTransferReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public DataTransferResp handle(Session session, DataTransferReq request) {
         log.info("[OCPP1.6] DataTransfer from {}: vendor={}, messageId={}",

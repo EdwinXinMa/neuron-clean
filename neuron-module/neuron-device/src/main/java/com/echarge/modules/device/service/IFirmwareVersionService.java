@@ -9,12 +9,14 @@ import com.echarge.modules.device.entity.FirmwareVersion;
 public interface IFirmwareVersionService extends IService<FirmwareVersion> {
 
     /**
-     * \u53d1\u5e03\u56fa\u4ef6 (DRAFT -> RELEASED)
+     * 发布固件 (DRAFT -> RELEASED)
+     * @param id 固件版本ID
      */
     void release(String id);
 
     /**
-     * \u5e9f\u5f03\u56fa\u4ef6 (RELEASED -> DEPRECATED)
+     * 废弃固件 (RELEASED -> DEPRECATED)
+     * @param id 固件版本ID
      */
     void deprecate(String id);
 }

@@ -10,6 +10,8 @@ public interface INcDlmHistoryService extends IService<NcDlmHistory> {
 
     /**
      * 保存 DLM 上报数据到时序表（主表 + 分配表）
+     * @param deviceSn 设备序列号
+     * @param payload  上报数据JSON字符串
      */
     void saveDlmReport(String deviceSn, String payload);
 }

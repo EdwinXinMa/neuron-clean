@@ -25,6 +25,7 @@ public class KafkaDeviceEventPublisher implements DeviceEventPublisher {
         this.objectMapper = objectMapper;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void publish(DeviceEvent event) {
         String topic = resolveTopic(event.getEventType());

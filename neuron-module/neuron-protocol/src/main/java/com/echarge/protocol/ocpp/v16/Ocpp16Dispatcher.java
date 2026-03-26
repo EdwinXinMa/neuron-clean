@@ -32,6 +32,7 @@ public class Ocpp16Dispatcher implements MessageDispatcher {
         log.info("OCPP 1.6 dispatcher initialized with {} handlers: {}", handlers.size(), handlers.keySet());
     }
 
+    /** {@inheritDoc} */
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public OutboundMessage dispatch(Session session, InboundMessage message) {
@@ -54,6 +55,7 @@ public class Ocpp16Dispatcher implements MessageDispatcher {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public String supportedProtocol() {
         return PROTOCOL;

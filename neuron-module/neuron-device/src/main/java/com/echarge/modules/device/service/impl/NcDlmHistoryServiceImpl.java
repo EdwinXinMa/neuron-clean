@@ -29,6 +29,7 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
 
     private final Gson gson = new Gson();
 
+    /** {@inheritDoc} */
     @Async
     @Override
     public void saveDlmReport(String deviceSn, String payload) {

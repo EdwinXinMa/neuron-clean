@@ -54,11 +54,11 @@ public interface SysLogMapper extends BaseMapper<SysLog> {
 	Long findTodayIp(@Param("dayStart") Date dayStart, @Param("dayEnd") Date dayEnd);
 	
 	/**
-	 *   首页：根据时间统计访问数量/ip数量
-	 * @param dayStart
-	 * @param dayEnd
-     * @param dbType
-	 * @return
+	 * 首页：根据时间统计访问数量/IP数量
+	 * @param dayStart 开始时间
+	 * @param dayEnd   结束时间
+	 * @param dbType   数据库类型
+	 * @return 访问统计列表
 	 */
 	List<Map<String,Object>> findVisitCount(@Param("dayStart") Date dayStart, @Param("dayEnd") Date dayEnd, @Param("dbType") String dbType);
 }

@@ -25,6 +25,10 @@ public class KafkaAlertPublisher {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 将告警事件发布到Kafka的device-alert主题
+     * @param event 设备事件（包含故障信息）
+     */
     public void publishAlert(DeviceEvent event) {
         String key = event.getChargePointId();
         String value;

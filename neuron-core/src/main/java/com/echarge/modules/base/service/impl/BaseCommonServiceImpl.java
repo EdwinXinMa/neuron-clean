@@ -29,6 +29,7 @@ public class BaseCommonServiceImpl implements BaseCommonService {
     @Resource
     private BaseCommonMapper baseCommonMapper;
 
+    /** {@inheritDoc} */
     @Override
     public void addLog(LogDTO logDTO) {
         if(OConvertUtils.isEmpty(logDTO.getId())){
@@ -44,6 +45,7 @@ public class BaseCommonServiceImpl implements BaseCommonService {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addLog(String logContent, Integer logType, Integer operatetype, LoginUser user) {
         LogDTO sysLog = new LogDTO();
@@ -93,6 +95,7 @@ public class BaseCommonServiceImpl implements BaseCommonService {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addLog(String logContent, Integer logType, Integer operateType) {
         addLog(logContent, logType, operateType, null);

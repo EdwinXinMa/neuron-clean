@@ -8,11 +8,15 @@ public interface OcppCommandSender {
 
     /**
      * 检查设备 OCPP 会话是否存在且活跃
+     * @param chargePointId 充电点标识（设备SN）
+     * @return 是否已连接
      */
     boolean isDeviceConnected(String chargePointId);
 
     /**
      * 向设备发送 OCPP CALL 消息（JSON 字符串）
+     * @param chargePointId 充电点标识（设备SN）
+     * @param message       OCPP消息JSON字符串
      */
     void sendCall(String chargePointId, String message);
 }

@@ -41,21 +41,25 @@ public class SysLogServiceImpl extends ServiceImpl<SysLogMapper, SysLog> impleme
 		sysLogMapper.removeAll();
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Long findTotalVisitCount() {
 		return sysLogMapper.findTotalVisitCount();
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Long findTodayVisitCount(Date dayStart, Date dayEnd) {
 		return sysLogMapper.findTodayVisitCount(dayStart,dayEnd);
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Long findTodayIp(Date dayStart, Date dayEnd) {
 		return sysLogMapper.findTodayIp(dayStart,dayEnd);
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public List<Map<String,Object>> findVisitCount(Date dayStart, Date dayEnd) {
 		DbType dbType = CommonUtils.getDatabaseTypeEnum();

@@ -20,16 +20,19 @@ public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransac
 
     private final AtomicInteger transactionIdGenerator = new AtomicInteger(1);
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.START_TRANSACTION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<StartTransactionReq> requestType() {
         return StartTransactionReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public StartTransactionResp handle(Session session, StartTransactionReq request) {
         log.info("[OCPP1.6] StartTransaction from {}: connector={}, idTag={}, meterStart={}",

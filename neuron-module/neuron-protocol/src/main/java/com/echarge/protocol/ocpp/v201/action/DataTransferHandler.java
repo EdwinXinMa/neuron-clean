@@ -15,16 +15,19 @@ import org.springframework.stereotype.Component;
 @Component("v201DataTransferHandler")
 public class DataTransferHandler implements Ocpp201ActionHandler<DataTransferReq, DataTransferResp> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.DATA_TRANSFER;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<DataTransferReq> requestType() {
         return DataTransferReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public DataTransferResp handle(Session session, DataTransferReq request) {
         log.info("[OCPP2.0.1] DataTransfer from {}: vendor={}, messageId={}",

@@ -14,16 +14,19 @@ import org.springframework.stereotype.Component;
 @Component("v201StatusNotificationHandler")
 public class StatusNotificationHandler implements Ocpp201ActionHandler<StatusNotificationReq, Object> {
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.STATUS_NOTIFICATION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<StatusNotificationReq> requestType() {
         return StatusNotificationReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Object handle(Session session, StatusNotificationReq request) {
         log.info("[OCPP2.0.1] StatusNotification from {}: evseId={}, connectorId={}, status={}",

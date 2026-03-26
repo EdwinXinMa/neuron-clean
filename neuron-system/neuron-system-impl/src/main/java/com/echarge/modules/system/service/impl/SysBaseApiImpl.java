@@ -24,6 +24,7 @@ public class SysBaseApiImpl implements ISysBaseApi {
     @Resource
     private SysUserMapper userMapper;
 
+    /** {@inheritDoc} */
     @Override
     public Set<String> queryUserRoles(String username) {
         Set<String> roles = new HashSet<>();
@@ -34,6 +35,7 @@ public class SysBaseApiImpl implements ISysBaseApi {
         return roles;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Set<String> queryUserRolesById(String userId) {
         Set<String> roles = new HashSet<>();
@@ -44,6 +46,7 @@ public class SysBaseApiImpl implements ISysBaseApi {
         return roles;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Set<String> queryUserAuths(String userId) {
         // 精简版：所有用户拥有全部功能权限，仅 admin 额外拥有账号管理
@@ -56,6 +59,7 @@ public class SysBaseApiImpl implements ISysBaseApi {
         return auths;
     }
 
+    /** {@inheritDoc} */
     @Override
     public LoginUser getUserByName(String username) {
         SysUser user = getUserEntityByName(username);
@@ -65,12 +69,14 @@ public class SysBaseApiImpl implements ISysBaseApi {
         return toLoginUser(user);
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getUserIdByName(String username) {
         SysUser user = getUserEntityByName(username);
         return user != null ? user.getId() : null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public LoginUser getUserById(String id) {
         SysUser user = userMapper.selectById(id);
@@ -80,6 +86,7 @@ public class SysBaseApiImpl implements ISysBaseApi {
         return toLoginUser(user);
     }
 
+    /** {@inheritDoc} */
     @Override
     public SysUserCacheInfo getCacheUser(String username) {
         SysUserCacheInfo info = new SysUserCacheInfo();

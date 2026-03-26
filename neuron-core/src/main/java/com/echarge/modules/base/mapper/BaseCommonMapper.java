@@ -15,7 +15,7 @@ public interface BaseCommonMapper {
 
     /**
      * 保存日志
-     * @param dto
+     * @param dto 日志数据传输对象
      */
     @InterceptorIgnore(illegalSql = "true", tenantLine = "true")
     void saveLog(@Param("dto")LogDTO dto);

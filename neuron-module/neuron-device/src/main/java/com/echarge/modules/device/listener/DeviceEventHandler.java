@@ -101,6 +101,7 @@ public class DeviceEventHandler implements DeviceEventListener {
 
     // ==================== 统一处理入口 ====================
 
+    /** {@inheritDoc} */
     @Override
     public void onDeviceEvent(DeviceEvent event) {
         switch (event.getEventType()) {

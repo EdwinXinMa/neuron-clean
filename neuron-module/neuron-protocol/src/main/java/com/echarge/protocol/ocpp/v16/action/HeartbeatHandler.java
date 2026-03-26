@@ -22,16 +22,19 @@ public class HeartbeatHandler implements Ocpp16ActionHandler<Object, HeartbeatRe
     @Autowired
     private DeviceEventPublisher eventPublisher;
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.HEARTBEAT;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<Object> requestType() {
         return Object.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public HeartbeatResp handle(Session session, Object request) {
         log.debug("[OCPP1.6] Heartbeat from {}", session.getChargePointId());

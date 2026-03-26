@@ -15,12 +15,14 @@ public class OcppCommandSenderImpl implements OcppCommandSender {
     @Autowired
     private SessionManager sessionManager;
 
+    /** {@inheritDoc} */
     @Override
     public boolean isDeviceConnected(String chargePointId) {
         Session session = sessionManager.getByChargePointId(chargePointId);
         return session != null && session.isActive();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void sendCall(String chargePointId, String message) {
         sessionManager.sendMessage(chargePointId, message);

@@ -20,6 +20,11 @@ public class NeuronRedisClient {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+    /**
+     * 通过Redis发布消息到指定处理器
+     * @param handlerName 处理器名称
+     * @param params      消息参数
+     */
     public void sendMessage(String handlerName, BaseMap params) {
         params.put("handlerName", handlerName);
         this.redisTemplate.convertAndSend("neuron_redis_topic", params);

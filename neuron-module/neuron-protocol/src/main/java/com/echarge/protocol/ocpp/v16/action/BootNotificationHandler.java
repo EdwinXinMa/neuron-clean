@@ -26,16 +26,19 @@ public class BootNotificationHandler implements Ocpp16ActionHandler<BootNotifica
 
     private final Gson gson = new Gson();
 
+    /** {@inheritDoc} */
     @Override
     public String action() {
         return OcppAction.BOOT_NOTIFICATION;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<BootNotificationReq> requestType() {
         return BootNotificationReq.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public BootNotificationResp handle(Session session, BootNotificationReq request) {
         log.info("[OCPP1.6] BootNotification from {}: vendor={}, model={}, sn={}, firmware={}",
