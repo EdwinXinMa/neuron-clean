@@ -4,7 +4,8 @@ services:
 
   postgres:
     #image: mirror.ccs.tencentyun.com/library/postgres:15-alpine
-    image: timescale/timescaledb:latest-pg15
+    #image: timescale/timescaledb:latest-pg15
+    image: mirror.ccs.tencentyun.com/timescale/timescaledb:latest-pg15
     container_name: neuron-postgres
     restart: unless-stopped
     environment:
