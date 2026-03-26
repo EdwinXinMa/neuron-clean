@@ -34,6 +34,7 @@ import java.util.stream.Stream;
  *
  */
 @Slf4j
+@SuppressWarnings("AlibabaClassNamingShouldBeCamel")
 public class OConvertUtils {
 	public static boolean isEmpty(Object object) {
 		if (object == null) {
