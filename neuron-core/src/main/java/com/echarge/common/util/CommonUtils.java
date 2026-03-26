@@ -174,7 +174,7 @@ public class CommonUtils {
             File savefile = new File(savePath);
             FileCopyUtils.copy(mf.getBytes(), savefile);
             String dbpath = null;
-            if(oConvertUtils.isNotEmpty(bizPath)){
+            if(OConvertUtils.isNotEmpty(bizPath)){
                 dbpath = bizPath + File.separator + fileName;
             }else{
                 dbpath = fileName;
@@ -217,7 +217,7 @@ public class CommonUtils {
      */
     @Deprecated
     public static String getDatabaseType() {
-        if(oConvertUtils.isNotEmpty(DB_TYPE)){
+        if(OConvertUtils.isNotEmpty(DB_TYPE)){
             return DB_TYPE;
         }
         DataSource dataSource = SpringContextUtils.getApplicationContext().getBean(DataSource.class);
@@ -235,7 +235,7 @@ public class CommonUtils {
      * @return
      */
     public static DbType getDatabaseTypeEnum() {
-        if (oConvertUtils.isNotEmpty(dbTypeEnum)) {
+        if (OConvertUtils.isNotEmpty(dbTypeEnum)) {
             return dbTypeEnum;
         }
         try {
@@ -271,7 +271,7 @@ public class CommonUtils {
      * @throws SQLException
      */
     public static Connection getDataSourceConnect(String sourceKey) throws SQLException {
-        if (oConvertUtils.isEmpty(sourceKey)) {
+        if (OConvertUtils.isEmpty(sourceKey)) {
             sourceKey = "master";
         }
         DynamicDataSourceProperties prop = SpringContextUtils.getApplicationContext().getBean(DynamicDataSourceProperties.class);
@@ -333,14 +333,14 @@ public class CommonUtils {
     public static String getBaseUrl(HttpServletRequest request) {
         //1.【兼容】兼容微服务下的 base path-------
         String xGatewayBasePath = request.getHeader("X_GATEWAY_BASE_PATH");
-        if(oConvertUtils.isNotEmpty(xGatewayBasePath)){
+        if(OConvertUtils.isNotEmpty(xGatewayBasePath)){
             log.info("x_gateway_base_path = "+ xGatewayBasePath);
             return  xGatewayBasePath;
         }
         //2.【兼容】SSL认证之后，request.getScheme()获取不到https的问题
         // https://blog.csdn.net/weixin_34376986/article/details/89767950
         String scheme = request.getHeader(CommonConstant.X_FORWARDED_SCHEME);
-        if(oConvertUtils.isEmpty(scheme)){
+        if(OConvertUtils.isEmpty(scheme)){
             scheme = request.getScheme();
         }
 
@@ -423,13 +423,13 @@ public class CommonUtils {
      * @return name = '1212'
      */
     public static String getFilterSqlByTableSql(String tableSql) {
-        if(oConvertUtils.isEmpty(tableSql)){
+        if(OConvertUtils.isEmpty(tableSql)){
             return null;
         }
         
         if (tableSql.toLowerCase().indexOf(DataBaseConstant.SQL_WHERE) > 0) {
             String[] arr = tableSql.split(" (?i)where ");
-            if (arr != null && oConvertUtils.isNotEmpty(arr[1])) {
+            if (arr != null && OConvertUtils.isNotEmpty(arr[1])) {
                 return arr[1];
             }
         }
@@ -443,7 +443,7 @@ public class CommonUtils {
      * @return sys_user
      */
     public static String getTableNameByTableSql(String tableSql) {
-        if(oConvertUtils.isEmpty(tableSql)){
+        if(OConvertUtils.isEmpty(tableSql)){
             return null;
         }
         

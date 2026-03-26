@@ -62,7 +62,7 @@ public class MinioUtil {
         SsrfFileTypeFilter.checkUploadFileType(file, bizPath);
 
         String newBucket = bucketName;
-        if(oConvertUtils.isNotEmpty(customBucket)){
+        if(OConvertUtils.isNotEmpty(customBucket)){
             newBucket = customBucket;
         }
         try {

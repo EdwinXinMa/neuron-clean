@@ -15,7 +15,7 @@ import org.apache.shiro.spring.web.ShiroUrlPathHelper;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.crazycake.shiro.*;
 import com.echarge.common.constant.CommonConstant;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import com.echarge.config.NeuronBaseConfig;
 import com.echarge.config.shiro.filters.CustomShiroFilterFactoryBean;
 import com.echarge.config.shiro.filters.JwtFilter;
@@ -76,7 +76,7 @@ public class ShiroConfig {
         //支持yml方式，配置拦截排除
         if(neuronBaseConfig!=null && neuronBaseConfig.getShiro()!=null){
             String shiroExcludeUrls = neuronBaseConfig.getShiro().getExcludeUrls();
-            if(oConvertUtils.isNotEmpty(shiroExcludeUrls)){
+            if(OConvertUtils.isNotEmpty(shiroExcludeUrls)){
                 String[] permissionUrl = shiroExcludeUrls.split(",");
                 for(String url : permissionUrl){
                     filterChainDefinitionMap.put(url,"anon");
@@ -263,7 +263,7 @@ public class ShiroConfig {
             Set<HostAndPort> portSet = new HashSet<>();
             lettuceConnectionFactory.getClusterConfiguration().getClusterNodes().forEach(node -> portSet.add(new HostAndPort(node.getHost() , node.getPort())));
             //update-begin--Author:scott Date:20210531 for：修改集群模式下未设置redis密码的bug issues/I3QNIC
-            if (oConvertUtils.isNotEmpty(lettuceConnectionFactory.getPassword())) {
+            if (OConvertUtils.isNotEmpty(lettuceConnectionFactory.getPassword())) {
                 JedisCluster jedisCluster = new JedisCluster(portSet, 2000, 2000, 5,
                     lettuceConnectionFactory.getPassword(), new GenericObjectPoolConfig());
                 redisManager.setPassword(lettuceConnectionFactory.getPassword());

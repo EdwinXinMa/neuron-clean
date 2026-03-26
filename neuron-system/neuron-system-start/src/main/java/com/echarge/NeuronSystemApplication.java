@@ -1,7 +1,7 @@
 package com.echarge;
 
 import lombok.extern.slf4j.Slf4j;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
@@ -38,7 +38,7 @@ public class NeuronSystemApplication extends SpringBootServletInitializer {
         Environment env = application.getEnvironment();
         String ip = InetAddress.getLocalHost().getHostAddress();
         String port = env.getProperty("server.port");
-        String path = oConvertUtils.getString(env.getProperty("server.servlet.context-path"));
+        String path = OConvertUtils.getString(env.getProperty("server.servlet.context-path"));
         log.info("\n----------------------------------------------------------\n\t" +
                 "Application NeuronCloud is running! Access URLs:\n\t" +
                 "Local: \t\thttp://localhost:" + port + path + "\n\t" +

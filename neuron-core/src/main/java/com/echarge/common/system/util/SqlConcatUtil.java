@@ -11,7 +11,7 @@ import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.system.query.QueryGenerator;
 import com.echarge.common.system.query.QueryRuleEnum;
 import com.echarge.common.util.CommonUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -52,7 +52,7 @@ public class SqlConcatUtil {
         if (value == null) {
             return "";
         }
-        field =  alias+oConvertUtils.camelToUnderline(field);
+        field =  alias+OConvertUtils.camelToUnderline(field);
         QueryRuleEnum rule = QueryGenerator.convert2Rule(value);
         return getSingleSqlByRule(rule, field, value, isString, dataBaseType);
     }
@@ -252,7 +252,7 @@ public class SqlConcatUtil {
      */
     public static List<OrderItem> getQueryConditionOrders(String column, String order, String queryInfoString){
         List<OrderItem> list = new ArrayList<>();
-        if(oConvertUtils.isEmpty(queryInfoString)){
+        if(OConvertUtils.isEmpty(queryInfoString)){
             //默认以创建时间倒序查询
             if(CommonConstant.ORDER_TYPE_DESC.equalsIgnoreCase(order)){
                 list.add(OrderItem.desc(column));
@@ -275,7 +275,7 @@ public class SqlConcatUtil {
             while(it.hasNext()){
                 JSONObject json = (JSONObject)it.next();
                 String tempColumn = json.getString("column");
-                if(oConvertUtils.isNotEmpty(tempColumn)){
+                if(OConvertUtils.isNotEmpty(tempColumn)){
                     String tempOrder = json.getString("order");
                     if(CommonConstant.ORDER_TYPE_DESC.equalsIgnoreCase(tempOrder)){
                         list.add(OrderItem.desc(tempColumn));

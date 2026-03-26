@@ -1,7 +1,7 @@
 package com.echarge.modules.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.echarge.common.system.api.ISysBaseAPI;
+import com.echarge.common.system.api.ISysBaseApi;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.system.vo.SysUserCacheInfo;
 import com.echarge.modules.system.entity.SysUser;
@@ -19,7 +19,7 @@ import java.util.Set;
  */
 @Slf4j
 @Service
-public class SysBaseApiImpl implements ISysBaseAPI {
+public class SysBaseApiImpl implements ISysBaseApi {
 
     @Resource
     private SysUserMapper userMapper;

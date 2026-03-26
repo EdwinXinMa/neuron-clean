@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  *
  */
 @Slf4j
-public class OConvertUtils {
+public class oConvertUtils {
 	public static boolean isEmpty(Object object) {
 		if (object == null) {
 			return (true);
@@ -63,7 +63,7 @@ public class OConvertUtils {
 	 * @return
 	 */
 	public static String decodeString(String inStr) {
-		if (OConvertUtils.isEmpty(inStr)) {
+		if (oConvertUtils.isEmpty(inStr)) {
 			return null;
 		}
 
@@ -270,7 +270,7 @@ public class OConvertUtils {
 	 * @return
 	 */
 	public static String getNormalString(String input) {
-		if (OConvertUtils.isEmpty(input)) {
+		if (oConvertUtils.isEmpty(input)) {
 			return null;
 		}
 		String result = input.replaceAll("[^0-9a-zA-Z\\u4e00-\\u9fa5]", "");
@@ -908,7 +908,7 @@ public class OConvertUtils {
 ////		String[] b = new String[]{"2", "1"};
 //		Integer a = null;
 //		Integer b = 1;
-//		System.out.println(OConvertUtils.isEqual(a, b));
+//		System.out.println(oConvertUtils.isEqual(a, b));
 //	}
 	
 	/**
@@ -932,7 +932,7 @@ public class OConvertUtils {
 		String json = "";
 		try {
 			//换个写法，解决springboot读取jar包中文件的问题
-			InputStream stream = OConvertUtils.class.getClassLoader().getResourceAsStream(url.replace("classpath:", ""));
+			InputStream stream = oConvertUtils.class.getClassLoader().getResourceAsStream(url.replace("classpath:", ""));
 			json = IOUtils.toString(stream,"UTF-8");
 		} catch (IOException e) {
 			log.error(e.getMessage(),e);

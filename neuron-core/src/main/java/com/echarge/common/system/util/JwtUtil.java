@@ -30,7 +30,7 @@ import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.system.vo.SysUserCacheInfo;
 import com.echarge.common.util.DateUtils;
 import com.echarge.common.util.SpringContextUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 
 /**
  * @Author Edwin
@@ -180,7 +180,7 @@ public class JwtUtil {
 			DecodedJWT jwt = JWT.decode(token);
 			String clientType = jwt.getClaim("clientType").asString();
 			// 如果clientType为空，返回默认值PC（兼容旧token）
-			return oConvertUtils.isNotEmpty(clientType) ? clientType : CommonConstant.CLIENT_TYPE_PC;
+			return OConvertUtils.isNotEmpty(clientType) ? clientType : CommonConstant.CLIENT_TYPE_PC;
 		} catch (JWTDecodeException e) {
 			log.warn("解析token中的clientType失败，使用默认值PC：" + e.getMessage());
 			return CommonConstant.CLIENT_TYPE_PC;
@@ -197,7 +197,7 @@ public class JwtUtil {
 	public static String getUserNameByToken(HttpServletRequest request) throws NeuronBootException {
 		String accessToken = request.getHeader("X-Access-Token");
 		String username = getUsername(accessToken);
-		if (oConvertUtils.isEmpty(username)) {
+		if (OConvertUtils.isEmpty(username)) {
 			throw new NeuronBootException("未获取到用户");
 		}
 		return username;
@@ -221,7 +221,7 @@ public class JwtUtil {
 		if (key.contains(wellNumber)) {
 			key = key.substring(2,key.indexOf("}"));
 		}
-		if (oConvertUtils.isNotEmpty(key)) {
+		if (OConvertUtils.isNotEmpty(key)) {
 			HttpSession session = SpringContextUtils.getHttpServletRequest().getSession();
 			returnValue = (String) session.getAttribute(key);
 		}
@@ -268,7 +268,7 @@ public class JwtUtil {
 		}
 		// 是否存在字符串标志
 		boolean multiStr;
-		if(oConvertUtils.isNotEmpty(key) && key.trim().matches("^\\[\\w+]$")){
+		if(OConvertUtils.isNotEmpty(key) && key.trim().matches("^\\[\\w+]$")){
 			key = key.substring(1,key.length()-1);
 			multiStr = true;
 		} else {

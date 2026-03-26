@@ -1,6 +1,6 @@
 package com.echarge.common.system.query;
 
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 
 /**
  * Query 规则 常量
@@ -104,7 +104,7 @@ public enum QueryRuleEnum {
 	}
 
 	public static QueryRuleEnum getByValue(String value){
-    	if(oConvertUtils.isEmpty(value)) {
+    	if(OConvertUtils.isEmpty(value)) {
     		return null;
     	}
         for(QueryRuleEnum val :values()){

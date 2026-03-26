@@ -15,7 +15,7 @@ import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.BrowserUtils;
 import com.echarge.common.util.IpUtils;
 import com.echarge.common.util.SpringContextUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import com.echarge.modules.base.service.BaseCommonService;
 import org.springframework.beans.BeansException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -227,7 +227,7 @@ public class NeuronBootExceptionHandler {
 				// 文件上传过大异常时不能获取参数,否则会报错
 				Map<String, String[]> parameterMap = request.getParameterMap();
 				if(!CollectionUtils.isEmpty(parameterMap)) {
-					log.setMethod(oConvertUtils.mapToString(request.getParameterMap()));
+					log.setMethod(OConvertUtils.mapToString(request.getParameterMap()));
 				}
 			}
             // 请求地址

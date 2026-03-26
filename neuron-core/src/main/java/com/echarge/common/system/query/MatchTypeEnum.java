@@ -1,6 +1,6 @@
 package com.echarge.common.system.query;
 
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 
 /**
  * 查询链接规则
@@ -26,14 +26,14 @@ public enum MatchTypeEnum {
     }
 
     public static MatchTypeEnum getByValue(Object value) {
-        if (oConvertUtils.isEmpty(value)) {
+        if (OConvertUtils.isEmpty(value)) {
             return null;
         }
         return getByValue(value.toString());
     }
 
     public static MatchTypeEnum getByValue(String value) {
-        if (oConvertUtils.isEmpty(value)) {
+        if (OConvertUtils.isEmpty(value)) {
             return null;
         }
         for (MatchTypeEnum val : values()) {

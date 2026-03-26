@@ -158,7 +158,7 @@ public class QueryGenerator {
 				if (null != value && value.toString().startsWith(COMMA) && value.toString().endsWith(COMMA)) {
 					String multiLikeval = value.toString().replace(",,", COMMA);
 					String[] vals = multiLikeval.substring(1, multiLikeval.length()).split(COMMA);
-					final String field = oConvertUtils.camelToUnderline(column);
+					final String field = OConvertUtils.camelToUnderline(column);
 					if(vals.length>1) {
 						queryWrapper.and(j -> {
                             log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
@@ -243,7 +243,7 @@ public class QueryGenerator {
 			order = parameterMap.get(ORDER_TYPE)[0];
 		}
 		
-		if(oConvertUtils.isNotEmpty(column)){
+		if(OConvertUtils.isNotEmpty(column)){
 			log.debug("单字段排序规则>> column:" + column + ",排序方式:" + order);
 		}
 
@@ -277,7 +277,7 @@ public class QueryGenerator {
 		}
 
 		// 2. 列表单字段默认排序
-		if(oConvertUtils.isEmpty(column) && parameterMap!=null&& parameterMap.containsKey("defSortString")) {
+		if(OConvertUtils.isEmpty(column) && parameterMap!=null&& parameterMap.containsKey("defSortString")) {
 			// 多字段排序
 			String sortInfoString = parameterMap.get("defSortString")[0];
 			log.info("默认多字段排序规则>> defSortString:" + sortInfoString);
@@ -311,7 +311,7 @@ public class QueryGenerator {
 			log.warn("检测到实体里没有字段createTime，改成采用ID排序！");
 		}
 		
-		if (oConvertUtils.isNotEmpty(column) && oConvertUtils.isNotEmpty(order)) {
+		if (OConvertUtils.isNotEmpty(column) && OConvertUtils.isNotEmpty(order)) {
 			//字典字段，去掉字典翻译文本后缀
 			if(column.endsWith(CommonConstant.DICT_TEXT_SUFFIX)) {
 				column = column.substring(0, column.lastIndexOf(CommonConstant.DICT_TEXT_SUFFIX));
@@ -327,7 +327,7 @@ public class QueryGenerator {
 			if (column.contains(",")) {
 				List<String> columnList = Arrays.asList(column.split(","));
 				String columnStrNew = columnList.stream().map(c -> fieldColumnMap.get(c)).collect(Collectors.joining(","));
-				if (oConvertUtils.isNotEmpty(columnStrNew)) {
+				if (OConvertUtils.isNotEmpty(columnStrNew)) {
 					column = columnStrNew;
 				}
 			}else{
@@ -388,9 +388,9 @@ public class QueryGenerator {
                 }
 				// 代码逻辑说明: 【JTC-573】 过滤空条件查询，防止 sql 拼接多余的 and
 				List<QueryCondition> filterConditions = conditions.stream().filter(
-						rule -> (oConvertUtils.isNotEmpty(rule.getField())
-													&& oConvertUtils.isNotEmpty(rule.getRule())
-													&& oConvertUtils.isNotEmpty(rule.getVal())
+						rule -> (OConvertUtils.isNotEmpty(rule.getField())
+													&& OConvertUtils.isNotEmpty(rule.getRule())
+													&& OConvertUtils.isNotEmpty(rule.getVal())
 												 )
 												|| "empty".equals(rule.getRule())
 				).collect(Collectors.toList());
@@ -404,7 +404,7 @@ public class QueryGenerator {
                         QueryCondition rule = filterConditions.get(i);
                         if (
 								(
-								    oConvertUtils.isNotEmpty(rule.getField()) && oConvertUtils.isNotEmpty(rule.getRule()) && oConvertUtils.isNotEmpty(rule.getVal())
+								    OConvertUtils.isNotEmpty(rule.getField()) && OConvertUtils.isNotEmpty(rule.getRule()) && OConvertUtils.isNotEmpty(rule.getVal())
 								)
 							    || "empty".equals(rule.getRule())
 						) {
@@ -420,7 +420,7 @@ public class QueryGenerator {
 							}
 							// 代码逻辑说明: 【/issues/I3VR8E】高级查询没有类型转换，查询参数都是字符串类型 ----
 							String dbType = rule.getDbType();
-							if (oConvertUtils.isNotEmpty(dbType)) {
+							if (OConvertUtils.isNotEmpty(dbType)) {
 								try {
 									String valueStr = String.valueOf(queryValue);
 									switch (dbType.toLowerCase().trim()) {
@@ -590,7 +590,7 @@ public class QueryGenerator {
 	}
 	
 	private static void addQueryByRule(QueryWrapper<?> queryWrapper,String name,String type,String value,QueryRuleEnum rule) throws ParseException {
-		if(oConvertUtils.isNotEmpty(value)) {
+		if(OConvertUtils.isNotEmpty(value)) {
 			// 针对数字类型字段，多值查询
 			if(value.contains(COMMA)){
 				Object[] temp = Arrays.stream(value.split(COMMA)).map(v -> {
@@ -684,12 +684,12 @@ public class QueryGenerator {
 	public static void addEasyQuery(QueryWrapper<?> queryWrapper, String name, QueryRuleEnum rule, Object value) {
 		if (
 				(
-				   name==null || value == null || rule == null || oConvertUtils.isEmpty(value)
+				   name==null || value == null || rule == null || OConvertUtils.isEmpty(value)
 				) 
 				  && !QueryRuleEnum.EMPTY.equals(rule)) {
 			return;
 		}
-		name = oConvertUtils.camelToUnderline(name);
+		name = OConvertUtils.camelToUnderline(name);
 		log.debug("---高级查询 Query规则---field:{} , rule:{} , value:{}",name,rule.getValue(),value);
 		switch (rule) {
 		case GT:
@@ -809,7 +809,7 @@ public class QueryGenerator {
 	* @Return: java.lang.String
 	*/
 	public static String trimSingleQuote(String ruleValue) {
-		if (oConvertUtils.isEmpty(ruleValue)) {
+		if (OConvertUtils.isEmpty(ruleValue)) {
 			return "";
 		}
 		if (ruleValue.startsWith(QueryGenerator.SQL_SQ)) {
@@ -841,7 +841,7 @@ public class QueryGenerator {
 	 * 获取sql中的#{key} 这个key组成的set
 	 */
 	public static Set<String> getSqlRuleParams(String sql) {
-		if(oConvertUtils.isEmpty(sql)){
+		if(OConvertUtils.isEmpty(sql)){
 			return null;
 		}
 		Set<String> varParams = new HashSet<String>();

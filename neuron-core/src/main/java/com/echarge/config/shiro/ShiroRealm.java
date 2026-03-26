@@ -9,7 +9,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import com.echarge.common.api.CommonAPI;
+import com.echarge.common.api.CommonApi;
 import com.echarge.common.constant.CacheConstant;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.system.util.JwtUtil;
@@ -17,7 +17,7 @@ import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.RedisUtil;
 import com.echarge.common.util.SpringContextUtils;
 import com.echarge.common.util.TokenUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Role;
@@ -39,7 +39,7 @@ import java.util.Set;
 public class ShiroRealm extends AuthorizingRealm {
 	@Lazy
     @Resource
-    private CommonAPI commonApi;
+    private CommonApi commonApi;
 
     @Lazy
     @Resource
@@ -99,7 +99,7 @@ public class ShiroRealm extends AuthorizingRealm {
         String token = (String) auth.getCredentials();
         if (token == null) {
             HttpServletRequest req = SpringContextUtils.getHttpServletRequest();
-            log.info("————————身份认证失败——————————IP地址:  "+ oConvertUtils.getIpAddrByRequest(req) +"，URL:"+req.getRequestURI());
+            log.info("————————身份认证失败——————————IP地址:  "+ OConvertUtils.getIpAddrByRequest(req) +"，URL:"+req.getRequestURI());
             throw new AuthenticationException("token为空!");
         }
         // 校验token有效性
@@ -140,8 +140,8 @@ public class ShiroRealm extends AuthorizingRealm {
         // 校验token是否超时失效 & 或者账号密码是否错误
         if (!jwtTokenRefresh(token, username, loginUser.getPassword())) {
             // 用户登录Token过期提示信息
-            String userLoginTokenErrorMsg = oConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN_ERROR_MSG + token));
-            throw new AuthenticationException(oConvertUtils.isEmpty(userLoginTokenErrorMsg)? CommonConstant.TOKEN_IS_INVALID_MSG: userLoginTokenErrorMsg);
+            String userLoginTokenErrorMsg = OConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN_ERROR_MSG + token));
+            throw new AuthenticationException(OConvertUtils.isEmpty(userLoginTokenErrorMsg)? CommonConstant.TOKEN_IS_INVALID_MSG: userLoginTokenErrorMsg);
         }
         return loginUser;
     }
@@ -161,7 +161,7 @@ public class ShiroRealm extends AuthorizingRealm {
      */
     public boolean jwtTokenRefresh(String token, String userName, String passWord) {
         String cacheToken = String.valueOf(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN + token));
-        if (oConvertUtils.isNotEmpty(cacheToken)) {
+        if (OConvertUtils.isNotEmpty(cacheToken)) {
             // 校验token有效性
             if (!JwtUtil.verify(cacheToken, userName, passWord)) {
                 // 从token中解析客户端类型，保持续期时使用相同的客户端类型

@@ -203,7 +203,7 @@ public class SqlInjectionUtil {
 	 */
 	public static void filterContent(String[] values, String customXssString) {
 		for (String val : values) {
-			if (oConvertUtils.isEmpty(val)) {
+			if (OConvertUtils.isEmpty(val)) {
 				return;
 			}
 			filterContent(val, customXssString);
@@ -331,7 +331,7 @@ public class SqlInjectionUtil {
 	 */
 	private static Pattern tableNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_\\$]{0,63}$");
 	public static String getSqlInjectTableName(String table) {
-		if(oConvertUtils.isEmpty(table)){
+		if(OConvertUtils.isEmpty(table)){
 			return table;
 		}
 
@@ -372,7 +372,7 @@ public class SqlInjectionUtil {
 	 */
 	static final Pattern FIELD_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
 	public static String getSqlInjectField(String field) {
-		if(oConvertUtils.isEmpty(field)){
+		if(OConvertUtils.isEmpty(field)){
 			return field;
 		}
 		
@@ -424,7 +424,7 @@ public class SqlInjectionUtil {
 	 * @return
 	 */
 	public static String getSqlInjectSortField(String sortField) {
-		String field = SqlInjectionUtil.getSqlInjectField(oConvertUtils.camelToUnderline(sortField));
+		String field = SqlInjectionUtil.getSqlInjectField(OConvertUtils.camelToUnderline(sortField));
 		return field;
 	}
 

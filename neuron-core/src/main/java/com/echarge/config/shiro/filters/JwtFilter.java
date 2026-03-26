@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.system.util.JwtUtil;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import com.echarge.config.shiro.JwtToken;
 import com.echarge.config.shiro.ignore.InMemoryIgnoreAuth;
 import org.springframework.http.HttpHeaders;
@@ -57,7 +57,7 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         } catch (Exception e) {
             // 使用异常中的具体错误信息，保留"不允许同一账号多地同时登录"等具体提示
             String errorMsg = e.getMessage();
-            if (oConvertUtils.isEmpty(errorMsg)) {
+            if (OConvertUtils.isEmpty(errorMsg)) {
                 errorMsg = CommonConstant.TOKEN_IS_INVALID_MSG;
             }
             JwtUtil.responseError((HttpServletResponse)response, 401, errorMsg);
@@ -73,7 +73,7 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String token = httpServletRequest.getHeader(CommonConstant.X_ACCESS_TOKEN);
         // 代码逻辑说明: JT-355 OA聊天添加token验证，获取token参数
-        if (oConvertUtils.isEmpty(token)) {
+        if (OConvertUtils.isEmpty(token)) {
             token = httpServletRequest.getParameter("token");
         }
 

@@ -11,7 +11,7 @@ import com.echarge.modules.base.service.BaseCommonService;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.IpUtils;
 import com.echarge.common.util.SpringContextUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -31,7 +31,7 @@ public class BaseCommonServiceImpl implements BaseCommonService {
 
     @Override
     public void addLog(LogDTO logDTO) {
-        if(oConvertUtils.isEmpty(logDTO.getId())){
+        if(OConvertUtils.isEmpty(logDTO.getId())){
             logDTO.setId(String.valueOf(IdWorker.getId()));
         }
         //保存日志（异常捕获处理，防止数据太大存储失败，导致业务失败）JT-238

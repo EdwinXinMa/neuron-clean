@@ -1,11 +1,11 @@
 package com.echarge.config.filter;
 
 import lombok.extern.slf4j.Slf4j;
-import com.echarge.common.api.CommonAPI;
+import com.echarge.common.api.CommonApi;
 import com.echarge.common.util.RedisUtil;
 import com.echarge.common.util.SpringContextUtils;
 import com.echarge.common.util.TokenUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,14 +23,14 @@ public class WebsocketFilter implements Filter {
 
     private static final String TOKEN_KEY = "Sec-WebSocket-Protocol";
 
-    private static CommonAPI commonApi;
+    private static CommonApi commonApi;
 
     private static RedisUtil redisUtil;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         if (commonApi == null) {
-            commonApi = SpringContextUtils.getBean(CommonAPI.class);
+            commonApi = SpringContextUtils.getBean(CommonApi.class);
         }
         if (redisUtil == null) {
             redisUtil = SpringContextUtils.getBean(RedisUtil.class);
@@ -43,8 +43,8 @@ public class WebsocketFilter implements Filter {
         try {
             TokenUtils.verifyToken(token, commonApi, redisUtil);
         } catch (Exception exception) {
-            //log.error("Websocket连接 Token安全校验失败，IP:{}, Token:{}, Path = {}，异常：{}", oConvertUtils.getIpAddrByRequest(request), token, request.getRequestURI(), exception.getMessage());
-            log.debug("Websocket连接 Token安全校验失败，IP:{}, Token:{}, Path = {}，异常：{}", oConvertUtils.getIpAddrByRequest(request), token, request.getRequestURI(), exception.getMessage());
+            //log.error("Websocket连接 Token安全校验失败，IP:{}, Token:{}, Path = {}，异常：{}", OConvertUtils.getIpAddrByRequest(request), token, request.getRequestURI(), exception.getMessage());
+            log.debug("Websocket连接 Token安全校验失败，IP:{}, Token:{}, Path = {}，异常：{}", OConvertUtils.getIpAddrByRequest(request), token, request.getRequestURI(), exception.getMessage());
             return;
         }
         HttpServletResponse response = (HttpServletResponse)servletResponse;

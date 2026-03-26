@@ -264,7 +264,7 @@ public class ReflectHelper {
         Field[] fields = clazz.getDeclaredFields();
         for(int i=0;i<fields.length;i++){
             String fieldName = fields[i].getName();
-            String tableColumnName = oConvertUtils.camelToUnderline(fieldName);
+            String tableColumnName = OConvertUtils.camelToUnderline(fieldName);
             if(fieldName.equalsIgnoreCase(field) || tableColumnName.equalsIgnoreCase(field)){
                 return true;
             }

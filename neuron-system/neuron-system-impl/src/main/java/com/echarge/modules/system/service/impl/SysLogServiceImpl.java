@@ -8,7 +8,7 @@ import java.util.Map;
 import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.annotation.DbType;
-import com.echarge.common.system.api.ISysBaseAPI;
+import com.echarge.common.system.api.ISysBaseApi;
 import com.echarge.common.util.CommonUtils;
 import com.echarge.modules.system.entity.SysLog;
 import com.echarge.modules.system.mapper.SysLogMapper;

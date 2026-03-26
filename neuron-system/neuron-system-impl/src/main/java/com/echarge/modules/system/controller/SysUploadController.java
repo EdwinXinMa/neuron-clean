@@ -5,7 +5,7 @@ import com.echarge.common.api.vo.Result;
 import com.echarge.common.util.CommonUtils;
 import com.echarge.common.util.MinioUtil;
 import com.echarge.common.util.filter.SsrfFileTypeFilter;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,18 +37,18 @@ public class SysUploadController {
 
         SsrfFileTypeFilter.checkUploadFileType(file, bizPath);
 
-        if(oConvertUtils.isEmpty(bizPath)){
+        if(OConvertUtils.isEmpty(bizPath)){
             bizPath = "";
         }
         String orgName = file.getOriginalFilename();
         orgName = CommonUtils.getFileName(orgName);
         String fileUrl;
-        if (oConvertUtils.isNotEmpty(bucket)) {
+        if (OConvertUtils.isNotEmpty(bucket)) {
             fileUrl = MinioUtil.upload(file, bizPath, bucket);
         } else {
             fileUrl = MinioUtil.upload(file, bizPath);
         }
-        if(oConvertUtils.isEmpty(fileUrl)){
+        if(OConvertUtils.isEmpty(fileUrl)){
             return Result.error("上传失败,请检查配置信息是否正确!");
         }
         result.setMessage(fileUrl);

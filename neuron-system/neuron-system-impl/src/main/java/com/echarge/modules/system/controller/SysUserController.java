@@ -9,7 +9,7 @@ import com.echarge.common.api.vo.Result;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.PasswordUtil;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import com.echarge.modules.system.entity.SysUser;
 import com.echarge.modules.system.service.ISysUserService;
 import org.apache.shiro.SecurityUtils;
@@ -72,7 +72,7 @@ public class SysUserController {
             return Result.error("用户名已存在");
         }
         // 设置默认值
-        String salt = oConvertUtils.randomGen(8);
+        String salt = OConvertUtils.randomGen(8);
         String password = user.getPassword();
         if (StringUtils.isBlank(password)) {
             password = "123456"; // 默认密码
@@ -129,7 +129,7 @@ public class SysUserController {
         if (user == null) {
             return Result.error("用户不存在");
         }
-        String salt = oConvertUtils.randomGen(8);
+        String salt = OConvertUtils.randomGen(8);
         String defaultPassword = "123456";
         user.setSalt(salt);
         user.setPassword(PasswordUtil.encrypt(user.getUsername(), defaultPassword, salt));
@@ -160,7 +160,7 @@ public class SysUserController {
             return Result.error("旧密码错误");
         }
 
-        String salt = oConvertUtils.randomGen(8);
+        String salt = OConvertUtils.randomGen(8);
         user.setSalt(salt);
         user.setPassword(PasswordUtil.encrypt(user.getUsername(), newPassword, salt));
         sysUserService.updateById(user);

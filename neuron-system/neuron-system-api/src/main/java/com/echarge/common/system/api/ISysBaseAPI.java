@@ -1,6 +1,6 @@
 package com.echarge.common.system.api;
 
-import com.echarge.common.api.CommonAPI;
+import com.echarge.common.api.CommonApi;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.system.vo.SysUserCacheInfo;
 
@@ -10,7 +10,7 @@ import java.util.Set;
  * 底层共通业务API（精简版）
  * @author Edwin
  */
-public interface ISysBaseAPI extends CommonAPI {
+public interface ISysBaseApi extends CommonApi {
 
     /**
      * 根据用户id查询用户信息

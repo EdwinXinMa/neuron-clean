@@ -2,7 +2,7 @@ package com.echarge.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import com.echarge.common.api.CommonAPI;
+import com.echarge.common.api.CommonApi;
 import com.echarge.common.constant.CacheConstant;
 import com.echarge.common.constant.CommonConstant;
 import com.echarge.common.exception.NeuronBoot401Exception;
@@ -62,10 +62,10 @@ public class TokenUtils {
     public static String getTenantIdByRequest(HttpServletRequest request) {
         String tenantId = null;
         if (tenantId == null) {
-            tenantId = oConvertUtils.getString(request.getHeader(CommonConstant.TENANT_ID));
+            tenantId = OConvertUtils.getString(request.getHeader(CommonConstant.TENANT_ID));
         }
 
-        if (oConvertUtils.isNotEmpty(tenantId) && "undefined".equals(tenantId)) {
+        if (OConvertUtils.isNotEmpty(tenantId) && "undefined".equals(tenantId)) {
             return null;
         }
         return tenantId;
@@ -88,7 +88,7 @@ public class TokenUtils {
     /**
      * 验证Token
      */
-    public static boolean verifyToken(HttpServletRequest request, CommonAPI commonApi, RedisUtil redisUtil) {
+    public static boolean verifyToken(HttpServletRequest request, CommonApi commonApi, RedisUtil redisUtil) {
         log.debug(" -- url --" + request.getRequestURL());
         String token = getTokenByRequest(request);
         return TokenUtils.verifyToken(token, commonApi, redisUtil);
@@ -97,7 +97,7 @@ public class TokenUtils {
     /**
      * 验证Token
      */
-    public static boolean verifyToken(String token, CommonAPI commonApi, RedisUtil redisUtil) {
+    public static boolean verifyToken(String token, CommonApi commonApi, RedisUtil redisUtil) {
         if (StringUtils.isBlank(token)) {
             throw new NeuronBoot401Exception("token不能为空!");
         }
@@ -121,8 +121,8 @@ public class TokenUtils {
         // 校验token是否超时失效 & 或者账号密码是否错误
         if (!jwtTokenRefresh(token, username, user.getPassword(), redisUtil)) {
             // 用户登录Token过期提示信息
-            String userLoginTokenErrorMsg = oConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN_ERROR_MSG + token));
-            throw new NeuronBoot401Exception(oConvertUtils.isEmpty(userLoginTokenErrorMsg)? CommonConstant.TOKEN_IS_INVALID_MSG: userLoginTokenErrorMsg);
+            String userLoginTokenErrorMsg = OConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN_ERROR_MSG + token));
+            throw new NeuronBoot401Exception(OConvertUtils.isEmpty(userLoginTokenErrorMsg)? CommonConstant.TOKEN_IS_INVALID_MSG: userLoginTokenErrorMsg);
         }
         return true;
     }
@@ -136,8 +136,8 @@ public class TokenUtils {
      * @return
      */
     private static boolean jwtTokenRefresh(String token, String userName, String passWord, RedisUtil redisUtil) {
-        String cacheToken = oConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN + token));
-        if (oConvertUtils.isNotEmpty(cacheToken)) {
+        String cacheToken = OConvertUtils.getString(redisUtil.get(CommonConstant.PREFIX_USER_TOKEN + token));
+        if (OConvertUtils.isNotEmpty(cacheToken)) {
             // 校验token有效性
             if (!JwtUtil.verify(cacheToken, userName, passWord)) {
                 // 从token中解析客户端类型，保持续期时使用相同的客户端类型
@@ -162,7 +162,7 @@ public class TokenUtils {
      * @param username
      * @return
      */
-    public static LoginUser getLoginUser(String username, CommonAPI commonApi, RedisUtil redisUtil) {
+    public static LoginUser getLoginUser(String username, CommonApi commonApi, RedisUtil redisUtil) {
         LoginUser loginUser = null;
         String loginUserKey = CacheConstant.SYS_USERS_CACHE + "::" + username;
         //【重要】此处通过redis原生获取缓存用户，是为了解决微服务下system服务挂了，其他服务互调不通问题---

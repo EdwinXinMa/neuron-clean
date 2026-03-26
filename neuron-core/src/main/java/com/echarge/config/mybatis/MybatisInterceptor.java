@@ -10,7 +10,7 @@ import org.apache.shiro.SecurityUtils;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.SpringContextUtils;
 import com.echarge.common.util.TokenUtils;
-import com.echarge.common.util.oConvertUtils;
+import com.echarge.common.util.OConvertUtils;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
@@ -43,7 +43,7 @@ public class MybatisInterceptor implements Interceptor {
 		}
 		if (SqlCommandType.INSERT == sqlCommandType) {
 			LoginUser sysUser = this.getLoginUser();
-			Field[] fields = oConvertUtils.getAllFields(parameter);
+			Field[] fields = OConvertUtils.getAllFields(parameter);
 			for (Field field : fields) {
 				log.debug("------field.name------" + field.getName());
 				try {
@@ -108,9 +108,9 @@ public class MybatisInterceptor implements Interceptor {
 					return invocation.proceed();
 				}
 
-				fields = oConvertUtils.getAllFields(parameter);
+				fields = OConvertUtils.getAllFields(parameter);
 			} else {
-				fields = oConvertUtils.getAllFields(parameter);
+				fields = OConvertUtils.getAllFields(parameter);
 			}
 
 			for (Field field : fields) {
