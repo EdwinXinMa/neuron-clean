@@ -224,7 +224,6 @@ public class CommonUtils {
         try {
             return getDatabaseTypeByDataSource(dataSource);
         } catch (SQLException e) {
-            //e.printStackTrace();
             log.warn(e.getMessage(),e);
             return "";
         }
@@ -313,7 +312,6 @@ public class CommonUtils {
                     DB_TYPE = DataBaseConstant.DB_TYPE_MARIADB;
                 }else {
                     log.error("数据库类型:[" + dbType + "]不识别!");
-                    //throw new NeuronBootException("数据库类型:["+dbType+"]不识别!");
                 }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);

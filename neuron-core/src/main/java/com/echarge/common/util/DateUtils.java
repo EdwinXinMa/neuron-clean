@@ -105,7 +105,6 @@ public class DateUtils extends PropertyEditorSupport {
      */
     public static Calendar getCalendar(long millis) {
         Calendar cal = Calendar.getInstance();
-        // --------------------cal.setTimeInMillis(millis);
         cal.setTime(new Date(millis));
         return cal;
     }
@@ -312,7 +311,6 @@ public class DateUtils extends PropertyEditorSupport {
      * @return 指定日历的时间戳
      */
     public static Timestamp getCalendarTimestamp(Calendar cal) {
-        // ---------------------return new Timestamp(cal.getTimeInMillis());
         return new Timestamp(cal.getTime().getTime());
     }
 
@@ -345,7 +343,6 @@ public class DateUtils extends PropertyEditorSupport {
      * @return 指定日历的毫秒数
      */
     public static long getMillis(Calendar cal) {
-        // --------------------return cal.getTimeInMillis();
         return cal.getTime().getTime();
     }
 

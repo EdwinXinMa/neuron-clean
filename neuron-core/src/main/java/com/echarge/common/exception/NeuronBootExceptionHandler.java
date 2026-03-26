@@ -132,7 +132,6 @@ public class NeuronBootExceptionHandler {
 			}
 		}
 		log.error(sb.toString(), e);
-		//return Result.error("没有权限，请联系管理员授权");
 		addSysLog(e);
 		return Result.error(405,sb.toString());
 	}

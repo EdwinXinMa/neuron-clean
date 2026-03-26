@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  *
  */
 @Slf4j
-public class oConvertUtils {
+public class OConvertUtils {
 	public static boolean isEmpty(Object object) {
 		if (object == null) {
 			return (true);
@@ -63,7 +63,7 @@ public class oConvertUtils {
 	 * @return
 	 */
 	public static String decodeString(String inStr) {
-		if (oConvertUtils.isEmpty(inStr)) {
+		if (OConvertUtils.isEmpty(inStr)) {
 			return null;
 		}
 
@@ -71,7 +71,6 @@ public class oConvertUtils {
 			inStr = URLDecoder.decode(inStr, "UTF-8");
 		} catch (Exception e) {
 			// 解决：URLDecoder: Illegal hex characters in escape (%) pattern - For input string: "自动"
-			//e.printStackTrace();
 		}
 		return inStr;
 	}
@@ -270,7 +269,7 @@ public class oConvertUtils {
 	 * @return
 	 */
 	public static String getNormalString(String input) {
-		if (oConvertUtils.isEmpty(input)) {
+		if (OConvertUtils.isEmpty(input)) {
 			return null;
 		}
 		String result = input.replaceAll("[^0-9a-zA-Z\\u4e00-\\u9fa5]", "");
@@ -903,14 +902,6 @@ public class oConvertUtils {
 		}
 	}
 
-//	public static void main(String[] args) {
-////		String[] a = new String[]{"1", "2"};
-////		String[] b = new String[]{"2", "1"};
-//		Integer a = null;
-//		Integer b = 1;
-//		System.out.println(oConvertUtils.isEqual(a, b));
-//	}
-	
 	/**
 	 * 判断 list 是否不为空
 	 *
@@ -932,7 +923,7 @@ public class oConvertUtils {
 		String json = "";
 		try {
 			//换个写法，解决springboot读取jar包中文件的问题
-			InputStream stream = oConvertUtils.class.getClassLoader().getResourceAsStream(url.replace("classpath:", ""));
+			InputStream stream = OConvertUtils.class.getClassLoader().getResourceAsStream(url.replace("classpath:", ""));
 			json = IOUtils.toString(stream,"UTF-8");
 		} catch (IOException e) {
 			log.error(e.getMessage(),e);

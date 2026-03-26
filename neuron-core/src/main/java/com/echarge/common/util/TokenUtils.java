@@ -48,7 +48,6 @@ public class TokenUtils {
             HttpServletRequest request = SpringContextUtils.getHttpServletRequest();
             token = TokenUtils.getTokenByRequest(request);
         } catch (Exception e) {
-            //e.printStackTrace();
         }
         return token;
     }
@@ -110,7 +109,6 @@ public class TokenUtils {
 
         // 查询用户信息
         LoginUser user = TokenUtils.getLoginUser(username, commonApi, redisUtil);
-        //LoginUser user = commonApi.getUserByName(username);
         if (user == null) {
             throw new NeuronBoot401Exception("用户不存在!");
         }

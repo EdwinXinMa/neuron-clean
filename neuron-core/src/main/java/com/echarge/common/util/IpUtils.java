@@ -49,11 +49,9 @@ public class IpUtils {
         	logger.error("IPUtils ERROR ", e);
         }
 
-        //logger.info("获取客户端 ip：{} ", ip);
         // 使用代理，则获取第一个IP地址
         if (StringUtils.isNotEmpty(ip) && ip.length() > 15) {
             if (ip.indexOf(",") > 0) {
-                //ip = ip.substring(0, ip.indexOf(","));
                 String[] ipAddresses = ip.split(",");
                 for (String ipAddress : ipAddresses) {
                     ipAddress = ipAddress.trim();
@@ -89,7 +87,6 @@ public class IpUtils {
         try {
             inetAddress = InetAddress.getLocalHost();
             String ipAddress = inetAddress.getHostAddress();
-            //System.out.println("IP地址: " + ipAddress);
             return ipAddress;
         } catch (UnknownHostException e) {
             logger.error("获取ip地址失败", e);

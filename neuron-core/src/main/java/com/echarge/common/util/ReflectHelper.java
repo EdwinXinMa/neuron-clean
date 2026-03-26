@@ -218,7 +218,6 @@ public class ReflectHelper {
         Field[] fields = o.getClass().getDeclaredFields();
         String[] fieldNames = new String[fields.length];
         for (int i = 0; i < fields.length; i++) {
-            //log.info(fields[i].getType());
             fieldNames[i] = fields[i].getName();
         }
         return fieldNames;
@@ -303,7 +302,6 @@ public class ReflectHelper {
             try {
                 field = clazz.getDeclaredField(name);
             } catch (NoSuchFieldException e) {
-                //e.printStackTrace();
             }
 
             //如果为空，则去父类查找字段

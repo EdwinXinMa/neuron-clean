@@ -132,7 +132,6 @@ public class QueryGenerator {
 		//定义实体字段和数据库字段名称的映射 高级查询中 只能获取实体字段 如果设置TableField注解 那么查询条件会出问题
 		Map<String,String> fieldColumnMap = new HashMap<>(5);
 		for (int i = 0; i < origDescriptors.length; i++) {
-			//aliasName = origDescriptors[i].getName();  mybatis  不存在实体属性 不用处理别名的情况
 			name = origDescriptors[i].getName();
 			type = origDescriptors[i].getPropertyType().toString();
 			try {
@@ -149,7 +148,6 @@ public class QueryGenerator {
 				fieldColumnMap.put(name,column);
 				//数据权限查询
 				if(ruleMap.containsKey(name)) {
-					// addRuleToQueryWrapper(ruleMap.get(name), column, origDescriptors[i].getPropertyType(), queryWrapper);
 				}
 				//区间查询
 				doIntervalQuery(queryWrapper, parameterMap, type, name, column);
@@ -167,7 +165,6 @@ public class QueryGenerator {
 								j = j.or().like(field,vals[k]);
 								log.info("---查询过滤器，Query规则 .or()---field:{}, rule:{}, value:{}", field, "like", vals[k]);
 							}
-							//return j;
 						});
 					}else {
 						log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
@@ -184,12 +181,6 @@ public class QueryGenerator {
 						 rule = convert2Rule(value);
 					}
 					value = replaceValue(rule,value);
-					// add -begin 添加判断为字符串时设为全模糊查询
-					//if( (rule==null || QueryRuleEnum.EQ.equals(rule)) && "class java.lang.String".equals(type)) {
-						// 可以设置左右模糊或全模糊，因人而异
-						//rule = QueryRuleEnum.LIKE;
-					//}
-					// add -end 添加判断为字符串时设为全模糊查询
 					addEasyQuery(queryWrapper, column, rule, value);
 				}
 				
@@ -460,7 +451,6 @@ public class QueryGenerator {
                             }
                         }
                     }
-                    //return andWrapper;
                 });
             } catch (UnsupportedEncodingException e) {
                 log.error("--高级查询参数转码失败：" + superQueryParams, e);
@@ -469,7 +459,6 @@ public class QueryGenerator {
                 e.printStackTrace();
             }
 		}
-		//log.info(" superQuery getCustomSqlSegment: "+ queryWrapper.getCustomSqlSegment());
 	}
 	/**
 	 * 根据所传的值 转化成对应的比较方式
@@ -779,8 +768,6 @@ public class QueryGenerator {
 	private static boolean judgedIsUselessField(String name) {
 		return "class".equals(name) || "ids".equals(name)
 				|| "page".equals(name) || "rows".equals(name)
-// sort/order 字段不再跳过
-//				|| "sort".equals(name) || "order".equals(name)
 				;
 	}
 
