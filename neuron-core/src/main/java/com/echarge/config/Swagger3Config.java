@@ -46,8 +46,8 @@ public class Swagger3Config implements WebMvcConfigurer {
             "/sys/randomImage/**"
     ));
     /** 预处理通配符模式，提高匹配效率 */
-    private static final Set<String> WILDCARD_PATTERNS = new HashSet<>();
-    private static final Set<String> EXACT_PATTERNS = new HashSet<>();
+    private static final Set<String> WILDCARD_PATTERNS = new HashSet<>(8);
+    private static final Set<String> EXACT_PATTERNS = new HashSet<>(8);
     static {
         // 初始化时分离精确匹配和通配符匹配
         for (String pattern : EXCLUDED_PATHS) {

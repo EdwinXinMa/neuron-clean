@@ -74,7 +74,7 @@ public class RedisConfig extends CachingConfigurerSupport {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer));
         NeuronRedisCacheWriter writer = new NeuronRedisCacheWriter(factory, Duration.ofMillis(50L));
-        HashMap<String, RedisCacheConfiguration> initialCaches = new HashMap<>();
+        HashMap<String, RedisCacheConfiguration> initialCaches = new HashMap<>(16);
         Map<String, Long> cacheTtls = this.redisCacheProperties.getCacheTtls();
         if (cacheTtls != null && !cacheTtls.isEmpty()) {
             cacheTtls.forEach((cacheName, ttl) -> {

@@ -37,7 +37,7 @@ public class DruidWallConfigRegister implements SpringApplicationRunListener {
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
         ConfigurableEnvironment env = context.getEnvironment();
-        Map<String, Object> props = new HashMap<>();
+        Map<String, Object> props = new HashMap<>(2);
         props.put("spring.datasource.dynamic.druid.wall.selectWhereAlwayTrueCheck", false);
 
         MutablePropertySources propertySources = env.getPropertySources();

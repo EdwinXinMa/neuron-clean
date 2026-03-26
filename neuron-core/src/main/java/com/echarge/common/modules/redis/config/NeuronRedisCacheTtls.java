@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix="neuron.redis")
 public class NeuronRedisCacheTtls {
-    private Map<String, Long> cacheTtls = new HashMap<String, Long>();
+    private Map<String, Long> cacheTtls = new HashMap<>(16);
     private boolean listenerEnabled = true;
 
     public Map<String, Long> getCacheTtls() {
