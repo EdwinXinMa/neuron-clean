@@ -188,7 +188,7 @@ implements RedisCacheWriter {
         return !this.sleepTime.isZero() && !this.sleepTime.isNegative();
     }
 
-    /*
+    /**
      * WARNING - Removed try catching itself - possible behaviour change.
      */
     private <T> T execute(String name, Function<RedisConnection, T> callback) {

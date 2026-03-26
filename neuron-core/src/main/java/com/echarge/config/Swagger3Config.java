@@ -36,16 +36,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @PropertySource("classpath:config/default-spring-doc.properties")
 public class Swagger3Config implements WebMvcConfigurer {
 
-    // 路径匹配结果缓存，避免重复计算
+    /** 路径匹配结果缓存，避免重复计算 */
     private static final Map<String, Boolean> EXCLUDED_PATHS_CACHE = new ConcurrentHashMap<>();
-    // 定义不需要注入安全要求的路径集合
+    /** 定义不需要注入安全要求的路径集合 */
     private static final Set<String> EXCLUDED_PATHS = new HashSet<>(Arrays.asList(
             "/sys/randomImage/**",
             "/sys/login",
             "/sys/logout",
             "/sys/randomImage/**"
     ));
-    // 预处理通配符模式，提高匹配效率
+    /** 预处理通配符模式，提高匹配效率 */
     private static final Set<String> WILDCARD_PATTERNS = new HashSet<>();
     private static final Set<String> EXACT_PATTERNS = new HashSet<>();
     static {

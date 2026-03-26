@@ -6,6 +6,10 @@ import com.echarge.common.base.BaseMap;
  * @author Edwin
  */
 public interface NeuronRedisListener {
-    public void onMessage(BaseMap var1);
+    /**
+     * 处理 Redis 消息
+     * @param var1 消息内容
+     */
+    void onMessage(BaseMap var1);
 }
 
