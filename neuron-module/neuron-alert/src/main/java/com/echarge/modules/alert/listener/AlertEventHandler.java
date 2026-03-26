@@ -1,5 +1,6 @@
 package com.echarge.modules.alert.listener;
 
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
 import com.echarge.common.event.kafka.KafkaTopics;
@@ -52,7 +53,7 @@ public class AlertEventHandler implements DeviceEventListener {
             String status = getStr(payload, "status");
             String errorCode = getStr(payload, "errorCode");
 
-            if ("Faulted".equals(status) && errorCode != null && !"NoError".equals(errorCode)) {
+            if (BizConstant.OCPP_FAULTED.equals(status) && errorCode != null && !BizConstant.OCPP_NO_ERROR.equals(errorCode)) {
                 processAlert(event);
             }
         }

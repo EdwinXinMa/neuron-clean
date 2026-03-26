@@ -1,6 +1,7 @@
 package com.echarge.modules.device.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.system.base.entity.NeuronEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -26,7 +27,7 @@ public class FirmwareVersion extends NeuronEntity implements Serializable {
     private String version;
 
     @Schema(description = "\u8bbe\u5907\u7c7b\u578b")
-    private String deviceType = "N3_LITE";
+    private String deviceType = BizConstant.TYPE_N3_LITE;
 
     @Schema(description = "MinIO\u5b58\u50a8\u8def\u5f84")
     private String fileUrl;
@@ -44,5 +45,5 @@ public class FirmwareVersion extends NeuronEntity implements Serializable {
     private String releaseNotes;
 
     @Schema(description = "\u72b6\u6001: DRAFT/RELEASED/DEPRECATED")
-    private String status = "DRAFT";
+    private String status = BizConstant.FIRMWARE_DRAFT;
 }

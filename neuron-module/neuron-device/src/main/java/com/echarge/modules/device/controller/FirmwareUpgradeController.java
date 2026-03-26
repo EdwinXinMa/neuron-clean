@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.util.MinioUtil;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
@@ -71,7 +72,7 @@ public class FirmwareUpgradeController {
         if (firmware == null) {
             throw new NeuronBootException("固件不存在");
         }
-        if (!"RELEASED".equals(firmware.getStatus())) {
+        if (!BizConstant.FIRMWARE_RELEASED.equals(firmware.getStatus())) {
             throw new NeuronBootException("固件状态不是已发布，无法升级");
         }
 
@@ -82,7 +83,7 @@ public class FirmwareUpgradeController {
         if (device == null) {
             throw new NeuronBootException("设备不存在: " + deviceSn);
         }
-        if (!"ONLINE".equals(device.getOnlineStatus())) {
+        if (!BizConstant.DEVICE_ONLINE.equals(device.getOnlineStatus())) {
             throw new NeuronBootException("设备不在线，无法升级");
         }
 
@@ -115,7 +116,7 @@ public class FirmwareUpgradeController {
         FirmwareUpgradeTask task = new FirmwareUpgradeTask();
         task.setFirmwareId(firmwareId);
         task.setDeviceSn(deviceSn);
-        task.setStatus("PENDING");
+        task.setStatus(BizConstant.TASK_PENDING);
         task.setProgress(0);
         task.setStartTime(new Date());
         upgradeTaskService.save(task);
@@ -138,7 +139,7 @@ public class FirmwareUpgradeController {
             sendUpdateFirmware(deviceSn, downloadUrl, taskId);
         } catch (Exception e) {
             log.error("下发 UpdateFirmware 失败, taskId={}", taskId, e);
-            task.setStatus("FAILED");
+            task.setStatus(BizConstant.TASK_FAILED);
             task.setErrorMsg("下发指令失败: " + e.getMessage());
             task.setFinishTime(new Date());
             upgradeTaskService.updateById(task);
@@ -153,7 +154,7 @@ public class FirmwareUpgradeController {
         saveOpLog(deviceSn, opUser, NcOpLog.OTA_UPGRADE, opContent, NcOpLog.SUCCESS, null);
 
         // 推送初始状态到前端
-        pushMessage(taskId, deviceSn, "PENDING", 0, "升级指令已下发，等待设备响应");
+        pushMessage(taskId, deviceSn, BizConstant.TASK_PENDING, 0, "升级指令已下发，等待设备响应");
 
         return Result.ok("升级任务已创建", taskId);
     }

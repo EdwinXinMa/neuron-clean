@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.util.MinioUtil;
 import com.echarge.modules.device.entity.FirmwareVersion;
@@ -63,7 +64,7 @@ public class FirmwareVersionController {
     public Result<?> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam String version,
-            @RequestParam(defaultValue = "N3_LITE") String deviceType,
+            @RequestParam(defaultValue = BizConstant.TYPE_N3_LITE) String deviceType,
             @RequestParam(required = false) String releaseNotes) {
 
         if (file.isEmpty()) {
@@ -97,7 +98,7 @@ public class FirmwareVersionController {
             fw.setFileSize(fileSize);
             fw.setChecksum(checksum);
             fw.setReleaseNotes(releaseNotes);
-            fw.setStatus("DRAFT");
+            fw.setStatus(BizConstant.FIRMWARE_DRAFT);
             firmwareVersionService.save(fw);
 
             return Result.ok("上传成功", fw);
@@ -136,7 +137,7 @@ public class FirmwareVersionController {
         if (fw == null) {
             return Result.error("固件不存在");
         }
-        if (!"DRAFT".equals(fw.getStatus())) {
+        if (!BizConstant.FIRMWARE_DRAFT.equals(fw.getStatus())) {
             return Result.error("只有草稿状态的固件才能删除");
         }
         // remove file from MinIO

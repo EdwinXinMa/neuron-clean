@@ -10,6 +10,7 @@ import com.echarge.common.ocpp.OcppCommandSender;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.RedisUtil;
 import com.echarge.modules.alert.entity.NcAlert;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.modules.alert.service.INcAlertService;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
@@ -170,16 +171,16 @@ public class NcDeviceController {
         stats.put("total", ncDeviceService.count(base));
         stats.put("online", ncDeviceService.count(new LambdaQueryWrapper<NcDevice>()
                 .eq(NcDevice::getDelFlag, 0).isNull(NcDevice::getParentDeviceId)
-                .eq(NcDevice::getOnlineStatus, "ONLINE")));
+                .eq(NcDevice::getOnlineStatus, BizConstant.DEVICE_ONLINE)));
         stats.put("offline", ncDeviceService.count(new LambdaQueryWrapper<NcDevice>()
                 .eq(NcDevice::getDelFlag, 0).isNull(NcDevice::getParentDeviceId)
-                .eq(NcDevice::getOnlineStatus, "OFFLINE")));
+                .eq(NcDevice::getOnlineStatus, BizConstant.DEVICE_OFFLINE)));
         stats.put("fault", ncDeviceService.count(new LambdaQueryWrapper<NcDevice>()
                 .eq(NcDevice::getDelFlag, 0).isNull(NcDevice::getParentDeviceId)
-                .eq(NcDevice::getOnlineStatus, "FAULT")));
+                .eq(NcDevice::getOnlineStatus, BizConstant.DEVICE_FAULT)));
         stats.put("unactivated", ncDeviceService.count(new LambdaQueryWrapper<NcDevice>()
                 .eq(NcDevice::getDelFlag, 0).isNull(NcDevice::getParentDeviceId)
-                .eq(NcDevice::getOnlineStatus, "UNACTIVATED")));
+                .eq(NcDevice::getOnlineStatus, BizConstant.DEVICE_UNACTIVATED)));
         stats.put("alertBadge", ncAlertService.countRecentCritical());
 
         return Result.ok(stats);
@@ -193,7 +194,7 @@ public class NcDeviceController {
                         .eq(NcDevice::getDelFlag, 0)
                         .isNull(NcDevice::getParentDeviceId)
                         .isNotNull(NcDevice::getLat)
-                        .ne(NcDevice::getOnlineStatus, "UNACTIVATED")
+                        .ne(NcDevice::getOnlineStatus, BizConstant.DEVICE_UNACTIVATED)
                         .select(NcDevice::getSn, NcDevice::getOnlineStatus,
                                 NcDevice::getLat, NcDevice::getLng,
                                 NcDevice::getDeviceModel)
@@ -203,7 +204,7 @@ public class NcDeviceController {
         for (NcDevice d : devices) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("sn", d.getSn());
-            item.put("status", d.getOnlineStatus() == null ? "UNACTIVATED" : d.getOnlineStatus().toLowerCase());
+            item.put("status", d.getOnlineStatus() == null ? BizConstant.DEVICE_UNACTIVATED : d.getOnlineStatus().toLowerCase());
             item.put("lat", d.getLat());
             item.put("lng", d.getLng());
             item.put("model", d.getDeviceModel());
@@ -297,8 +298,8 @@ public class NcDeviceController {
                     continue;
                 }
 
-                device.setDeviceType("N3_LITE");
-                device.setOnlineStatus("UNACTIVATED");
+                device.setDeviceType(BizConstant.TYPE_N3_LITE);
+                device.setOnlineStatus(BizConstant.DEVICE_UNACTIVATED);
                 device.setStatus("NORMAL");
                 device.setDelFlag(0);
                 NcDeviceServiceImpl.assignRandomLocation(device);
@@ -369,7 +370,7 @@ public class NcDeviceController {
 
             JsonObject dtPayload = new JsonObject();
             dtPayload.addProperty("vendorId", "AlwaysControl");
-            dtPayload.addProperty("messageId", "SetDLMConfig");
+            dtPayload.addProperty("messageId", BizConstant.DT_SET_DLM_CONFIG);
             dtPayload.addProperty("data", payload.toString());
             call.add(dtPayload);
 

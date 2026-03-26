@@ -1,5 +1,6 @@
 package com.echarge.protocol.ocpp.v16.action;
 
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.core.session.Session;
@@ -41,7 +42,7 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
 
         // 根据 messageId 路由到不同业务
         String messageId = request.getMessageId();
-        if ("TopologyReport".equals(messageId)) {
+        if (BizConstant.DT_TOPOLOGY_REPORT.equals(messageId)) {
             DeviceEvent event = new DeviceEvent(
                     DeviceEvent.TOPOLOGY_REPORT,
                     session.getChargePointId(),
@@ -51,7 +52,7 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
             return new DataTransferResp("Accepted", null);
         }
 
-        if ("DLMStatus".equals(messageId)) {
+        if (BizConstant.DT_DLM_STATUS.equals(messageId)) {
             DeviceEvent event = new DeviceEvent(
                     DeviceEvent.DLM_STATUS,
                     session.getChargePointId(),

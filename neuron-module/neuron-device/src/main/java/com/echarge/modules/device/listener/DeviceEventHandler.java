@@ -3,6 +3,7 @@ package com.echarge.modules.device.listener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.event.kafka.KafkaAlertPublisher;
 import com.echarge.common.event.kafka.KafkaTopics;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
@@ -154,7 +155,7 @@ public class DeviceEventHandler implements DeviceEventListener {
 
         if (device != null) {
             // 台账已存在 → 激活设备，更新运行时信息
-            device.setOnlineStatus("ONLINE");
+            device.setOnlineStatus(BizConstant.DEVICE_ONLINE);
             device.setFirmwareVersion(firmwareVersion);
             device.setLastHeartbeat(now);
             device.setLastOnlineTime(now);
@@ -173,7 +174,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             device.setDeviceType(guessDeviceType(model));
             device.setDeviceModel(model);
             device.setFirmwareVersion(firmwareVersion);
-            device.setOnlineStatus("ONLINE");
+            device.setOnlineStatus(BizConstant.DEVICE_ONLINE);
             device.setFirstOnlineTime(now);
             device.setLastOnlineTime(now);
             device.setLastHeartbeat(now);
@@ -181,7 +182,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             ncDeviceService.save(device);
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }
-        broadcastDeviceStatus(chargePointId, "ONLINE", "设备上线");
+        broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
     }
 
     /**
@@ -194,7 +195,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         );
         if (device != null) {
             device.setLastHeartbeat(new Date());
-            device.setOnlineStatus("ONLINE");
+            device.setOnlineStatus(BizConstant.DEVICE_ONLINE);
             ncDeviceService.updateById(device);
         }
     }
@@ -223,10 +224,10 @@ public class DeviceEventHandler implements DeviceEventListener {
 
         if (connectorId == 0) {
             // N3 Lite 本体状态
-            n3lite.setOnlineStatus("Faulted".equals(status) ? "FAULT" : "ONLINE");
+            n3lite.setOnlineStatus(BizConstant.OCPP_FAULTED.equals(status) ? BizConstant.DEVICE_FAULT : BizConstant.DEVICE_ONLINE);
             ncDeviceService.updateById(n3lite);
             log.info("[DeviceEvent] N3 Lite status updated: sn={}, status={}", chargePointId, status);
-            broadcastDeviceStatus(chargePointId, "Faulted".equals(status) ? "FAULT" : "ONLINE", status);
+            broadcastDeviceStatus(chargePointId, BizConstant.OCPP_FAULTED.equals(status) ? BizConstant.DEVICE_FAULT : BizConstant.DEVICE_ONLINE, status);
         } else if (connectorId > 0) {
             // 更新枪状态
             NcConnector connector = ncConnectorService.getOne(
@@ -236,7 +237,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                                     "SELECT id FROM nc_device WHERE parent_device_id = '" + n3lite.getId() + "'")
             );
             if (connector != null) {
-                connector.setStatus(status != null ? status : "Available");
+                connector.setStatus(status != null ? status : BizConstant.OCPP_AVAILABLE);
                 connector.setUpdateTime(new Date());
                 ncConnectorService.updateById(connector);
                 log.info("[DeviceEvent] Connector status updated: connectorId={}, status={}", connectorId, status);
@@ -246,17 +247,17 @@ public class DeviceEventHandler implements DeviceEventListener {
                 List<NcConnector> allConnectors = ncConnectorService.list(
                         new LambdaQueryWrapper<NcConnector>().eq(NcConnector::getDeviceId, pileId)
                 );
-                boolean allFaulted = allConnectors.stream().allMatch(c -> "Faulted".equals(c.getStatus()));
+                boolean allFaulted = allConnectors.stream().allMatch(c -> BizConstant.OCPP_FAULTED.equals(c.getStatus()));
                 NcDevice pile = ncDeviceService.getById(pileId);
                 if (pile != null) {
-                    pile.setOnlineStatus(allFaulted ? "FAULT" : "ONLINE");
+                    pile.setOnlineStatus(allFaulted ? BizConstant.DEVICE_FAULT : BizConstant.DEVICE_ONLINE);
                     ncDeviceService.updateById(pile);
                 }
             }
         }
 
         // 故障时二次生产到 device-alert topic
-        if ("Faulted".equals(status) && errorCode != null && !"NoError".equals(errorCode)) {
+        if (BizConstant.OCPP_FAULTED.equals(status) && errorCode != null && !BizConstant.OCPP_NO_ERROR.equals(errorCode)) {
             publishAlert(event);
         }
     }
@@ -279,17 +280,17 @@ public class DeviceEventHandler implements DeviceEventListener {
                 new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, chargePointId)
         );
         if (device != null) {
-            device.setOnlineStatus("OFFLINE");
+            device.setOnlineStatus(BizConstant.DEVICE_OFFLINE);
             ncDeviceService.updateById(device);
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
-            broadcastDeviceStatus(chargePointId, "OFFLINE", "设备离线");
+            broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
 
             // N3 Lite 离线 → 下挂桩也全部离线，桩下的枪状态改为 Unavailable
             List<NcDevice> children = ncDeviceService.list(
                     new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getParentDeviceId, device.getId())
             );
             for (NcDevice child : children) {
-                child.setOnlineStatus("OFFLINE");
+                child.setOnlineStatus(BizConstant.DEVICE_OFFLINE);
                 ncDeviceService.updateById(child);
                 log.info("[DeviceEvent] Child device offline: sn={}", child.getSn());
 
@@ -298,7 +299,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                         new LambdaQueryWrapper<NcConnector>().eq(NcConnector::getDeviceId, child.getId())
                 );
                 for (NcConnector connector : connectors) {
-                    connector.setStatus("Unavailable");
+                    connector.setStatus(BizConstant.OCPP_UNAVAILABLE);
                     connector.setUpdateTime(new Date());
                     ncConnectorService.updateById(connector);
                 }
@@ -365,17 +366,17 @@ public class DeviceEventHandler implements DeviceEventListener {
 
             if (pile != null) {
                 pile.setParentDeviceId(parent.getId());
-                pile.setOnlineStatus("ONLINE");
+                pile.setOnlineStatus(BizConstant.DEVICE_ONLINE);
                 pile.setDeviceModel(model);
                 ncDeviceService.updateById(pile);
                 log.info("[DeviceEvent] Pile updated: sn={}, parent={}", sn, chargePointId);
             } else {
                 pile = new NcDevice();
                 pile.setSn(sn);
-                pile.setDeviceType("ATP_III");
+                pile.setDeviceType(BizConstant.TYPE_ATP_III);
                 pile.setDeviceModel(model);
                 pile.setParentDeviceId(parent.getId());
-                pile.setOnlineStatus("ONLINE");
+                pile.setOnlineStatus(BizConstant.DEVICE_ONLINE);
                 pile.setLastHeartbeat(now);
                 ncDeviceService.save(pile);
                 log.info("[DeviceEvent] Pile registered: sn={}, parent={}", sn, chargePointId);
@@ -402,14 +403,14 @@ public class DeviceEventHandler implements DeviceEventListener {
                     );
 
                     if (connector != null) {
-                        connector.setStatus(connStatus != null ? connStatus : "Available");
+                        connector.setStatus(connStatus != null ? connStatus : BizConstant.OCPP_AVAILABLE);
                         connector.setUpdateTime(now);
                         ncConnectorService.updateById(connector);
                     } else {
                         connector = new NcConnector();
                         connector.setDeviceId(pile.getId());
                         connector.setConnectorId(connectorId);
-                        connector.setStatus(connStatus != null ? connStatus : "Available");
+                        connector.setStatus(connStatus != null ? connStatus : BizConstant.OCPP_AVAILABLE);
                         connector.setCreateTime(now);
                         connector.setUpdateTime(now);
                         ncConnectorService.save(connector);
@@ -505,7 +506,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         FirmwareUpgradeTask task = upgradeTaskService.getOne(
                 new LambdaQueryWrapper<FirmwareUpgradeTask>()
                         .eq(FirmwareUpgradeTask::getDeviceSn, chargePointId)
-                        .in(FirmwareUpgradeTask::getStatus, "PENDING", "DOWNLOADING", "INSTALLING")
+                        .in(FirmwareUpgradeTask::getStatus, BizConstant.TASK_PENDING, BizConstant.TASK_DOWNLOADING, BizConstant.TASK_INSTALLING)
                         .orderByDesc(FirmwareUpgradeTask::getCreateTime)
                         .last("LIMIT 1")
         );
@@ -521,34 +522,34 @@ public class DeviceEventHandler implements DeviceEventListener {
 
         switch (status) {
             case "Downloading":
-                taskStatus = "DOWNLOADING";
+                taskStatus = BizConstant.TASK_DOWNLOADING;
                 progress = 30;
                 msg = "设备正在下载固件";
                 break;
             case "Downloaded":
-                taskStatus = "DOWNLOADING";
+                taskStatus = BizConstant.TASK_DOWNLOADING;
                 progress = 100;
                 msg = "固件下载完成";
                 break;
             case "Installing":
-                taskStatus = "INSTALLING";
+                taskStatus = BizConstant.TASK_INSTALLING;
                 progress = 50;
                 msg = "设备正在安装固件";
                 break;
             case "Installed":
-                taskStatus = "COMPLETED";
+                taskStatus = BizConstant.TASK_COMPLETED;
                 progress = 100;
                 msg = "固件升级完成";
                 task.setFinishTime(new Date());
                 break;
             case "DownloadFailed":
-                taskStatus = "FAILED";
+                taskStatus = BizConstant.TASK_FAILED;
                 msg = "固件下载失败";
                 task.setErrorMsg(msg);
                 task.setFinishTime(new Date());
                 break;
             case "InstallationFailed":
-                taskStatus = "FAILED";
+                taskStatus = BizConstant.TASK_FAILED;
                 msg = "固件安装失败";
                 task.setErrorMsg(msg);
                 task.setFinishTime(new Date());
@@ -566,7 +567,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         upgradeTaskService.updateById(task);
 
         // 升级失败时补记操作日志
-        if ("FAILED".equals(taskStatus)) {
+        if (BizConstant.TASK_FAILED.equals(taskStatus)) {
             NcOpLog failLog = new NcOpLog();
             failLog.setDeviceSn(chargePointId);
             failLog.setOpUser("system");
@@ -595,22 +596,22 @@ public class DeviceEventHandler implements DeviceEventListener {
      */
     private String mapConnectorStatus(String ocppStatus) {
         if (ocppStatus == null) {
-            return "ONLINE";
+            return BizConstant.DEVICE_ONLINE;
         }
         switch (ocppStatus) {
-            case "Available":
+            case BizConstant.OCPP_AVAILABLE:
             case "Charging":
             case "SuspendedEV":
             case "SuspendedEVSE":
             case "Preparing":
             case "Finishing":
-                return "ONLINE";
-            case "Faulted":
-                return "FAULT";
-            case "Unavailable":
-                return "OFFLINE";
+                return BizConstant.DEVICE_ONLINE;
+            case BizConstant.OCPP_FAULTED:
+                return BizConstant.DEVICE_FAULT;
+            case BizConstant.OCPP_UNAVAILABLE:
+                return BizConstant.DEVICE_OFFLINE;
             default:
-                return "ONLINE";
+                return BizConstant.DEVICE_ONLINE;
         }
     }
 
@@ -619,13 +620,13 @@ public class DeviceEventHandler implements DeviceEventListener {
      */
     private String guessDeviceType(String model) {
         if (model == null) {
-            return "N3_LITE";
+            return BizConstant.TYPE_N3_LITE;
         }
         String lower = model.toLowerCase();
         if (lower.contains("atp")) {
-            return "ATP_III";
+            return BizConstant.TYPE_ATP_III;
         }
-        return "N3_LITE";
+        return BizConstant.TYPE_N3_LITE;
     }
 
     /**

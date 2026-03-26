@@ -1,6 +1,7 @@
 package com.echarge.modules.device.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.mapper.NcDeviceMapper;
@@ -39,8 +40,8 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         if (existsBySn(device.getSn())) {
             throw new NeuronBootException("\u8bbe\u5907SN\u5df2\u5b58\u5728");
         }
-        device.setDeviceType("N3_LITE");
-        device.setOnlineStatus("UNACTIVATED");
+        device.setDeviceType(BizConstant.TYPE_N3_LITE);
+        device.setOnlineStatus(BizConstant.DEVICE_UNACTIVATED);
         device.setStatus("NORMAL");
         device.setDelFlag(0);
         assignRandomLocation(device);
