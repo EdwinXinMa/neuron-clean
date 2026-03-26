@@ -161,8 +161,11 @@ public class CommonUtils {
             }
             // 获取文件名
             String orgName = mf.getOriginalFilename();
+            if (orgName == null) {
+                orgName = "unknown";
+            }
             // 无中文情况下进行转码
-            if (orgName != null && !CommonUtils.ifContainChinese(orgName)) {
+            if (!CommonUtils.ifContainChinese(orgName)) {
                 orgName = new String(orgName.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
             }
             orgName = CommonUtils.getFileName(orgName);

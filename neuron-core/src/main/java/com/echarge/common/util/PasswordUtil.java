@@ -7,11 +7,13 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Description: 密码工具类
  * @author Edwin
  */
+@Slf4j
 public class PasswordUtil {
 
 	/**
@@ -132,7 +134,10 @@ public class PasswordUtil {
 		}
 
 		catch (Exception e) {
-			// TODO: handle exception
+			log.error("Decrypt failed: {}", e.getMessage());
+		}
+		if (passDec == null) {
+			return "";
 		}
 		return new String(passDec);
 	}
