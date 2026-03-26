@@ -99,6 +99,19 @@ spring:
       host: 127.0.0.1
       port: 6379
       password:
+  # Kafka 配置
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1
+      retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
+      enable-auto-commit: true
 #mybatis plus 设置
 mybatis-plus:
   mapper-locations: classpath*:com/echarge/**/xml/*Mapper.xml
@@ -118,7 +131,7 @@ mybatis-plus:
 neuron:
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:
-    enabled: false
+    enabled: true
   # OCPP 协议网关
   protocol:
     enabled: true

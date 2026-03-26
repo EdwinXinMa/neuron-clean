@@ -3,6 +3,8 @@ package com.echarge.modules.device.listener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
+import com.echarge.common.event.kafka.KafkaAlertPublisher;
+import com.echarge.common.event.kafka.KafkaTopics;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
@@ -21,7 +23,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -29,7 +33,8 @@ import java.util.stream.Collectors;
 
 /**
  * 设备事件消费端
- * 接收 protocol 模块发来的设备事件，执行业务逻辑
+ * 直连模式：实现 DeviceEventListener 接口
+ * Kafka 模式：通过 @KafkaListener 消费三个 Topic
  */
 @Slf4j
 @Component
@@ -53,7 +58,47 @@ public class DeviceEventHandler implements DeviceEventListener {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired(required = false)
+    private KafkaAlertPublisher kafkaAlertPublisher;
+
     private final Gson gson = new Gson();
+
+    // ==================== Kafka 消费入口 ====================
+
+    @KafkaListener(
+            topics = KafkaTopics.DEVICE_LIFECYCLE,
+            groupId = "device-handler",
+            autoStartup = "${neuron.kafka.enabled:false}"
+    )
+    public void onLifecycleMessage(ConsumerRecord<String, String> record) {
+        DeviceEvent event = gson.fromJson(record.value(), DeviceEvent.class);
+        log.debug("[KAFKA] Lifecycle consumed: key={}, type={}", record.key(), event.getEventType());
+        onDeviceEvent(event);
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.DEVICE_TELEMETRY,
+            groupId = "device-handler",
+            autoStartup = "${neuron.kafka.enabled:false}"
+    )
+    public void onTelemetryMessage(ConsumerRecord<String, String> record) {
+        DeviceEvent event = gson.fromJson(record.value(), DeviceEvent.class);
+        log.debug("[KAFKA] Telemetry consumed: key={}, type={}", record.key(), event.getEventType());
+        onDeviceEvent(event);
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.DEVICE_TASK,
+            groupId = "device-handler",
+            autoStartup = "${neuron.kafka.enabled:false}"
+    )
+    public void onTaskMessage(ConsumerRecord<String, String> record) {
+        DeviceEvent event = gson.fromJson(record.value(), DeviceEvent.class);
+        log.debug("[KAFKA] Task consumed: key={}, type={}", record.key(), event.getEventType());
+        onDeviceEvent(event);
+    }
+
+    // ==================== 统一处理入口 ====================
 
     @Override
     public void onDeviceEvent(DeviceEvent event) {
@@ -206,6 +251,20 @@ public class DeviceEventHandler implements DeviceEventListener {
                     ncDeviceService.updateById(pile);
                 }
             }
+        }
+
+        // 故障时二次生产到 device-alert topic
+        if ("Faulted".equals(status) && errorCode != null && !"NoError".equals(errorCode)) {
+            publishAlert(event);
+        }
+    }
+
+    /**
+     * 发布告警事件到 device-alert（Kafka 模式走 Kafka，直连模式直接忽略由 AlertEventHandler 自行处理）
+     */
+    private void publishAlert(DeviceEvent event) {
+        if (kafkaAlertPublisher != null) {
+            kafkaAlertPublisher.publishAlert(event);
         }
     }
 
