@@ -11,6 +11,7 @@ import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.common.websocket.FrontendPushChannel;
 import com.echarge.modules.device.websocket.OtaWebSocket;
@@ -45,6 +46,9 @@ public class DeviceEventHandler implements DeviceEventListener {
 
     @Autowired
     private INcOpLogService opLogService;
+
+    @Autowired
+    private INcDlmHistoryService dlmHistoryService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -407,6 +411,9 @@ public class DeviceEventHandler implements DeviceEventListener {
         // 直接将整个 JSON 写入 Redis，key 过期时间 5 分钟（设备应每 60s 上报一次）
         String redisKey = "device:dlm:" + chargePointId;
         redisUtil.set(redisKey, payload, 300);
+
+        // 异步写入时序表（历史记录）
+        dlmHistoryService.saveDlmReport(chargePointId, payload);
 
         // 同步 breakerRating 到数据库（持久化配置值）
         try {
