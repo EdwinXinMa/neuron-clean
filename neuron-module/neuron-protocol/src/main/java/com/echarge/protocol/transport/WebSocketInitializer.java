@@ -46,7 +46,8 @@ public class WebSocketInitializer extends ChannelInitializer<SocketChannel> {
                 true,
                 properties.getMaxFrameSize(),
                 false,
-                true  // checkStartsWith: /ocpp/TEST001 匹配 /ocpp 前缀
+                // checkStartsWith: /ocpp/TEST001 匹配 /ocpp 前缀
+                true
         ));
         // 180秒未收到任何消息则判定设备超时，触发关闭连接
         pipeline.addLast(new IdleStateHandler(180, 0, 0, TimeUnit.SECONDS));

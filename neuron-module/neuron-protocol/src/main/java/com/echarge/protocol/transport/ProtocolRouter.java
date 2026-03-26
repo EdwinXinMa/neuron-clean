@@ -57,7 +57,8 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
             }
 
             if (subProtocol == null || subProtocol.isEmpty()) {
-                subProtocol = "ocpp1.6"; // default fallback
+                // default fallback
+                subProtocol = "ocpp1.6";
             }
 
             if (!dispatchers.containsKey(subProtocol)) {

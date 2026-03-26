@@ -1004,10 +1004,12 @@ public class OConvertUtils {
 	 */
 	public static boolean isAllInList(List<String> sourceList, List<String> targetList){
 		if(sourceList == null || sourceList.isEmpty()){
-			return true; // 空列表视为所有元素都存在
+			// 空列表视为所有元素都存在
+			return true;
 		}
 		if(targetList == null || targetList.isEmpty()){
-			return false; // 目标列表为空，源列表非空时返回false
+			// 目标列表为空，源列表非空时返回false
+			return false;
 		}
 
 		for(String sourceItem: sourceList){
@@ -1019,10 +1021,12 @@ public class OConvertUtils {
 				}
 			}
 			if(!found){
-				return false; // 有任何一个元素不在目标列表中，返回false
+				// 有任何一个元素不在目标列表中，返回false
+				return false;
 			}
 		}
-		return true; // 所有元素都找到了
+		// 所有元素都找到了
+		return true;
 	}
 	
 	/**

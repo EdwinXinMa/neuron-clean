@@ -75,15 +75,18 @@ public class SysUserController {
         String salt = OConvertUtils.randomGen(8);
         String password = user.getPassword();
         if (StringUtils.isBlank(password)) {
-            password = "123456"; // 默认密码
+            // 默认密码
+            password = "123456";
         }
         user.setSalt(salt);
         user.setPassword(PasswordUtil.encrypt(user.getUsername(), password, salt));
-        user.setStatus(CommonConstant.USER_UNFREEZE); // 正常状态
+        // 正常状态
+        user.setStatus(CommonConstant.USER_UNFREEZE);
         user.setDelFlag(CommonConstant.DEL_FLAG_0);
         user.setCreateTime(new Date());
         if (StringUtils.isBlank(user.getRole())) {
-            user.setRole("operator"); // 默认运维角色
+            // 默认运维角色
+            user.setRole("operator");
         }
         sysUserService.save(user);
         return Result.ok("添加成功");

@@ -37,16 +37,19 @@ public class OcppFrameCodec extends MessageToMessageCodec<TextWebSocketFrame, Ou
             String messageId = array.get(1).getAsString();
 
             switch (messageType) {
-                case 2: // CALL
+                // CALL
+                case 2:
                     String action = array.get(2).getAsString();
                     JsonElement payload = array.size() > 3 ? array.get(3) : null;
                     out.add(new InboundMessage(messageType, messageId, action, payload));
                     break;
-                case 3: // CALLRESULT
+                // CALLRESULT
+                case 3:
                     JsonElement resultPayload = array.size() > 2 ? array.get(2) : null;
                     out.add(new InboundMessage(messageType, messageId, null, resultPayload));
                     break;
-                case 4: // CALLERROR
+                // CALLERROR
+                case 4:
                     out.add(new InboundMessage(messageType, messageId,
                             array.get(2).getAsString(), array.size() > 4 ? array.get(4) : null));
                     break;

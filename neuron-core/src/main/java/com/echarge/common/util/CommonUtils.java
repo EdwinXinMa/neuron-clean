@@ -61,7 +61,8 @@ public class CommonUtils {
             if(CommonConstant.UPLOAD_TYPE_LOCAL.equals(uploadType)){
                 File file = new File(basePath + File.separator + bizPath + File.separator );
                 if (!file.exists()) {
-                    file.mkdirs();// 创建文件根目录
+                    // 创建文件根目录
+                    file.mkdirs();
                 }
                 String savePath = file.getPath() + File.separator + fileName;
                 File savefile = new File(savePath);

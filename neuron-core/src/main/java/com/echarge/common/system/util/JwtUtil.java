@@ -240,7 +240,8 @@ public class JwtUtil {
 		//1.优先获取 SysUserCacheInfo
 		if(user==null) {
 			try {
-				user = null; // NeuronDataAutorUtils 已移除
+				// NeuronDataAutorUtils 已移除
+				user = null;
 			} catch (Exception e) {
 				log.warn("获取用户信息异常：" + e.getMessage());
 			}

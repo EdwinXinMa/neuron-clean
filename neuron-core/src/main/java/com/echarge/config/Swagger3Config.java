@@ -139,7 +139,8 @@ public class Swagger3Config implements WebMvcConfigurer {
                         new SecurityScheme()
                                 .name(CommonConstant.X_ACCESS_TOKEN)
                                 .type(SecurityScheme.Type.APIKEY)
-                                .in(SecurityScheme.In.HEADER) // 关键：指定为 header
+                                // 关键：指定为 header
+                                .in(SecurityScheme.In.HEADER)
                 ));
     }
 }

@@ -35,6 +35,7 @@ public class MeterValuesHandler implements Ocpp16ActionHandler<MeterValuesReq, O
                 request.getMeterValue() != null ? request.getMeterValue().size() : 0);
 
         // TODO: store meter values for billing/monitoring
-        return new Object(); // empty response per OCPP spec
+        // empty response per OCPP spec
+        return new Object();
     }
 }
