@@ -57,7 +57,7 @@ public class NcOpLog implements Serializable {
     @DateTimeFormat
     private Date createTime;
 
-    // ==================== 操作类型常量 ====================
+    /** ==================== 操作类型常量 ==================== */
     public static final String OTA_UPGRADE    = "OTA_UPGRADE";
     public static final String DLM_CONFIG     = "DLM_CONFIG";
     public static final String REMOTE_REBOOT  = "REMOTE_REBOOT";

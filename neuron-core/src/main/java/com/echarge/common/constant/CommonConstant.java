@@ -6,25 +6,25 @@ package com.echarge.common.constant;
  */
 public interface CommonConstant {
 
-	// ======================== 状态标记 ========================
+	/** ======================== 状态标记 ======================== */
 	Integer DEL_FLAG_1 = 1;
 	Integer DEL_FLAG_0 = 0;
 
-	// ======================== 用户状态 ========================
+	/** ======================== 用户状态 ======================== */
 	/** 1正常(解冻) 2冻结 */
 	Integer USER_UNFREEZE = 1;
 	Integer USER_FREEZE = 2;
 
-	// ======================== 系统日志类型 ========================
+	/** ======================== 系统日志类型 ======================== */
 	int LOG_TYPE_4 = 4;
 
-	// ======================== HTTP 状态码 ========================
+	/** ======================== HTTP 状态码 ======================== */
 	Integer SC_OK_200 = 200;
 	Integer SC_INTERNAL_SERVER_ERROR_500 = 500;
 	/** 访问权限认证未通过 */
 	Integer SC_NO_AUTHZ = 510;
 
-	// ======================== Token / 认证 ========================
+	/** ======================== Token / 认证 ======================== */
 	String X_ACCESS_TOKEN = "X-Access-Token";
 	String TENANT_ID = "X-Tenant-Id";
 	String TOKEN_IS_INVALID_MSG = "Token失效，请重新登录!";
@@ -41,18 +41,18 @@ public interface CommonConstant {
 	String CLIENT_TYPE_PC = "PC";
 	String CLIENT_TYPE_APP = "APP";
 
-	// ======================== 微服务 ========================
+	/** ======================== 微服务 ======================== */
 	String CLOUD_SERVER_KEY = "spring.cloud.nacos.discovery.server-addr";
 
-	// ======================== 文件上传类型 ========================
+	/** ======================== 文件上传类型 ======================== */
 	String UPLOAD_TYPE_LOCAL = "local";
 	String UPLOAD_TYPE_MINIO = "minio";
 
-	// ======================== 排序 ========================
+	/** ======================== 排序 ======================== */
 	String ORDER_TYPE_ASC = "ASC";
 	String ORDER_TYPE_DESC = "DESC";
 
-	// ======================== 其他 ========================
+	/** ======================== 其他 ======================== */
 	String UNKNOWN = "unknown";
 	String STR_HTTP = "http";
 	String STRING_NULL = "null";

@@ -56,7 +56,7 @@ public class IgnoreAuthPostProcessor implements InitializingBean {
         log.info("Init Token ignoreAuthUrls Config [ 耗时 ] ：" + elapsedTime + "ms");
     }
 
-    // 优化：新方法处理单个@IgnoreAuth方法，减少重复注解检查
+    /** 优化：新方法处理单个@IgnoreAuth方法，减少重复注解检查 */
     private List<String> processIgnoreAuthMethod(Class<?> clazz, Method method) {
         RequestMapping base = clazz.getAnnotation(RequestMapping.class);
         String[] baseUrl = Objects.nonNull(base) ? base.value() : new String[]{};
