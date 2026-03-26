@@ -709,10 +709,8 @@ public class OConvertUtils {
 		List<Map<String, Object>> select = new ArrayList<>();
 		for (Map<String, Object> row : list) {
 			 Map<String, Object> resultMap = new HashMap<>(5);
-			 Set<String> keySet = row.keySet(); 
-			 for (String key : keySet) { 
-				 String newKey = key.toLowerCase(); 
-				 resultMap.put(newKey, row.get(key)); 
+			 for (Map.Entry<String, Object> entry : row.entrySet()) {
+				 resultMap.put(entry.getKey().toLowerCase(), entry.getValue());
 			 }
 			 select.add(resultMap);
 		}

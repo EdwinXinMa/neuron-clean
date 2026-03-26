@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 
@@ -153,13 +154,12 @@ public class SsrfFileTypeFilter {
             byte[] b = new byte[10];
             is.read(b, 0, b.length);
             String fileTypeHex = String.valueOf(bytesToHexString(b));
-            Iterator<String> keyIter = FILE_TYPE_MAP.keySet().iterator();
-            while (keyIter.hasNext()) {
-                String key = keyIter.next();
+            String hexPrefix = fileTypeHex.toLowerCase().substring(0, 5);
+            for (Map.Entry<String, String> entry : FILE_TYPE_MAP.entrySet()) {
+                String key = entry.getKey().toLowerCase();
                 // 验证前5个字符比较
-                if (key.toLowerCase().startsWith(fileTypeHex.toLowerCase().substring(0, 5))
-                        || fileTypeHex.toLowerCase().substring(0, 5).startsWith(key.toLowerCase())) {
-                    fileExtendName = FILE_TYPE_MAP.get(key);
+                if (key.startsWith(hexPrefix) || hexPrefix.startsWith(key)) {
+                    fileExtendName = entry.getValue();
                     break;
                 }
             }

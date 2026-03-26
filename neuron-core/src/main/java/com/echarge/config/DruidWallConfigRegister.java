@@ -19,19 +19,15 @@ import java.util.Map;
  */
 public class DruidWallConfigRegister implements SpringApplicationRunListener {
 
-    public SpringApplication application;
-
-    private String[] args;
-
+    private final SpringApplication application;
 
     /**
      * 必备，否则启动报错
-     * @param application
-     * @param args
+     * @param application Spring 应用
+     * @param args 启动参数
      */
     public DruidWallConfigRegister(SpringApplication application, String[] args) {
         this.application = application;
-        this.args = args;
     }
 
     @Override
