@@ -47,8 +47,20 @@ public class WebsocketFilter implements Filter {
             return;
         }
         HttpServletResponse response = (HttpServletResponse)servletResponse;
-        response.setHeader(TOKEN_KEY, token);
+        response.setHeader(TOKEN_KEY, sanitizeHeader(token));
         filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    /**
+     * 清洗 HTTP header 值，防止 HTTP Response Splitting
+     * @param value 原始值
+     * @return 去掉 \r \n 的安全值
+     */
+    static String sanitizeHeader(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replaceAll("[\\r\\n]", "");
     }
 
 }

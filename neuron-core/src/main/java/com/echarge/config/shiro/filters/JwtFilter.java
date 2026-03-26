@@ -92,13 +92,13 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         if(allowOrigin){
-            httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, httpServletRequest.getHeader(HttpHeaders.ORIGIN));
+            httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, sanitizeHeader(httpServletRequest.getHeader(HttpHeaders.ORIGIN)));
             // 允许客户端请求方法
             httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,POST,OPTIONS,PUT,DELETE");
             // 允许客户端提交的Header
             String requestHeaders = httpServletRequest.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);
             if (StringUtils.isNotEmpty(requestHeaders)) {
-                httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders);
+                httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, sanitizeHeader(requestHeaders));
             }
             // 允许客户端携带凭证信息(是否允许发送Cookie)
             httpServletResponse.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
@@ -122,5 +122,17 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
     @Override
     public void afterCompletion(ServletRequest request, ServletResponse response, Exception exception) throws Exception {
         // no-op
+    }
+
+    /**
+     * 清洗 HTTP header 值，防止 HTTP Response Splitting
+     * @param value 原始值
+     * @return 去掉 \r \n 的安全值
+     */
+    private String sanitizeHeader(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replaceAll("[\\r\\n]", "");
     }
 }
