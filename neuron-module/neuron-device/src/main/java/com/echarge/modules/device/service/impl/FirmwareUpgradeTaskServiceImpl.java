@@ -6,6 +6,9 @@ import com.echarge.modules.device.mapper.FirmwareUpgradeTaskMapper;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author Edwin
+ */
 @Service
 public class FirmwareUpgradeTaskServiceImpl extends ServiceImpl<FirmwareUpgradeTaskMapper, FirmwareUpgradeTask> implements IFirmwareUpgradeTaskService {
 }

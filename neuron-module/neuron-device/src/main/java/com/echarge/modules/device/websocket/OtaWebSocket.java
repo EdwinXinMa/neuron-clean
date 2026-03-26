@@ -9,6 +9,9 @@ import jakarta.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component
 @ServerEndpoint("/otaSocket/{token}")

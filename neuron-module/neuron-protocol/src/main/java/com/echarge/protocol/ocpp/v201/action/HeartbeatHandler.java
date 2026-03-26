@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component("v201HeartbeatHandler")
 public class HeartbeatHandler implements Ocpp201ActionHandler<Object, HeartbeatResp> {

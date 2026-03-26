@@ -21,6 +21,7 @@ import java.util.Date;
 /**
  * 用户管理（精简版）
  * 功能：账号列表、新增账号、禁用/启用、重置密码、修改自己密码
+ * @author Edwin
  */
 @Slf4j
 @RestController
@@ -57,7 +58,7 @@ public class SysUserController {
         IPage<SysUser> page = sysUserService.page(new Page<>(pageNo, pageSize), query);
         // 清除密码和盐值
         page.getRecords().forEach(u -> { u.setPassword(null); u.setSalt(null); });
-        return Result.OK(page);
+        return Result.ok(page);
     }
 
     /**
@@ -85,7 +86,7 @@ public class SysUserController {
             user.setRole("operator"); // 默认运维角色
         }
         sysUserService.save(user);
-        return Result.OK("添加成功");
+        return Result.ok("添加成功");
     }
 
     /**
@@ -102,7 +103,7 @@ public class SysUserController {
         update.setPhone(user.getPhone());
         update.setEmail(user.getEmail());
         sysUserService.updateById(update);
-        return Result.OK("修改成功");
+        return Result.ok("修改成功");
     }
 
     /**
@@ -116,7 +117,7 @@ public class SysUserController {
         }
         user.setStatus(status);
         sysUserService.updateById(user);
-        return Result.OK(CommonConstant.USER_FREEZE.equals(status) ? "已禁用" : "已启用");
+        return Result.ok(CommonConstant.USER_FREEZE.equals(status) ? "已禁用" : "已启用");
     }
 
     /**
@@ -133,7 +134,7 @@ public class SysUserController {
         user.setSalt(salt);
         user.setPassword(PasswordUtil.encrypt(user.getUsername(), defaultPassword, salt));
         sysUserService.updateById(user);
-        return Result.OK("密码已重置为默认密码");
+        return Result.ok("密码已重置为默认密码");
     }
 
     /**
@@ -163,7 +164,7 @@ public class SysUserController {
         user.setSalt(salt);
         user.setPassword(PasswordUtil.encrypt(user.getUsername(), newPassword, salt));
         sysUserService.updateById(user);
-        return Result.OK("密码修改成功");
+        return Result.ok("密码修改成功");
     }
 
     /**
@@ -183,7 +184,7 @@ public class SysUserController {
         update.setId(loginUser.getId());
         update.setAvatar(avatar);
         sysUserService.updateById(update);
-        return Result.OK(avatar);
+        return Result.ok(avatar);
     }
 
     /**
@@ -200,6 +201,6 @@ public class SysUserController {
             user.setPassword(null);
             user.setSalt(null);
         }
-        return Result.OK(user);
+        return Result.ok(user);
     }
 }

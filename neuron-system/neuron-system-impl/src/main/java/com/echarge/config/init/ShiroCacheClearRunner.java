@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * Shiro缓存清理
  * 在应用启动时清除所有的Shiro授权缓存
  * 主要用于解决重启项目，用户未重新登录，按钮权限不生效的问题
+ * @author Edwin
  */
 @Slf4j
 @Component

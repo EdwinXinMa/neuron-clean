@@ -3,6 +3,9 @@ package com.echarge.modules.device.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.echarge.modules.device.entity.NcDevice;
 
+/**
+ * @author Edwin
+ */
 public interface INcDeviceService extends IService<NcDevice> {
 
     /** 台账录入 */

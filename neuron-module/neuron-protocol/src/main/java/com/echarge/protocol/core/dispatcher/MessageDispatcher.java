@@ -2,6 +2,9 @@ package com.echarge.protocol.core.dispatcher;
 
 import com.echarge.protocol.core.session.Session;
 
+/**
+ * @author Edwin
+ */
 public interface MessageDispatcher {
 
     /**

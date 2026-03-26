@@ -16,6 +16,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * @author Edwin
+ */
 @Data
 @TableName("nc_device")
 @EqualsAndHashCode(callSuper = false)

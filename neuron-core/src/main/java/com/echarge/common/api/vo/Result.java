@@ -94,39 +94,7 @@ public class Result<T> implements Serializable {
 		return r;
 	}
 
-	public static<T> Result<T> OK() {
-		Result<T> r = new Result<T>();
-		r.setSuccess(true);
-		r.setCode(CommonConstant.SC_OK_200);
-		return r;
-	}
-
-	/**
-	 * 此方法是为了兼容升级所创建
-	 *
-	 * @param msg
-	 * @param <T>
-	 * @return
-	 */
-	public static<T> Result<T> OK(String msg) {
-		Result<T> r = new Result<T>();
-		r.setSuccess(true);
-		r.setCode(CommonConstant.SC_OK_200);
-		r.setMessage(msg);
-		//Result OK(String msg)方法会造成兼容性问题 issues/I4IP3D
-		r.setResult((T) msg);
-		return r;
-	}
-
-	public static<T> Result<T> OK(T data) {
-		Result<T> r = new Result<T>();
-		r.setSuccess(true);
-		r.setCode(CommonConstant.SC_OK_200);
-		r.setResult(data);
-		return r;
-	}
-
-	public static<T> Result<T> OK(String msg, T data) {
+	public static<T> Result<T> ok(String msg, T data) {
 		Result<T> r = new Result<T>();
 		r.setSuccess(true);
 		r.setCode(CommonConstant.SC_OK_200);

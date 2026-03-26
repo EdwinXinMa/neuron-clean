@@ -17,6 +17,7 @@ import java.util.Date;
 
 /**
  * 告警记录（v3.0 只读）
+ * @author Edwin
  */
 @Slf4j
 @Tag(name = "告警记录")
@@ -66,7 +67,7 @@ public class NcAlertController {
         query.orderByDesc(NcAlert::getAlertTime);
 
         IPage<NcAlert> page = ncAlertService.page(new Page<>(pageNo, pageSize), query);
-        return Result.OK(page);
+        return Result.ok(page);
     }
 
     /**
@@ -75,6 +76,6 @@ public class NcAlertController {
     @Operation(summary = "导航角标告警数")
     @GetMapping("/badge")
     public Result<Long> badge() {
-        return Result.OK(ncAlertService.countRecentCritical());
+        return Result.ok(ncAlertService.countRecentCritical());
     }
 }

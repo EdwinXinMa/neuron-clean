@@ -2,6 +2,9 @@ package com.echarge.protocol.core.handler;
 
 import com.echarge.protocol.core.session.Session;
 
+/**
+ * @author Edwin
+ */
 public interface ActionHandler<REQ, RESP> {
 
     /**

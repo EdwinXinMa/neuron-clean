@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * 本地直连模式 — Kafka 未开启时，直接调用 DeviceEventListener
+ * @author Edwin
  */
 @Slf4j
 @Component

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 加载项目配置
+ * @author Edwin
  */
 @Data
 @Component("neuronBaseConfig")

@@ -6,6 +6,7 @@ import java.time.Instant;
 
 /**
  * 设备事件 — protocol 模块发出，device 模块消费
+ * @author Edwin
  */
 @Data
 public class DeviceEvent implements Serializable {

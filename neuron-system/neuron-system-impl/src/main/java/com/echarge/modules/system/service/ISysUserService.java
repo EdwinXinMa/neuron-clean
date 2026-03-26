@@ -6,6 +6,7 @@ import com.echarge.modules.system.entity.SysUser;
 
 /**
  * 用户 Service（精简版）
+ * @author Edwin
  */
 public interface ISysUserService extends IService<SysUser> {
 

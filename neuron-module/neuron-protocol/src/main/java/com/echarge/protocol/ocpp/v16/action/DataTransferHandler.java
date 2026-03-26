@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component
 public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq, DataTransferResp> {

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * 用户 Service 实现（精简版）
+ * @author Edwin
  */
 @Slf4j
 @Service
@@ -38,6 +39,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (CommonConstant.DEL_FLAG_1.toString().equals(String.valueOf(sysUser.getDelFlag()))) {
             return Result.error("账号已被删除");
         }
-        return Result.OK();
+        return Result.ok();
     }
 }

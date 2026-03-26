@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component("v201BootNotificationHandler")
 public class BootNotificationHandler implements Ocpp201ActionHandler<BootNotificationReq, BootNotificationResp> {

@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 /**
  * 前端推送通道 — core 层接口，device 模块注册实现，其他模块通过此接口广播
+ * @author Edwin
  */
 public final class FrontendPushChannel {
 

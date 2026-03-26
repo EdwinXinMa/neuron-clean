@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.echarge.modules.device.entity.NcDevice;
 import org.apache.ibatis.annotations.Mapper;
 
+/**
+ * @author Edwin
+ */
 @Mapper
 public interface NcDeviceMapper extends BaseMapper<NcDevice> {
 }

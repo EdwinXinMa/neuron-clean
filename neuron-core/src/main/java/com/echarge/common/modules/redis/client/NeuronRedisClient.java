@@ -12,6 +12,9 @@ import com.echarge.common.base.BaseMap;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
+/**
+ * @author Edwin
+ */
 @Configuration
 public class NeuronRedisClient {
     @Resource

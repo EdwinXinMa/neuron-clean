@@ -5,6 +5,7 @@ import com.echarge.modules.device.entity.NcOpLog;
 
 /**
  * 设备操作日志 Service
+ * @author Edwin
  */
 public interface INcOpLogService extends IService<NcOpLog> {
 

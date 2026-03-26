@@ -17,6 +17,7 @@ import java.util.Map;
 
 /**
  * 单体启动类
+ * @author Edwin
  */
 @Slf4j
 @SpringBootApplication(exclude = MongoAutoConfiguration.class)

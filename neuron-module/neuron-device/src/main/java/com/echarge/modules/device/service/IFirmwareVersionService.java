@@ -3,6 +3,9 @@ package com.echarge.modules.device.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.echarge.modules.device.entity.FirmwareVersion;
 
+/**
+ * @author Edwin
+ */
 public interface IFirmwareVersionService extends IService<FirmwareVersion> {
 
     /**

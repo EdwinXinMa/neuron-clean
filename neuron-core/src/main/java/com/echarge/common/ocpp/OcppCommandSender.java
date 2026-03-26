@@ -2,6 +2,7 @@ package com.echarge.common.ocpp;
 
 /**
  * OCPP 命令下发接口 — 定义在 core 层，protocol 模块实现，device 模块调用
+ * @author Edwin
  */
 public interface OcppCommandSender {
 

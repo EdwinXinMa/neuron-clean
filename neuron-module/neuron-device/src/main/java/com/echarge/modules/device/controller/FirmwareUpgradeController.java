@@ -32,6 +32,9 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Tag(name = "固件升级")
 @RestController
@@ -152,7 +155,7 @@ public class FirmwareUpgradeController {
         // 推送初始状态到前端
         pushMessage(taskId, deviceSn, "PENDING", 0, "升级指令已下发，等待设备响应");
 
-        return Result.OK("升级任务已创建", taskId);
+        return Result.ok("升级任务已创建", taskId);
     }
 
     @Operation(summary = "查询任务详情")
@@ -162,7 +165,7 @@ public class FirmwareUpgradeController {
         if (task == null) {
             return Result.error("任务不存在");
         }
-        return Result.OK(task);
+        return Result.ok(task);
     }
 
     @Operation(summary = "升级历史")
@@ -179,7 +182,7 @@ public class FirmwareUpgradeController {
         query.orderByDesc(FirmwareUpgradeTask::getCreateTime);
 
         IPage<FirmwareUpgradeTask> page = upgradeTaskService.page(new Page<>(pageNo, pageSize), query);
-        return Result.OK(page);
+        return Result.ok(page);
     }
 
     /**

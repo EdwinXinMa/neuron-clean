@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Kafka 模式 — 按事件类型路由到不同 Topic，chargePointId 作为 partition key
+ * @author Edwin
  */
 @Slf4j
 @Component

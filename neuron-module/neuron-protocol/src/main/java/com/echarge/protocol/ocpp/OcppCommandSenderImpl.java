@@ -6,6 +6,9 @@ import com.echarge.protocol.core.session.SessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Component
 public class OcppCommandSenderImpl implements OcppCommandSender {
 

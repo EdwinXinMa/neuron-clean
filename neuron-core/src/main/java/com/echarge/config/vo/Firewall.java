@@ -4,6 +4,7 @@ import lombok.Data;
 
 /**
  * 平台安全配置
+ * @author Edwin
  */
 @Data
 public class Firewall {

@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component
 public class SessionManager {

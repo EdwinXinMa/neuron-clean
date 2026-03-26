@@ -2,6 +2,9 @@ package com.echarge.protocol.ocpp.common;
 
 import lombok.Getter;
 
+/**
+ * @author Edwin
+ */
 @Getter
 public enum OcppErrorCode {
 

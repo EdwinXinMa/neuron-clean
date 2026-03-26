@@ -15,6 +15,9 @@ import io.netty.handler.timeout.IdleStateHandler;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author Edwin
+ */
 public class WebSocketInitializer extends ChannelInitializer<SocketChannel> {
 
     private final ProtocolProperties properties;

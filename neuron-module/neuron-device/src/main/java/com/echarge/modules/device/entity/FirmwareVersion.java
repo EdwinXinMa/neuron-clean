@@ -10,6 +10,9 @@ import lombok.experimental.Accessors;
 import java.io.Serial;
 import java.io.Serializable;
 
+/**
+ * @author Edwin
+ */
 @Data
 @TableName("firmware_version")
 @EqualsAndHashCode(callSuper = false)

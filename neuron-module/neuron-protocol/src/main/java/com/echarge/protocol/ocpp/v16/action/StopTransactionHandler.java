@@ -9,6 +9,9 @@ import com.echarge.protocol.ocpp.v16.model.StopTransactionResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component
 public class StopTransactionHandler implements Ocpp16ActionHandler<StopTransactionReq, StopTransactionResp> {

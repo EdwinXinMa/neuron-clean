@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * @author Edwin
+ */
 @Data
 public class TransactionEventReq {
     /** "Started", "Updated", "Ended" */

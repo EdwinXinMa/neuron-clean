@@ -6,6 +6,7 @@ import org.apache.shiro.authc.AuthenticationToken;
  * @Author Edwin
  * @create 2018-07-12 15:19
  * @desc
+ * @author Edwin
  **/
 public class JwtToken implements AuthenticationToken {
 	

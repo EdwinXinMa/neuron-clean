@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
  * 告警事件监听
  * 直连模式：从 LocalDeviceEventPublisher 接收所有事件，过滤 STATUS_NOTIFICATION
  * Kafka 模式：从 device-alert topic 消费（已经是确认的告警，无需再过滤）
+ * @author Edwin
  */
 @Slf4j
 @Component

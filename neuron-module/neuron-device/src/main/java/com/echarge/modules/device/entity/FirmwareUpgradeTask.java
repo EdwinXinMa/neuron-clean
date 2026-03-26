@@ -13,6 +13,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author Edwin
+ */
 @Data
 @TableName("firmware_upgrade_task")
 @EqualsAndHashCode(callSuper = false)

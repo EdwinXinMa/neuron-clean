@@ -2,6 +2,9 @@ package com.echarge.protocol.ocpp.common;
 
 import com.echarge.protocol.core.dispatcher.OutboundMessage;
 
+/**
+ * @author Edwin
+ */
 public final class OcppCallError {
 
     private OcppCallError() {}

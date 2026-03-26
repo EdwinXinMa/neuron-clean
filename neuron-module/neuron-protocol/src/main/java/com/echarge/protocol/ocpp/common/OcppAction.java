@@ -1,5 +1,8 @@
 package com.echarge.protocol.ocpp.common;
 
+/**
+ * @author Edwin
+ */
 public final class OcppAction {
 
     private OcppAction() {}

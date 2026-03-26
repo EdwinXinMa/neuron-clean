@@ -8,6 +8,7 @@ import java.util.Set;
 
 /**
  * 底层共通业务API（精简版）
+ * @author Edwin
  */
 public interface ISysBaseAPI extends CommonAPI {
 

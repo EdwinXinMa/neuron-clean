@@ -14,6 +14,9 @@ import com.echarge.common.modules.redis.listener.NeuronRedisListener;
 import com.echarge.common.util.SpringContextHolder;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Component
 public class RedisReceiver {
     public void onMessage(BaseMap params) {

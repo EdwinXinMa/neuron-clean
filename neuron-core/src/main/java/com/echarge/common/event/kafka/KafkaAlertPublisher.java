@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * 告警事件二次生产者
  * DeviceEventHandler 检测到故障后调用此类，将告警发布到 device-alert topic
+ * @author Edwin
  */
 @Slf4j
 @Component

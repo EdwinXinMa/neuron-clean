@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 登录控制器（精简版）
+ * @author Edwin
  */
 @Slf4j
 @RestController
@@ -63,7 +64,7 @@ public class LoginController {
         obj.put("userInfo", sysUser);
 
         log.info("用户 {} 登录成功", username);
-        return Result.OK(obj);
+        return Result.ok(obj);
     }
 
     /**
@@ -71,6 +72,6 @@ public class LoginController {
      */
     @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
     public Result<Object> logout() {
-        return Result.OK("退出登录成功");
+        return Result.ok("退出登录成功");
     }
 }

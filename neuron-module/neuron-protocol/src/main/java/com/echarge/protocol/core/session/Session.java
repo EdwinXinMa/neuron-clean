@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author Edwin
+ */
 @Data
 public class Session {
 

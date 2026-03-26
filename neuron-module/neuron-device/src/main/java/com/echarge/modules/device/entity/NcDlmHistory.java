@@ -11,6 +11,7 @@ import java.util.Date;
 
 /**
  * DLM 时序数据（N3 Lite 级别）
+ * @author Edwin
  */
 @Data
 @TableName("nc_dlm_history")

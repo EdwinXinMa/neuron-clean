@@ -5,6 +5,7 @@ import com.echarge.modules.alert.entity.NcAlert;
 
 /**
  * 告警 Service（v3.0 精简版：只读，只插入，无状态流转）
+ * @author Edwin
  */
 public interface INcAlertService extends IService<NcAlert> {
 

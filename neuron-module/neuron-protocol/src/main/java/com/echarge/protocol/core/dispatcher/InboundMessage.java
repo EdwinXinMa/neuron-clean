@@ -4,6 +4,9 @@ import com.google.gson.JsonElement;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * @author Edwin
+ */
 @Data
 @AllArgsConstructor
 public class InboundMessage {

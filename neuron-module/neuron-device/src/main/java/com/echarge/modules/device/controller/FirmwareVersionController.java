@@ -21,6 +21,9 @@ import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Tag(name = "固件版本管理")
 @RestController
@@ -52,7 +55,7 @@ public class FirmwareVersionController {
         query.orderByDesc(FirmwareVersion::getCreateTime);
 
         IPage<FirmwareVersion> page = firmwareVersionService.page(new Page<>(pageNo, pageSize), query);
-        return Result.OK(page);
+        return Result.ok(page);
     }
 
     @Operation(summary = "上传固件文件")
@@ -97,7 +100,7 @@ public class FirmwareVersionController {
             fw.setStatus("DRAFT");
             firmwareVersionService.save(fw);
 
-            return Result.OK("上传成功", fw);
+            return Result.ok("上传成功", fw);
         } catch (Exception e) {
             log.error("固件上传失败", e);
             return Result.error("上传失败: " + e.getMessage());
@@ -109,7 +112,7 @@ public class FirmwareVersionController {
     public Result<?> release(@RequestParam String id) {
         try {
             firmwareVersionService.release(id);
-            return Result.OK("发布成功");
+            return Result.ok("发布成功");
         } catch (NeuronBootException e) {
             return Result.error(e.getMessage());
         }
@@ -120,7 +123,7 @@ public class FirmwareVersionController {
     public Result<?> deprecate(@RequestParam String id) {
         try {
             firmwareVersionService.deprecate(id);
-            return Result.OK("废弃成功");
+            return Result.ok("废弃成功");
         } catch (NeuronBootException e) {
             return Result.error(e.getMessage());
         }
@@ -152,7 +155,7 @@ public class FirmwareVersionController {
             log.warn("删除MinIO文件失败: {}", e.getMessage());
         }
         firmwareVersionService.removeById(id);
-        return Result.OK("删除成功");
+        return Result.ok("删除成功");
     }
 
     @Operation(summary = "获取固件下载链接")
@@ -178,7 +181,7 @@ public class FirmwareVersionController {
             Map<String, String> result = new LinkedHashMap<>();
             result.put("url", presignedUrl);
             result.put("fileName", fw.getFileName());
-            return Result.OK(result);
+            return Result.ok(result);
         } catch (Exception e) {
             log.error("生成下载链接失败", e);
             return Result.error("生成下载链接失败: " + e.getMessage());

@@ -8,6 +8,9 @@ import com.echarge.protocol.ocpp.v16.model.DataTransferResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component("v201DataTransferHandler")
 public class DataTransferHandler implements Ocpp201ActionHandler<DataTransferReq, DataTransferResp> {

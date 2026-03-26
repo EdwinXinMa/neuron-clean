@@ -18,6 +18,7 @@ import java.util.List;
 
 /**
  * 设备操作日志
+ * @author Edwin
  */
 @Slf4j
 @Tag(name = "操作日志")
@@ -63,7 +64,7 @@ public class NcOpLogController {
         }
         query.orderByDesc(NcOpLog::getOpTime);
 
-        return Result.OK(ncOpLogService.page(new Page<>(pageNo, pageSize), query));
+        return Result.ok(ncOpLogService.page(new Page<>(pageNo, pageSize), query));
     }
 
     /**
@@ -79,6 +80,6 @@ public class NcOpLogController {
                         .orderByDesc(NcOpLog::getOpTime)
                         .last("LIMIT " + limit)
         );
-        return Result.OK(logs);
+        return Result.ok(logs);
     }
 }

@@ -11,6 +11,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * 设备事件 WebSocket — 广播设备状态变化到所有前端客户端
  * 前端连接 /deviceSocket 后，设备上线/离线/故障/告警 等事件会实时推送
+ * @author Edwin
  */
 @Slf4j
 @Component

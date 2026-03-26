@@ -18,6 +18,9 @@ import org.slf4j.MDC;
 
 import java.util.Map;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> {
 
@@ -142,7 +145,9 @@ public class ProtocolRouter extends SimpleChannelInboundHandler<InboundMessage> 
     }
 
     private String extractChargePointId(String uri) {
-        if (uri == null) return null;
+        if (uri == null) {
+            return null;
+        }
         // Remove query string if present
         int queryIdx = uri.indexOf('?');
         if (queryIdx > 0) {

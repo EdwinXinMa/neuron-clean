@@ -6,6 +6,7 @@ import java.util.Set;
 
 /**
  * 通用api（精简版）
+ * @author Edwin
  */
 public interface CommonAPI {
 

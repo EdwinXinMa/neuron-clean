@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Service
 public class NcOpLogServiceImpl extends ServiceImpl<NcOpLogMapper, NcOpLog> implements INcOpLogService {

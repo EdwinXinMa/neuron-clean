@@ -127,7 +127,7 @@ public class Swagger3Config implements WebMvcConfigurer {
     }
     
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI customOpenApi() {
         return new OpenAPI()
                 .info(new Info()
                         .title("NeuronCloud API 接口文档")

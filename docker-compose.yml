@@ -121,7 +121,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - /data/neuron/logs:/app/logs
+      - /data/neuron/logs:/logs
       - /data/neuron/uploads:/opt/upFiles
 
 networks:

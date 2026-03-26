@@ -16,6 +16,7 @@ import java.util.Date;
 
 /**
  * 用户表（精简版）
+ * @author Edwin
  */
 @Data
 @TableName("sys_user")

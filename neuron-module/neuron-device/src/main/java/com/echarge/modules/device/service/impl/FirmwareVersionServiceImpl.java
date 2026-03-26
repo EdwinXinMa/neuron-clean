@@ -7,6 +7,9 @@ import com.echarge.modules.device.mapper.FirmwareVersionMapper;
 import com.echarge.modules.device.service.IFirmwareVersionService;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author Edwin
+ */
 @Service
 public class FirmwareVersionServiceImpl extends ServiceImpl<FirmwareVersionMapper, FirmwareVersion>
         implements IFirmwareVersionService {

@@ -6,6 +6,9 @@ import com.echarge.modules.device.mapper.NcConnectorMapper;
 import com.echarge.modules.device.service.INcConnectorService;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author Edwin
+ */
 @Service
 public class NcConnectorServiceImpl extends ServiceImpl<NcConnectorMapper, NcConnector> implements INcConnectorService {
 }

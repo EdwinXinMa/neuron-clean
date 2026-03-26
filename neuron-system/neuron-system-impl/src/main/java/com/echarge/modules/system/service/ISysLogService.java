@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  *
  * @Author Edwin
  * @since 2026-03-22
+ * @author Edwin
  */
 public interface ISysLogService extends IService<SysLog> {
 

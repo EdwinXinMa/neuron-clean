@@ -81,8 +81,7 @@ public class oConvertUtils {
 		return temp;
 	}
 
-	@SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
-    public static String StrToUTF(String strIn, String sourceCode, String targetCode) {
+    public static String strToUtf(String strIn, String sourceCode, String targetCode) {
 		strIn = "";
 		try {
 			strIn = new String(strIn.getBytes("ISO-8859-1"), "GBK");
@@ -783,14 +782,14 @@ public class oConvertUtils {
 				return equalityOfArrays((Object[]) oldVal, (Object[]) newVal);
 			}else if(oldVal instanceof JSONArray){
 				if(newVal instanceof JSONArray){
-					return equalityOfJSONArray((JSONArray) oldVal, (JSONArray) newVal);
+					return equalityOfJsonArray((JSONArray) oldVal, (JSONArray) newVal);
 				}else{
 					if (isEmpty(newVal) && (oldVal == null || ((JSONArray) oldVal).size() == 0)) {
 						return true;
 					}
 					JSONArray newValArray = new JSONArray();
 					newValArray.addAll(Arrays.asList(newVal.toString().split(",")));
-					return equalityOfJSONArray((JSONArray) oldVal, newValArray);
+					return equalityOfJsonArray((JSONArray) oldVal, newValArray);
 				}
 			}else{
 				return oldVal.equals(newVal);
@@ -837,7 +836,7 @@ public class oConvertUtils {
 	 * @param newVal
 	 * @return
 	 */
-	public static boolean equalityOfJSONArray(JSONArray oldVal, JSONArray newVal) {
+	public static boolean equalityOfJsonArray(JSONArray oldVal, JSONArray newVal) {
 		if (oldVal != null && newVal != null) {
 			Object[] oldValArray = oldVal.toArray();
 			Object[] newValArray = newVal.toArray();
@@ -945,7 +944,7 @@ public class oConvertUtils {
 	 * 将List 转成 JSONArray
 	 * @return
 	 */
-	public static JSONArray list2JSONArray(List<String> list){
+	public static JSONArray listToJsonArray(List<String> list){
 		if(list==null || list.size()==0){
 			return null;
 		}

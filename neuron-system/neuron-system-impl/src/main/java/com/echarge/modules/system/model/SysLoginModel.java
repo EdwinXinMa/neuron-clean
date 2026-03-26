@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @Author Edwin
  * @since  2026-03-22
+ * @author Edwin
  */
 @Schema(description="登录对象")
 public class SysLoginModel {

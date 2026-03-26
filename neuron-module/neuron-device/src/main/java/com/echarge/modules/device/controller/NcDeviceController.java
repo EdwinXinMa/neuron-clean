@@ -33,6 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Tag(name = "设备管理")
 @RestController
@@ -79,7 +82,7 @@ public class NcDeviceController {
         query.last("ORDER BY CASE online_status WHEN 'ONLINE' THEN 0 WHEN 'FAULT' THEN 1 WHEN 'OFFLINE' THEN 2 WHEN 'UNACTIVATED' THEN 3 ELSE 4 END ASC, last_heartbeat DESC NULLS LAST");
 
         IPage<NcDevice> page = ncDeviceService.page(new Page<>(pageNo, pageSize), query);
-        return Result.OK(page);
+        return Result.ok(page);
     }
 
     @Operation(summary = "设备详情（聚合）")
@@ -152,7 +155,7 @@ public class NcDeviceController {
         );
         result.put("recentAlerts", alerts);
 
-        return Result.OK(result);
+        return Result.ok(result);
     }
 
     @Operation(summary = "设备统计（仪表盘）")
@@ -179,7 +182,7 @@ public class NcDeviceController {
                 .eq(NcDevice::getOnlineStatus, "UNACTIVATED")));
         stats.put("alertBadge", ncAlertService.countRecentCritical());
 
-        return Result.OK(stats);
+        return Result.ok(stats);
     }
 
     @Operation(summary = "地图设备坐标")
@@ -206,7 +209,7 @@ public class NcDeviceController {
             item.put("model", d.getDeviceModel());
             result.add(item);
         }
-        return Result.OK(result);
+        return Result.ok(result);
     }
 
     @Operation(summary = "台账编辑")
@@ -216,7 +219,7 @@ public class NcDeviceController {
             return Result.error("缺少设备ID");
         }
         ncDeviceService.updateById(device);
-        return Result.OK("修改成功");
+        return Result.ok("修改成功");
     }
 
     @Operation(summary = "台账录入")
@@ -224,7 +227,7 @@ public class NcDeviceController {
     public Result<?> add(@RequestBody NcDevice device) {
         try {
             ncDeviceService.register(device);
-            return Result.OK("录入成功");
+            return Result.ok("录入成功");
         } catch (NeuronBootException e) {
             return Result.error(e.getMessage());
         }
@@ -235,7 +238,7 @@ public class NcDeviceController {
     public Result<?> disable(@RequestParam String id) {
         try {
             ncDeviceService.disable(id);
-            return Result.OK("已禁用");
+            return Result.ok("已禁用");
         } catch (NeuronBootException e) {
             return Result.error(e.getMessage());
         }
@@ -246,7 +249,7 @@ public class NcDeviceController {
     public Result<?> enable(@RequestParam String id) {
         try {
             ncDeviceService.enable(id);
-            return Result.OK("已启用");
+            return Result.ok("已启用");
         } catch (NeuronBootException e) {
             return Result.error(e.getMessage());
         }
@@ -312,7 +315,7 @@ public class NcDeviceController {
         result.put("success", success);
         result.put("skipped", skipped);
         result.put("errors", errors);
-        return Result.OK(result);
+        return Result.ok(result);
     }
 
     /**
@@ -391,7 +394,7 @@ public class NcDeviceController {
         opLog.setCreateTime(new Date());
         opLogService.save(opLog);
 
-        return Result.OK("DLM 配置已更新");
+        return Result.ok("DLM 配置已更新");
     }
 
     /**
@@ -442,7 +445,7 @@ public class NcDeviceController {
         opLog.setCreateTime(new Date());
         opLogService.save(opLog);
 
-        return Result.OK("重启命令已下发");
+        return Result.ok("重启命令已下发");
     }
 
     private Map<String, String> buildError(int row, String sn, String reason) {

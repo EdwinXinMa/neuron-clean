@@ -11,6 +11,7 @@ import java.util.Date;
 
 /**
  * DLM 子桩电流分配时序数据
+ * @author Edwin
  */
 @Data
 @TableName("nc_dlm_history_allocation")

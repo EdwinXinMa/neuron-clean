@@ -9,6 +9,9 @@ import com.echarge.protocol.ocpp.v201.model.IdTokenInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component("v201AuthorizeHandler")
 public class AuthorizeHandler implements Ocpp201ActionHandler<AuthorizeReq, AuthorizeResp> {

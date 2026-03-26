@@ -15,6 +15,7 @@ import java.util.Date;
 
 /**
  * 设备操作日志
+ * @author Edwin
  */
 @Data
 @TableName("nc_op_log")

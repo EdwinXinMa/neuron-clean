@@ -16,6 +16,7 @@ import java.util.Date;
 
 /**
  * 告警记录（v3.0 精简版：只读，无状态流转）
+ * @author Edwin
  */
 @Data
 @TableName("nc_alert")

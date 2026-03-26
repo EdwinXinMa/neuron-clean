@@ -10,6 +10,7 @@ import java.util.Date;
 
 /**
  * 在线用户信息（精简版）
+ * @author Edwin
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

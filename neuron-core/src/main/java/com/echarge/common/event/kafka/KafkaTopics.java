@@ -2,6 +2,7 @@ package com.echarge.common.event.kafka;
 
 /**
  * Kafka Topic 常量
+ * @author Edwin
  */
 public final class KafkaTopics {
 

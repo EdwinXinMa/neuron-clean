@@ -191,7 +191,7 @@ public class NeuronBootExceptionHandler {
 	 * @return
 	 */
 	@ExceptionHandler(NeuronSqlInjectionException.class)
-	public Result<?> handleSQLException(Exception exception) {
+	public Result<?> handleSqlException(Exception exception) {
 		String msg = exception.getMessage().toLowerCase();
 		final String extractvalue = "extractvalue";
 		final String updatexml = "updatexml";

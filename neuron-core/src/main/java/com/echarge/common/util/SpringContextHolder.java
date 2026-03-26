@@ -21,6 +21,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Lazy(value=false)
 @Component
 public class SpringContextHolder

@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 /**
  * 浏览器/客户端检测工具
+ * @author Edwin
  */
 public class BrowserUtils {
 

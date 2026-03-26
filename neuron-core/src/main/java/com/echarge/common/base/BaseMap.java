@@ -9,6 +9,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.ConvertUtils;
 
+/**
+ * @author Edwin
+ */
 public class BaseMap extends HashMap<String, Object> {
     private static final long serialVersionUID = 1L;
 

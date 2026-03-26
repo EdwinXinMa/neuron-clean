@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
  * 设备事件消费端
  * 直连模式：实现 DeviceEventListener 接口
  * Kafka 模式：通过 @KafkaListener 消费三个 Topic
+ * @author Edwin
  */
 @Slf4j
 @Component

@@ -21,6 +21,7 @@ import java.util.List;
  * CALL:       [2, "messageId", "action", {payload}]
  * CALLRESULT: [3, "messageId", {payload}]
  * CALLERROR:  [4, "messageId", "errorCode", "errorDescription", {errorDetails}]
+ * @author Edwin
  */
 @Slf4j
 public class OcppFrameCodec extends MessageToMessageCodec<TextWebSocketFrame, OutboundMessage> {

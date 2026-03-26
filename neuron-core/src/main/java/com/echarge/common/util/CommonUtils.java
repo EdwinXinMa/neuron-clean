@@ -370,9 +370,9 @@ public class CommonUtils {
      * @param target  目标对象
      * @param sources 来源对象，允许多个，优先级从左到右，最右侧的优先级最高
      */
-    public static JSONObject mergeJSON(JSONObject target, JSONObject... sources) {
+    public static JSONObject mergeJson(JSONObject target, JSONObject... sources) {
         for (JSONObject source : sources) {
-            CommonUtils.mergeJSON(target, source);
+            CommonUtils.mergeJson(target, source);
         }
         return target;
     }
@@ -383,7 +383,7 @@ public class CommonUtils {
      * @param target 目标对象
      * @param source 来源对象
      */
-    public static JSONObject mergeJSON(JSONObject target, JSONObject source) {
+    public static JSONObject mergeJson(JSONObject target, JSONObject source) {
         for (String key : source.keySet()) {
             Object sourceItem = source.get(key);
             // 是否是 JSONObject
@@ -392,7 +392,7 @@ public class CommonUtils {
                 if (target.containsKey(key)) {
                     // 两个都是 JSONObject，继续合并
                     if (target.get(key) instanceof Map) {
-                        CommonUtils.mergeJSON(target.getJSONObject(key), source.getJSONObject(key));
+                        CommonUtils.mergeJson(target.getJSONObject(key), source.getJSONObject(key));
                         continue;
                     }
                 }

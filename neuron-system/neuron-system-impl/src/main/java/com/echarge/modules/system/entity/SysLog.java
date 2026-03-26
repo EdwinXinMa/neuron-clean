@@ -20,6 +20,7 @@ import lombok.experimental.Accessors;
  *
  * @Author Edwin
  * @since 2026-03-22
+ * @author Edwin
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

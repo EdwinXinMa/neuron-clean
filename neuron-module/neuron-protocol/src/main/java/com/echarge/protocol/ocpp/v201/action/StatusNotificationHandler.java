@@ -7,6 +7,9 @@ import com.echarge.protocol.ocpp.v201.model.StatusNotificationReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Slf4j
 @Component("v201StatusNotificationHandler")
 public class StatusNotificationHandler implements Ocpp201ActionHandler<StatusNotificationReq, Object> {

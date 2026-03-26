@@ -23,6 +23,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Edwin
+ */
 @Component
 public class RedisUtil {
     @Autowired
