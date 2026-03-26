@@ -381,7 +381,9 @@ public class NcDeviceController {
         String opUser = "system";
         try {
             LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
-            if (loginUser != null) opUser = loginUser.getUsername();
+            if (loginUser != null) {
+                opUser = loginUser.getUsername();
+            }
         } catch (Exception ignored) {}
 
         NcOpLog opLog = new NcOpLog();
@@ -432,7 +434,9 @@ public class NcDeviceController {
         String opUser = "system";
         try {
             LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
-            if (loginUser != null) opUser = loginUser.getUsername();
+            if (loginUser != null) {
+                opUser = loginUser.getUsername();
+            }
         } catch (Exception ignored) {}
 
         NcOpLog opLog = new NcOpLog();
