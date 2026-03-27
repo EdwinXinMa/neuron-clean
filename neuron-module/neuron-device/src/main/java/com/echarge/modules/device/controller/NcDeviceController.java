@@ -18,6 +18,7 @@ import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
+import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -60,6 +61,9 @@ public class NcDeviceController {
 
     @Autowired
     private INcOpLogService opLogService;
+
+    @Autowired
+    private INcDlmHistoryService dlmHistoryService;
 
     @Operation(summary = "设备列表")
     @GetMapping("/list")
@@ -398,6 +402,25 @@ public class NcDeviceController {
         opLogService.save(opLog);
 
         return Result.ok("DLM 配置已更新");
+    }
+
+    /**
+     * DLM 历史图表数据
+     * 按时间范围聚合，返回断路器额定值、总电流、充电电流、家庭电流等
+     */
+    @Operation(summary = "DLM 历史图表")
+    @GetMapping("/{sn}/dlm/history")
+    public Result<Map<String, Object>> dlmHistory(
+            @PathVariable String sn,
+            @RequestParam(defaultValue = "24h") String range) {
+        NcDevice device = ncDeviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
+        );
+        if (device == null) {
+            return Result.error("设备不存在: " + sn);
+        }
+        Map<String, Object> chartData = dlmHistoryService.getChartData(sn, range);
+        return Result.ok(chartData);
     }
 
     /**

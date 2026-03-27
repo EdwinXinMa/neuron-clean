@@ -40,6 +40,8 @@ public class WebSocketInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline pipeline = ch.pipeline();
         pipeline.addLast(new HttpServerCodec());
         pipeline.addLast(new HttpObjectAggregator(properties.getMaxFrameSize()));
+        // OCPP 连接认证（在 WebSocket 握手前拦截）
+        pipeline.addLast(new HttpAuthHandler(properties));
         pipeline.addLast(new WebSocketServerProtocolHandler(
                 properties.getPath(),
                 "ocpp1.6,ocpp2.0.1",

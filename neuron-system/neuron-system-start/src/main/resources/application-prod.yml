@@ -136,6 +136,8 @@ neuron:
     boss-threads: 1
     worker-threads: 0
     max-frame-size: 65536
+    auth-enabled: false
+    auth-password: Neuron2026
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
   # 文件上传方式：minio

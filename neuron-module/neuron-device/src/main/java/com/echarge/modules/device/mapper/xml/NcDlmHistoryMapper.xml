@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.echarge.modules.device.mapper.NcDlmHistoryMapper">
+
+    <select id="queryChartData" resultType="java.util.LinkedHashMap">
+        SELECT
+            bucket                                          AS time,
+            ROUND(AVG(total_current)::numeric, 1)           AS total_current,
+            ROUND(AVG(breaker_rating)::numeric, 1)          AS breaker_rating,
+            ROUND(AVG(voltage)::numeric, 1)                 AS voltage,
+            ROUND(AVG(total_power)::numeric, 0)             AS total_power,
+            ROUND(COALESCE(AVG(ev_current), 0)::numeric, 1) AS ev_current,
+            ROUND(GREATEST(AVG(total_current) - COALESCE(AVG(ev_current), 0), 0)::numeric, 1) AS home_current
+        FROM (
+            SELECT
+                time_bucket(CAST(#{bucketInterval} AS interval), h.time) AS bucket,
+                h.total_current,
+                h.breaker_rating,
+                h.voltage,
+                h.total_power,
+                (
+                    SELECT SUM(a.allocated_current)
+                    FROM nc_dlm_history_allocation a
+                    WHERE a.device_sn = h.device_sn
+                      AND a.time = h.time
+                ) AS ev_current
+            FROM nc_dlm_history h
+            WHERE h.device_sn = #{deviceSn}
+              AND h.time &gt;= #{since}
+        ) t
+        GROUP BY bucket
+        ORDER BY bucket
+    </select>
+
+</mapper>

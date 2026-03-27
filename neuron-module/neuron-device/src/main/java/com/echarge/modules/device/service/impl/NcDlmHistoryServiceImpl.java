@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * @author Edwin
@@ -65,6 +65,47 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
         } catch (Exception e) {
             log.warn("[DlmHistory] Failed to save DLM report for {}: {}", deviceSn, e.getMessage());
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<String, Object> getChartData(String deviceSn, String range) {
+        // 时间范围 → 聚合间隔
+        String bucketInterval;
+        int bucketSeconds;
+        long hoursAgo;
+        switch (range) {
+            case "1h":
+                bucketInterval = "1 second";
+                bucketSeconds = 1;
+                hoursAgo = 1;
+                break;
+            case "6h":
+                bucketInterval = "5 minutes";
+                bucketSeconds = 300;
+                hoursAgo = 6;
+                break;
+            case "7d":
+                bucketInterval = "1 hour";
+                bucketSeconds = 3600;
+                hoursAgo = 168;
+                break;
+            default:
+                bucketInterval = "15 minutes";
+                bucketSeconds = 900;
+                hoursAgo = 24;
+                break;
+        }
+
+        Date since = new Date(System.currentTimeMillis() - hoursAgo * 3600 * 1000);
+        List<Map<String, Object>> points = baseMapper.queryChartData(deviceSn, bucketInterval, since);
+
+        Map<String, Object> result = new LinkedHashMap<>(4);
+        result.put("deviceSn", deviceSn);
+        result.put("range", range);
+        result.put("bucketSeconds", bucketSeconds);
+        result.put("points", points);
+        return result;
     }
 
     private Float getFloat(JsonObject obj, String key) {
