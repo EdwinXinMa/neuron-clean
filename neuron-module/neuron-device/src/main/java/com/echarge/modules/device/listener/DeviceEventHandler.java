@@ -570,7 +570,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         if (BizConstant.TASK_FAILED.equals(taskStatus)) {
             NcOpLog failLog = new NcOpLog();
             failLog.setDeviceSn(chargePointId);
-            failLog.setOpUser("system");
+            failLog.setOpUser(task.getCreateBy() != null ? task.getCreateBy() : "system");
             failLog.setOpType(NcOpLog.OTA_UPGRADE);
             failLog.setOpContent(msg);
             failLog.setOpResult(NcOpLog.FAIL);

@@ -187,6 +187,13 @@ public class NcDeviceController {
                 .eq(NcDevice::getOnlineStatus, BizConstant.DEVICE_UNACTIVATED)));
         stats.put("alertBadge", ncAlertService.countRecentCritical());
 
+        // 今日活跃：今天有过心跳的 N3 Lite 设备数
+        java.time.LocalDate today = java.time.LocalDate.now();
+        Date todayStart = java.sql.Timestamp.valueOf(today.atStartOfDay());
+        stats.put("activeToday", ncDeviceService.count(new LambdaQueryWrapper<NcDevice>()
+                .eq(NcDevice::getDelFlag, 0).isNull(NcDevice::getParentDeviceId)
+                .ge(NcDevice::getLastHeartbeat, todayStart)));
+
         return Result.ok(stats);
     }
 
