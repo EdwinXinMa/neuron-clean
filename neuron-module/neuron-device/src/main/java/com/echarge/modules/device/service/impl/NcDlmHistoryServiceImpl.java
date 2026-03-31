@@ -44,7 +44,8 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
                     .setTotalCurrent(getFloat(data, "totalCurrent"))
                     .setVoltage(getFloat(data, "voltage"))
                     .setTotalPower(getFloat(data, "totalPower"))
-                    .setDeviceTemp(getFloat(data, "deviceTemp"))
+                    .setLoadCurrent(getFloat(data, "loadCurrent"))
+                    .setTotalChargingCurrent(getFloat(data, "totalChargingCurrent"))
                     .setWifiRssi(getShort(data, "wifiRssi"))
                     .setBreakerRating(getShort(data, "breakerRating"));
             baseMapper.insert(history);

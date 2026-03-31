@@ -12,9 +12,11 @@ import com.echarge.common.util.RedisUtil;
 import com.echarge.modules.alert.entity.NcAlert;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.modules.alert.service.INcAlertService;
+import com.echarge.modules.device.entity.NcChargingSession;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.entity.NcOpLog;
+import com.echarge.modules.device.mapper.NcChargingSessionMapper;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
@@ -65,6 +67,9 @@ public class NcDeviceController {
     @Autowired
     private INcDlmHistoryService dlmHistoryService;
 
+    @Autowired
+    private NcChargingSessionMapper chargingSessionMapper;
+
     @Operation(summary = "设备列表")
     @GetMapping("/list")
     public Result<IPage<NcDevice>> list(
@@ -103,22 +108,25 @@ public class NcDeviceController {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("device", device);
 
+        // ─── CT 实时数据（Redis） ───
         String redisKey = "device:dlm:" + sn;
         Object dlmRaw = redisClient.get(redisKey);
+        JSONObject dlm = null;
         Map<String, Object> ctData = new LinkedHashMap<>();
         if (dlmRaw != null) {
             try {
-                JSONObject dlm = JSONObject.parseObject(dlmRaw.toString());
+                dlm = JSONObject.parseObject(dlmRaw.toString());
                 ctData.put("totalCurrent", dlm.getDoubleValue("totalCurrent"));
                 ctData.put("voltage", dlm.getDoubleValue("voltage"));
                 ctData.put("totalPower", dlm.getDoubleValue("totalPower"));
-                ctData.put("deviceTemp", dlm.getDoubleValue("deviceTemp"));
+                ctData.put("loadCurrent", dlm.getDoubleValue("loadCurrent"));
+                ctData.put("totalChargingCurrent", dlm.getDoubleValue("totalChargingCurrent"));
                 ctData.put("wifiRssi", dlm.getIntValue("wifiRssi"));
                 ctData.put("breakerRating", dlm.getIntValue("breakerRating"));
-                ctData.put("pileAllocations", dlm.getJSONArray("pileAllocations"));
                 ctData.put("dataFresh", true);
             } catch (Exception e) {
                 log.warn("Failed to parse DLM Redis data for {}: {}", sn, e.getMessage());
+                dlm = null;
                 ctData.put("dataFresh", false);
                 ctData.put("breakerRating", device.getBreakerRating());
             }
@@ -131,6 +139,19 @@ public class NcDeviceController {
         }
         result.put("ctData", ctData);
 
+        // ─── DLMStatus pileAllocations 索引（按 sn 查桩，按 connectorId 查枪） ───
+        Map<String, JSONObject> dlmPileMap = new LinkedHashMap<>();
+        if (dlm != null && dlm.containsKey("pileAllocations")) {
+            for (Object obj : dlm.getJSONArray("pileAllocations")) {
+                JSONObject pile = (JSONObject) obj;
+                String pileSn = pile.getString("sn");
+                if (pileSn != null) {
+                    dlmPileMap.put(pileSn, pile);
+                }
+            }
+        }
+
+        // ─── 下挂充电桩（nc_connector 结构 + DLMStatus 实时数据合并） ───
         List<NcDevice> childDevices = ncDeviceService.list(
                 new LambdaQueryWrapper<NcDevice>()
                         .eq(NcDevice::getParentDeviceId, device.getId())
@@ -142,10 +163,59 @@ public class NcDeviceController {
             charger.put("sn", child.getSn());
             charger.put("model", child.getDeviceModel());
             charger.put("onlineStatus", child.getOnlineStatus());
-            List<NcConnector> connectors = ncConnectorService.list(
-                    new LambdaQueryWrapper<NcConnector>().eq(NcConnector::getDeviceId, child.getId())
+
+            // 从 DLMStatus 合并桩级别数据
+            JSONObject dlmPile = dlmPileMap.get(child.getSn());
+            if (dlmPile != null) {
+                charger.put("allocatedCurrent", dlmPile.getDoubleValue("allocatedCurrent"));
+                charger.put("connectStatus", dlmPile.getString("connectStatus"));
+                charger.put("charge_EVStatus", dlmPile.getString("charge_EVStatus"));
+                charger.put("energy", dlmPile.getIntValue("energy"));
+                charger.put("charge_Method", dlmPile.getIntValue("charge_Method"));
+                charger.put("charge_version", dlmPile.getString("charge_version"));
+                charger.put("snr", dlmPile.getIntValue("snr"));
+                charger.put("atten", dlmPile.getIntValue("atten"));
+            }
+
+            // 枪列表：以 nc_connector 为骨架，合并 DLMStatus connectors 数据
+            List<NcConnector> dbConnectors = ncConnectorService.list(
+                    new LambdaQueryWrapper<NcConnector>()
+                            .eq(NcConnector::getDeviceId, child.getId())
+                            .orderByAsc(NcConnector::getConnectorId)
             );
-            charger.put("connectors", connectors);
+
+            // DLMStatus 枪索引
+            Map<Integer, JSONObject> dlmConnMap = new LinkedHashMap<>();
+            if (dlmPile != null && dlmPile.containsKey("connectors")) {
+                for (Object cObj : dlmPile.getJSONArray("connectors")) {
+                    JSONObject c = (JSONObject) cObj;
+                    Integer cId = c.getInteger("connectorId");
+                    if (cId != null) {
+                        dlmConnMap.put(cId, c);
+                    }
+                }
+            }
+
+            List<Map<String, Object>> connectorList = new ArrayList<>();
+            for (NcConnector dbConn : dbConnectors) {
+                Map<String, Object> connMap = new LinkedHashMap<>();
+                connMap.put("id", dbConn.getId());
+                connMap.put("connectorId", dbConn.getConnectorId());
+                connMap.put("status", dbConn.getStatus());
+                connMap.put("currentPower", dbConn.getCurrentPower());
+                connMap.put("currentEnergy", dbConn.getCurrentEnergy());
+
+                // 合并 DLMStatus 枪级别数据
+                JSONObject dlmConn = dlmConnMap.get(dbConn.getConnectorId());
+                if (dlmConn != null) {
+                    connMap.put("dlmStatus", dlmConn.getString("status"));
+                    connMap.put("startTime", dlmConn.getString("startTime"));
+                    connMap.put("endTime", dlmConn.getString("endTime"));
+                    connMap.put("duration", dlmConn.getIntValue("duration"));
+                }
+                connectorList.add(connMap);
+            }
+            charger.put("connectors", connectorList);
             chargers.add(charger);
         }
         result.put("chargers", chargers);
@@ -428,6 +498,21 @@ public class NcDeviceController {
         }
         Map<String, Object> chartData = dlmHistoryService.getChartData(sn, range);
         return Result.ok(chartData);
+    }
+
+    @Operation(summary = "充电记录")
+    @GetMapping("/{sn}/charging-sessions")
+    public Result<?> chargingSessions(
+            @PathVariable String sn,
+            @RequestParam(defaultValue = "1") Integer pageNo,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+        Page<NcChargingSession> page = chargingSessionMapper.selectPage(
+                new Page<>(pageNo, pageSize),
+                new LambdaQueryWrapper<NcChargingSession>()
+                        .eq(NcChargingSession::getDeviceSn, sn)
+                        .orderByDesc(NcChargingSession::getStartTime)
+        );
+        return Result.ok(page);
     }
 
     /**

@@ -7,10 +7,12 @@ import com.echarge.common.constant.BizConstant;
 import com.echarge.common.event.kafka.KafkaAlertPublisher;
 import com.echarge.common.event.kafka.KafkaTopics;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
+import com.echarge.modules.device.entity.NcChargingSession;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.entity.NcOpLog;
+import com.echarge.modules.device.mapper.NcChargingSessionMapper;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
@@ -56,6 +58,9 @@ public class DeviceEventHandler implements DeviceEventListener {
 
     @Autowired
     private INcDlmHistoryService dlmHistoryService;
+
+    @Autowired
+    private NcChargingSessionMapper chargingSessionMapper;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -285,6 +290,9 @@ public class DeviceEventHandler implements DeviceEventListener {
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
             broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
 
+            // 清除 Redis 中的 DLM 实时数据，避免离线后前端还显示旧数据
+            redisUtil.del("device:dlm:" + chargePointId);
+
             // N3 Lite 离线 → 下挂桩也全部离线，桩下的枪状态改为 Unavailable
             List<NcDevice> children = ncDeviceService.list(
                     new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getParentDeviceId, device.getId())
@@ -470,16 +478,17 @@ public class DeviceEventHandler implements DeviceEventListener {
         String payload = event.getPayload();
         log.info("[DeviceEvent] DlmReport from {}: {}", chargePointId, payload);
 
-        // 直接将整个 JSON 写入 Redis，key 过期时间 5 分钟（设备应每 60s 上报一次）
+        // 完整 JSON 写入 Redis（实时展示）
         String redisKey = "device:dlm:" + chargePointId;
         redisUtil.set(redisKey, payload, 300);
 
-        // 异步写入时序表（历史记录）
+        // 异步写入时序表（历史图表）
         dlmHistoryService.saveDlmReport(chargePointId, payload);
 
-        // 同步 breakerRating 到数据库（持久化配置值）
         try {
             JsonObject data = gson.fromJson(payload, JsonObject.class);
+
+            // 同步 breakerRating 到数据库
             if (data.has("breakerRating")) {
                 int breakerRating = data.get("breakerRating").getAsInt();
                 NcDevice device = ncDeviceService.getOne(
@@ -491,9 +500,100 @@ public class DeviceEventHandler implements DeviceEventListener {
                     log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
                 }
             }
+
+            // 充电会话检测（遍历桩 → 枪）
+            if (data.has("pileAllocations")) {
+                JsonArray piles = data.getAsJsonArray("pileAllocations");
+                for (JsonElement pileElem : piles) {
+                    JsonObject pile = pileElem.getAsJsonObject();
+                    String pileSn = getJsonString(pile, "sn");
+                    Integer energy = pile.has("energy") && !pile.get("energy").isJsonNull()
+                            ? pile.get("energy").getAsInt() : null;
+                    Integer chargingMethod = pile.has("charge_Method") && !pile.get("charge_Method").isJsonNull()
+                            ? pile.get("charge_Method").getAsInt() : null;
+
+                    if (!pile.has("connectors")) {
+                        continue;
+                    }
+                    JsonArray connectors = pile.getAsJsonArray("connectors");
+                    for (JsonElement connElem : connectors) {
+                        JsonObject conn = connElem.getAsJsonObject();
+                        detectChargingSession(chargePointId, pileSn, conn, energy, chargingMethod);
+                    }
+                }
+            }
         } catch (Exception e) {
-            log.warn("[DeviceEvent] Failed to sync breakerRating for {}: {}", chargePointId, e.getMessage());
+            log.warn("[DeviceEvent] Failed to process DLM for {}: {}", chargePointId, e.getMessage());
         }
+    }
+
+    /**
+     * 充电会话检测：按枪的 startTime/endTime 自动创建和关闭会话
+     */
+    private void detectChargingSession(String deviceSn, String pileSn, JsonObject conn,
+                                       Integer energy, Integer chargingMethod) {
+        try {
+            int connectorId = conn.has("connectorId") ? conn.get("connectorId").getAsInt() : 0;
+            if (connectorId == 0) {
+                return;
+            }
+            String startTimeStr = getJsonString(conn, "startTime");
+            String endTimeStr = getJsonString(conn, "endTime");
+            Integer duration = conn.has("duration") && !conn.get("duration").isJsonNull()
+                    ? conn.get("duration").getAsInt() : null;
+
+            // 查找该枪的进行中会话
+            NcChargingSession active = chargingSessionMapper.selectOne(
+                    new LambdaQueryWrapper<NcChargingSession>()
+                            .eq(NcChargingSession::getDeviceSn, deviceSn)
+                            .eq(NcChargingSession::getPileSn, pileSn)
+                            .eq(NcChargingSession::getConnectorId, connectorId)
+                            .eq(NcChargingSession::getStatus, NcChargingSession.CHARGING)
+                            .last("LIMIT 1")
+            );
+
+            boolean hasStartTime = startTimeStr != null && !startTimeStr.isEmpty();
+            boolean hasEndTime = endTimeStr != null && !endTimeStr.isEmpty();
+
+            if (hasStartTime && active == null) {
+                // 新充电会话：startTime 有值且无进行中会话
+                NcChargingSession session = new NcChargingSession()
+                        .setDeviceSn(deviceSn)
+                        .setPileSn(pileSn)
+                        .setConnectorId(connectorId)
+                        .setStartTime(parseUnixTimestamp(startTimeStr))
+                        .setDuration(duration)
+                        .setEnergy(energy)
+                        .setChargingMethod(chargingMethod)
+                        .setStatus(NcChargingSession.CHARGING)
+                        .setCreateTime(new Date());
+                chargingSessionMapper.insert(session);
+                log.info("[ChargingSession] Started: device={}, pile={}, connector={}", deviceSn, pileSn, connectorId);
+            } else if (active != null && hasEndTime) {
+                // 充电结束：有进行中会话且 endTime 有值
+                active.setEndTime(parseUnixTimestamp(endTimeStr));
+                active.setDuration(duration);
+                active.setEnergy(energy);
+                active.setStatus(NcChargingSession.FINISHED);
+                chargingSessionMapper.updateById(active);
+                log.info("[ChargingSession] Finished: device={}, pile={}, connector={}, energy={}Wh",
+                        deviceSn, pileSn, connectorId, energy);
+            } else if (active != null) {
+                // 充电进行中：更新 duration 和 energy
+                active.setDuration(duration);
+                active.setEnergy(energy);
+                chargingSessionMapper.updateById(active);
+            }
+        } catch (Exception e) {
+            log.warn("[ChargingSession] Detection failed for {}/{}: {}", deviceSn, pileSn, e.getMessage());
+        }
+    }
+
+    private Date parseUnixTimestamp(String timestamp) {
+        if (timestamp == null || timestamp.isEmpty()) {
+            return null;
+        }
+        return new Date(Long.parseLong(timestamp) * 1000);
     }
 
     private void handleFirmwareStatus(DeviceEvent event) {

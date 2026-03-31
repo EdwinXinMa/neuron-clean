@@ -36,8 +36,11 @@ public class NcDlmHistory implements Serializable {
     @Schema(description = "总功率 (W)")
     private Float totalPower;
 
-    @Schema(description = "设备温度 (℃)")
-    private Float deviceTemp;
+    @Schema(description = "家庭负载电流 (A)")
+    private Float loadCurrent;
+
+    @Schema(description = "充电总电流 (A)")
+    private Float totalChargingCurrent;
 
     @Schema(description = "WiFi 信号强度 (dBm)")
     private Short wifiRssi;
