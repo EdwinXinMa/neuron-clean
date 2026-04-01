@@ -408,8 +408,8 @@ public class NcDeviceController {
     @PostMapping("/{sn}/dlm")
     public Result<?> updateDlm(@PathVariable String sn, @RequestBody JSONObject params) {
         Integer breakerRating = params.getInteger("breakerRating");
-        if (breakerRating == null || breakerRating <= 0) {
-            return Result.error("breakerRating 参数无效");
+        if (breakerRating == null || !BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
+            return Result.error("breakerRating 必须是 16/20/25/32/40/50/63 之一");
         }
 
         NcDevice device = ncDeviceService.getOne(

@@ -1,5 +1,7 @@
 package com.echarge.common.constant;
 
+import java.util.Set;
+
 /**
  * 业务常量（按业务领域分区）
  * @author Edwin
@@ -70,6 +72,8 @@ public final class BizConstant {
     public static final String DT_DLM_STATUS = "DLMStatus";
     /** DLM 配置下发 */
     public static final String DT_SET_DLM_CONFIG = "SetDLMConfig";
+    /** breakerRating 合法值（协议 §6.2） */
+    public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(16, 20, 25, 32, 40, 50, 63);
 
     // ==================== 设备类型 ====================
 

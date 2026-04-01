@@ -21,6 +21,6 @@ public class ProtocolProperties {
 
     /** 是否开启连接认证 */
     private boolean authEnabled = false;
-    /** 全局连接密码 */
-    private String authPassword = "";
+    /** 全局接入密钥 */
+    private String authKey = "";
 }

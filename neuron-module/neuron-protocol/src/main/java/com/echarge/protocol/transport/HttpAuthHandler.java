@@ -40,7 +40,7 @@ public class HttpAuthHandler extends ChannelInboundHandlerAdapter {
             }
 
             String password = extractPassword(request);
-            if (properties.getAuthPassword().equals(password)) {
+            if (properties.getAuthKey().equals(password)) {
                 // 认证通过，放行
                 log.debug("OCPP auth passed: uri={}", request.uri());
                 ctx.fireChannelRead(msg);

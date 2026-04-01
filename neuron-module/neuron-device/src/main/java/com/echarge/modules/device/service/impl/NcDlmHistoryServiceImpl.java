@@ -55,11 +55,15 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
                 JsonArray allocations = data.getAsJsonArray("pileAllocations");
                 for (JsonElement elem : allocations) {
                     JsonObject alloc = elem.getAsJsonObject();
+                    String pileSn = getString(alloc, "sn");
+                    if (pileSn == null) {
+                        continue;
+                    }
                     NcDlmHistoryAllocation allocation = new NcDlmHistoryAllocation()
                             .setTime(now)
                             .setDeviceSn(deviceSn)
-                            .setPileSn(alloc.get("sn").getAsString())
-                            .setAllocatedCurrent(alloc.get("allocatedCurrent").getAsFloat());
+                            .setPileSn(pileSn)
+                            .setAllocatedCurrent(getFloat(alloc, "allocatedCurrent"));
                     allocationMapper.insert(allocation);
                 }
             }
@@ -107,6 +111,10 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
         result.put("bucketSeconds", bucketSeconds);
         result.put("points", points);
         return result;
+    }
+
+    private String getString(JsonObject obj, String key) {
+        return obj.has(key) && !obj.get(key).isJsonNull() ? obj.get(key).getAsString() : null;
     }
 
     private Float getFloat(JsonObject obj, String key) {

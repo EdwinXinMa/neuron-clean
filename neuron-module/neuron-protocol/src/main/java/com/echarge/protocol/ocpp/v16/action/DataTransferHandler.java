@@ -63,6 +63,6 @@ public class DataTransferHandler implements Ocpp16ActionHandler<DataTransferReq,
         }
 
         log.warn("[OCPP1.6] Unknown DataTransfer messageId: {}", messageId);
-        return new DataTransferResp("Accepted", null);
+        return new DataTransferResp("UnknownMessageId", null);
     }
 }
