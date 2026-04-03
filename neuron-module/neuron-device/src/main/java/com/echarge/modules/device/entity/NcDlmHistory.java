@@ -27,8 +27,14 @@ public class NcDlmHistory implements Serializable {
     @Schema(description = "设备序列号")
     private String deviceSn;
 
-    @Schema(description = "总电流 (A)")
-    private Float totalCurrent;
+    @Schema(description = "入户总电流 A 相 (A)")
+    private Float totalCurrentA;
+
+    @Schema(description = "入户总电流 B 相 (A)，单相时为 0")
+    private Float totalCurrentB;
+
+    @Schema(description = "入户总电流 C 相 (A)，单相时为 0")
+    private Float totalCurrentC;
 
     @Schema(description = "电压 (V)")
     private Float voltage;

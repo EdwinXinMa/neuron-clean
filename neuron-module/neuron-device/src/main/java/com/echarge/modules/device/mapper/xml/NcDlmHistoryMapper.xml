@@ -5,7 +5,9 @@
     <select id="queryChartData" resultType="java.util.LinkedHashMap">
         SELECT
             bucket                                                           AS time,
-            ROUND(AVG(total_current)::numeric, 1)                            AS total_current,
+            ROUND(AVG(total_current_a)::numeric, 1)                           AS total_current_a,
+            ROUND(AVG(total_current_b)::numeric, 1)                           AS total_current_b,
+            ROUND(AVG(total_current_c)::numeric, 1)                           AS total_current_c,
             ROUND(AVG(breaker_rating)::numeric, 1)                           AS breaker_rating,
             ROUND(AVG(voltage)::numeric, 1)                                  AS voltage,
             ROUND(AVG(total_power)::numeric, 0)                              AS total_power,
@@ -14,7 +16,7 @@
         FROM (
             SELECT
                 time_bucket(CAST(#{bucketInterval} AS interval), h.time) AS bucket,
-                h.total_current, h.breaker_rating, h.voltage, h.total_power,
+                h.total_current_a, h.total_current_b, h.total_current_c, h.breaker_rating, h.voltage, h.total_power,
                 h.load_current, h.total_charging_current
             FROM nc_dlm_history h
             WHERE h.device_sn = #{deviceSn}

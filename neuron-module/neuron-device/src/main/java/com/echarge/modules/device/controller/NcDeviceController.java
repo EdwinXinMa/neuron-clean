@@ -116,7 +116,16 @@ public class NcDeviceController {
         if (dlmRaw != null) {
             try {
                 dlm = JSONObject.parseObject(dlmRaw.toString());
-                ctData.put("totalCurrent", dlm.getDoubleValue("totalCurrent"));
+                // 兼容旧固件：优先取三相字段，取不到则回退到旧的 totalCurrent 单值（映射到 A 相）
+                if (dlm.containsKey("totalCurrentA")) {
+                    ctData.put("totalCurrentA", dlm.getDoubleValue("totalCurrentA"));
+                    ctData.put("totalCurrentB", dlm.getDoubleValue("totalCurrentB"));
+                    ctData.put("totalCurrentC", dlm.getDoubleValue("totalCurrentC"));
+                } else {
+                    ctData.put("totalCurrentA", dlm.getDoubleValue("totalCurrent"));
+                    ctData.put("totalCurrentB", 0);
+                    ctData.put("totalCurrentC", 0);
+                }
                 ctData.put("voltage", dlm.getDoubleValue("voltage"));
                 ctData.put("totalPower", dlm.getDoubleValue("totalPower"));
                 ctData.put("loadCurrent", dlm.getDoubleValue("loadCurrent"));
@@ -133,7 +142,9 @@ public class NcDeviceController {
         } else {
             ctData.put("dataFresh", false);
             ctData.put("breakerRating", device.getBreakerRating());
-            ctData.put("totalCurrent", null);
+            ctData.put("totalCurrentA", null);
+            ctData.put("totalCurrentB", null);
+            ctData.put("totalCurrentC", null);
             ctData.put("voltage", null);
             ctData.put("totalPower", null);
         }
