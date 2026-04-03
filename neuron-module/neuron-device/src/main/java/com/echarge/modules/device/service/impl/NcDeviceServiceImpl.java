@@ -1,24 +1,44 @@
 package com.echarge.modules.device.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
+import com.echarge.common.ocpp.OcppCommandSender;
+import com.echarge.common.util.RedisUtil;
 import com.echarge.modules.device.entity.NcDevice;
+import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.mapper.NcDeviceMapper;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.INcOpLogService;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Edwin
  */
+@Slf4j
 @Service
 public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> implements INcDeviceService {
+
+    @Autowired
+    private OcppCommandSender ocppCommandSender;
+
+    @Autowired
+    private RedisUtil redisClient;
+
+    @Autowired
+    private INcOpLogService opLogService;
 
     /** {@inheritDoc} */
     @Override
@@ -76,6 +96,69 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         return this.count(new LambdaQueryWrapper<NcDevice>()
                 .eq(NcDevice::getSn, sn)
                 .eq(NcDevice::getDelFlag, 0)) > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void sendDlmConfig(String sn, int breakerRating, String opUser) {
+        NcDevice device = this.getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
+        if (device == null) {
+            throw new NeuronBootException("设备不存在: " + sn);
+        }
+        if (!BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
+            throw new NeuronBootException("breakerRating 必须是 16/20/25/32/40/50/63 之一");
+        }
+
+        Integer oldRating = device.getBreakerRating();
+
+        // 更新数据库
+        device.setBreakerRating(breakerRating);
+        this.updateById(device);
+
+        // 同步更新 Redis
+        String redisKey = "device:dlm:" + sn;
+        Object dlmRaw = redisClient.get(redisKey);
+        if (dlmRaw != null) {
+            try {
+                JSONObject dlm = JSONObject.parseObject(dlmRaw.toString());
+                dlm.put("breakerRating", breakerRating);
+                redisClient.set(redisKey, dlm.toJSONString(), 300);
+            } catch (Exception e) {
+                log.warn("更新 Redis DLM 数据失败: {}", e.getMessage());
+            }
+        }
+
+        // OCPP 下发
+        if (ocppCommandSender.isDeviceConnected(sn)) {
+            String messageId = "dlm-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            JsonObject payload = new JsonObject();
+            payload.addProperty("breakerRating", breakerRating);
+
+            JsonArray call = new JsonArray();
+            call.add(2);
+            call.add(messageId);
+            call.add("DataTransfer");
+
+            JsonObject dtPayload = new JsonObject();
+            dtPayload.addProperty("vendorId", "AlwaysControl");
+            dtPayload.addProperty("messageId", BizConstant.DT_SET_DLM_CONFIG);
+            dtPayload.addProperty("data", payload.toString());
+            call.add(dtPayload);
+
+            ocppCommandSender.sendCall(sn, call.toString());
+            log.info("[DLM] Config sent to {}: breakerRating={}A", sn, breakerRating);
+        }
+
+        // 操作日志
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.DLM_CONFIG);
+        opLog.setOpContent((oldRating != null ? oldRating : "?") + "A → " + breakerRating + "A");
+        opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
     }
 
     /**

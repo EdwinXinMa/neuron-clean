@@ -32,4 +32,13 @@ public interface INcDeviceService extends IService<NcDevice> {
      * @return 是否已存在
      */
     boolean existsBySn(String sn);
+
+    /**
+     * 下发 DLM 配置（breakerRating）
+     * 更新数据库 + Redis + OCPP 下发 + 操作日志
+     * @param sn 设备序列号
+     * @param breakerRating 断路器额定值
+     * @param opUser 操作人
+     */
+    void sendDlmConfig(String sn, int breakerRating, String opUser);
 }

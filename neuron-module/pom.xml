@@ -16,6 +16,7 @@
         <module>neuron-alert</module>
         <module>neuron-device</module>
         <module>neuron-protocol</module>
+        <module>neuron-app</module>
     </modules>
 
 

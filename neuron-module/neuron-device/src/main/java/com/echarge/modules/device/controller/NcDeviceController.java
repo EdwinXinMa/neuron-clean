@@ -419,58 +419,10 @@ public class NcDeviceController {
     @PostMapping("/{sn}/dlm")
     public Result<?> updateDlm(@PathVariable String sn, @RequestBody JSONObject params) {
         Integer breakerRating = params.getInteger("breakerRating");
-        if (breakerRating == null || !BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
-            return Result.error("breakerRating 必须是 16/20/25/32/40/50/63 之一");
+        if (breakerRating == null) {
+            return Result.error("breakerRating 不能为空");
         }
 
-        NcDevice device = ncDeviceService.getOne(
-                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
-        );
-        if (device == null) {
-            return Result.error("设备不存在: " + sn);
-        }
-
-        Integer oldRating = device.getBreakerRating();
-
-        // 更新数据库
-        device.setBreakerRating(breakerRating);
-        ncDeviceService.updateById(device);
-
-        // 同步更新 Redis 中的 DLM 数据
-        String redisKey = "device:dlm:" + sn;
-        Object dlmRaw = redisClient.get(redisKey);
-        if (dlmRaw != null) {
-            try {
-                JSONObject dlm = JSONObject.parseObject(dlmRaw.toString());
-                dlm.put("breakerRating", breakerRating);
-                redisClient.set(redisKey, dlm.toJSONString(), 300);
-            } catch (Exception e) {
-                log.warn("更新 Redis DLM 数据失败: {}", e.getMessage());
-            }
-        }
-
-        // 如果设备在线，通过 OCPP 下发配置
-        if (ocppCommandSender.isDeviceConnected(sn)) {
-            String messageId = "dlm-" + java.util.UUID.randomUUID().toString().substring(0, 8);
-            JsonObject payload = new JsonObject();
-            payload.addProperty("breakerRating", breakerRating);
-
-            JsonArray call = new JsonArray();
-            call.add(2);
-            call.add(messageId);
-            call.add("DataTransfer");
-
-            JsonObject dtPayload = new JsonObject();
-            dtPayload.addProperty("vendorId", "AlwaysControl");
-            dtPayload.addProperty("messageId", BizConstant.DT_SET_DLM_CONFIG);
-            dtPayload.addProperty("data", payload.toString());
-            call.add(dtPayload);
-
-            ocppCommandSender.sendCall(sn, call.toString());
-            log.info("[DLM] Config sent to {}: breakerRating={}A", sn, breakerRating);
-        }
-
-        // 记录操作日志
         String opUser = "system";
         try {
             LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
@@ -479,15 +431,11 @@ public class NcDeviceController {
             }
         } catch (Exception ignored) {}
 
-        NcOpLog opLog = new NcOpLog();
-        opLog.setDeviceSn(sn);
-        opLog.setOpUser(opUser);
-        opLog.setOpType(NcOpLog.DLM_CONFIG);
-        opLog.setOpContent((oldRating != null ? oldRating : "?") + "A → " + breakerRating + "A");
-        opLog.setOpResult(NcOpLog.SUCCESS);
-        opLog.setOpTime(new Date());
-        opLog.setCreateTime(new Date());
-        opLogService.save(opLog);
+        try {
+            ncDeviceService.sendDlmConfig(sn, breakerRating, opUser);
+        } catch (NeuronBootException e) {
+            return Result.error(e.getMessage());
+        }
 
         return Result.ok("DLM 配置已更新");
     }

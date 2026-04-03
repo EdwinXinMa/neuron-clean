@@ -36,6 +36,12 @@
             <artifactId>neuron-protocol</artifactId>
             <version>${neuron.version}</version>
         </dependency>
+        <!-- App 云端模块 -->
+        <dependency>
+            <groupId>com.echarge</groupId>
+            <artifactId>neuron-app</artifactId>
+            <version>${neuron.version}</version>
+        </dependency>
         
         <dependency>
             <groupId>jakarta.servlet</groupId>
