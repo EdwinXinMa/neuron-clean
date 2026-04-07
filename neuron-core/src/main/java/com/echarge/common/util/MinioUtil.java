@@ -46,6 +46,21 @@ public class MinioUtil {
         return bucketName;
     }
 
+    /**
+     * 从完整 URL 或相对路径中提取 objectName
+     */
+    public static String extractObjectName(String fileUrl, String bucket) {
+        if (fileUrl == null) {
+            return null;
+        }
+        // 找 /bucket/ 的位置
+        int bucketIdx = fileUrl.indexOf("/" + bucket + "/");
+        if (bucketIdx >= 0) {
+            return fileUrl.substring(bucketIdx + bucket.length() + 2);
+        }
+        return fileUrl;
+    }
+
     private static MinioClient minioClient = null;
 
     /**
@@ -98,7 +113,7 @@ public class MinioUtil {
                     .stream(stream,stream.available(),-1).build();
             minioClient.putObject(objectArgs);
             stream.close();
-            fileUrl = minioUrl+newBucket+"/"+objectName;
+            fileUrl = "/" + newBucket + "/" + objectName;
         }catch (Exception e){
             log.error(e.getMessage(), e);
         }
@@ -215,7 +230,7 @@ public class MinioUtil {
                 .stream(stream,stream.available(),-1).build();
         minioClient.putObject(objectArgs);
         stream.close();
-        return minioUrl+bucketName+"/"+relativePath;
+        return "/" + bucketName + "/" + relativePath;
     }
 
 }

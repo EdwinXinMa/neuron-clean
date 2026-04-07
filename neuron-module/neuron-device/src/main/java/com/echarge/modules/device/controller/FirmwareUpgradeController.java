@@ -95,17 +95,8 @@ public class FirmwareUpgradeController {
         // 生成固件下载 URL（MinIO presigned URL，1小时有效）
         String downloadUrl;
         try {
-            String fileUrl = firmware.getFileUrl();
             String bucketName = MinioUtil.getBucketName();
-            // 从 fileUrl 中提取 objectName（兼容 minio_url 变更的情况）
-            String objectName;
-            int bucketIdx = fileUrl.indexOf("/" + bucketName + "/");
-            if (bucketIdx >= 0) {
-                objectName = fileUrl.substring(bucketIdx + bucketName.length() + 2);
-            } else {
-                String minioUrl = MinioUtil.getMinioUrl();
-                objectName = fileUrl.replace(minioUrl + bucketName + "/", "");
-            }
+            String objectName = MinioUtil.extractObjectName(firmware.getFileUrl(), bucketName);
             downloadUrl = MinioUtil.getObjectUrl(bucketName, objectName, 3600);
         } catch (Exception e) {
             log.error("生成固件下载链接失败", e);

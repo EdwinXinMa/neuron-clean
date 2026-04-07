@@ -142,16 +142,8 @@ public class FirmwareVersionController {
         }
         // remove file from MinIO
         try {
-            String fileUrl = fw.getFileUrl();
-            String bucketName = MinioUtil.getBucketName();
-            String objectName;
-            int bucketIdx = fileUrl.indexOf("/" + bucketName + "/");
-            if (bucketIdx >= 0) {
-                objectName = fileUrl.substring(bucketIdx + bucketName.length() + 2);
-            } else {
-                objectName = fileUrl.replace(MinioUtil.getMinioUrl() + bucketName + "/", "");
-            }
-            MinioUtil.removeObject(bucketName, objectName);
+            String objectName = MinioUtil.extractObjectName(fw.getFileUrl(), MinioUtil.getBucketName());
+            MinioUtil.removeObject(MinioUtil.getBucketName(), objectName);
         } catch (Exception e) {
             log.warn("删除MinIO文件失败: {}", e.getMessage());
         }
@@ -167,16 +159,8 @@ public class FirmwareVersionController {
             return Result.error("固件不存在");
         }
         try {
-            String fileUrl = fw.getFileUrl();
             String bucketName = MinioUtil.getBucketName();
-            String objectName;
-            int bucketIdx = fileUrl.indexOf("/" + bucketName + "/");
-            if (bucketIdx >= 0) {
-                objectName = fileUrl.substring(bucketIdx + bucketName.length() + 2);
-            } else {
-                objectName = fileUrl.replace(MinioUtil.getMinioUrl() + bucketName + "/", "");
-            }
-            // 1 hour = 3600 seconds
+            String objectName = MinioUtil.extractObjectName(fw.getFileUrl(), bucketName);
             String presignedUrl = MinioUtil.getObjectUrl(bucketName, objectName, 3600);
 
             Map<String, String> result = new LinkedHashMap<>();
