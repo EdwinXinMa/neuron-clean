@@ -61,7 +61,7 @@ stages:
             with:
               artifact: artifact
               variables: []
-              dockerfilePath: Dockerfile
+              dockerfilePath: Dockerfile-company
               noCache: false
               dockerRegistry: crpi-q1gy3dzwbqy5vieg.cn-heyuan.personal.cr.aliyuncs.com/neuron-cloud/neuron-backend
               useVpcAddress: false
