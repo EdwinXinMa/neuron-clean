@@ -3,7 +3,7 @@ version: '3.8'
 services:
 
   postgres:
-    image: mirror.ccs.tencentyun.com/timescale/timescaledb:latest-pg15
+    image: crpi-q1gy3dzwbqy5vieg.cn-heyuan.personal.cr.aliyuncs.com/neuron-cloud/timescaledb:latest-pg16
     container_name: neuron-postgres
     restart: unless-stopped
     environment:
@@ -22,7 +22,7 @@ services:
       retries: 5
 
   redis:
-    image: mirror.ccs.tencentyun.com/library/redis:7-alpine
+    image: crpi-q1gy3dzwbqy5vieg.cn-heyuan.personal.cr.aliyuncs.com/neuron-cloud/redis:7-alpine
     container_name: neuron-redis
     restart: unless-stopped
     environment:
@@ -39,7 +39,7 @@ services:
       retries: 5
 
   minio:
-    image: mirror.ccs.tencentyun.com/minio/minio:latest
+    image: crpi-q1gy3dzwbqy5vieg.cn-heyuan.personal.cr.aliyuncs.com/neuron-cloud/minio:latest
     container_name: neuron-minio
     restart: unless-stopped
     environment:
@@ -59,7 +59,7 @@ services:
       retries: 5
 
   kafka:
-    image: mirror.ccs.tencentyun.com/apache/kafka:3.9.0
+    image: crpi-q1gy3dzwbqy5vieg.cn-heyuan.personal.cr.aliyuncs.com/neuron-cloud/kafka:3.9.0
     container_name: neuron-kafka
     restart: unless-stopped
     environment:

@@ -1,0 +1,252 @@
+# =============================================================================
+# pipeline-backend.yml - NeuronCloud 后端部署流水线
+# =============================================================================
+# 用途：部署后端服务到公司测试服务器
+# 端口：8180 (API) / 9101 (OCPP WebSocket)
+#
+# 阶段说明：
+#   1. 构建        - Maven编译 + Docker镜像推送
+#   2. 部署        - 拉取镜像 + 启动容器
+#   3. 健康检查    - 验证应用启动状态
+#   4. 清理        - 清理旧镜像
+# =============================================================================
+
+sources:
+  repo_0:
+    type: codeup
+    name: neuron-clean
+    endpoint: https://codeup.aliyun.com/neuron/N3Lite/neuron-clean.git
+    branch: main
+    certificate:
+      type: serviceConnection
+      serviceConnection: hm9du8rmfraowhyb
+
+defaultWorkspace: repo_0
+
+stages:
+  # ===========================================================================
+  # 阶段 1：构建（Maven + Docker 镜像）
+  # ===========================================================================
+  stage_build:
+    name: "1. 构建"
+    jobs:
+      job_0:
+        name: Maven构建 + Docker镜像
+        runsOn:
+          group: public/cn-beijing
+          labels: linux,amd64
+        steps:
+          # 步骤 1.1：Maven 构建
+          step_maven:
+            name: Maven编译打包
+            step: JavaBuild
+            with:
+              jdkVersion: "17"
+              mavenVersion: "3.9.3"
+              run: |
+                echo "============================================================"
+                echo "  NeuronCloud 后端构建"
+                echo "============================================================"
+                mvn -B clean package -DskipTests
+                echo "[INFO] 构建产物:"
+                ls -lh neuron-system/neuron-system-start/target/*.jar 2>/dev/null || echo "未找到 JAR"
+                # 复制 jar 到 Dockerfile 同级目录
+                cp neuron-system/neuron-system-start/target/neuron-system-start-1.0.0.jar neuron-system-start.jar
+                echo "============================================================"
+
+          # 步骤 1.2：Docker 镜像构建推送
+          step_docker:
+            name: 镜像构建推送
+            step: ACRDockerBuild
+            with:
+              artifact: artifact
+              variables: []
+              dockerfilePath: Dockerfile
+              noCache: false
+              dockerRegistry: registry.cn-heyuan.aliyuncs.com/szxuheng/neuron-backend
+              useVpcAddress: false
+              buildkitVersion: v0.11.6
+              dockerTag: ${DATETIME}
+              region: cn-heyuan
+              serviceConnection: hfys4zjr796p5ipm
+              extraTags:
+                - latest
+        driven: auto
+        plugins: []
+
+  # ===========================================================================
+  # 阶段 2：部署
+  # ===========================================================================
+  stage_deploy:
+    name: "2. 部署"
+    jobs:
+      job_deploy:
+        name: 测试服务器部署
+        component: VMDockerDeploy
+        driven: auto
+        with:
+          variables:
+            - key: tag
+              value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
+          useEncode: false
+          pauseStrategy: noPause
+          machineGroup: cTY11FaiMYWhg3sK
+          run: |-
+            set -ex
+
+            echo "============================================================"
+            echo "  NeuronCloud 后端部署"
+            echo "============================================================"
+
+            CONTAINER_NAME="neuron-backend"
+            HOST_PORT_API=8180
+            HOST_PORT_OCPP=9101
+
+            # 1. 登录 ACR + 拉取镜像
+            echo "[INFO] >>> [1/3] 登录ACR并拉取镜像..."
+            echo "${DOCKER_PASSWORD}" | docker login --username="${DOCKER_USERNAME}" --password-stdin registry.cn-heyuan.aliyuncs.com
+            docker pull "${tag}"
+            echo "[INFO] 镜像拉取完成"
+
+            # 2. 停止旧容器
+            echo "[INFO] >>> [2/3] 停止旧容器..."
+            docker stop "${CONTAINER_NAME}" 2>/dev/null || true
+            docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
+
+            # 3. 启动新容器
+            echo "[INFO] >>> [3/3] 启动新容器..."
+            mkdir -p /data/neuron/logs /data/neuron/uploads
+
+            docker run -d \
+                --name "${CONTAINER_NAME}" \
+                --network neuron-net \
+                --restart=unless-stopped \
+                -e TZ=Asia/Shanghai \
+                -e SPRING_PROFILES_ACTIVE=dev \
+                -e SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL="jdbc:postgresql://neuron-postgres:5432/neuron_cloud?stringtype=unspecified" \
+                -e SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME=postgres \
+                -e SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD=123456 \
+                -e SPRING_DATA_REDIS_HOST=neuron-redis \
+                -e SPRING_DATA_REDIS_PORT=6379 \
+                -e SPRING_KAFKA_BOOTSTRAP_SERVERS=neuron-kafka:9092 \
+                -e NEURON_UPLOADTYPE=minio \
+                -e NEURON_MINIO_MINIO_URL="http://neuron-minio:9000" \
+                -e NEURON_MINIO_MINIO_NAME=neuron \
+                -e NEURON_MINIO_MINIO_PASS=neuron123 \
+                -e NEURON_MINIO_BUCKETNAME=neuron-firmware \
+                -e NEURON_REDISSON_ADDRESS="neuron-redis:6379" \
+                -p ${HOST_PORT_API}:8080 \
+                -p ${HOST_PORT_OCPP}:9001 \
+                -v /data/neuron/logs:/logs \
+                -v /data/neuron/uploads:/opt/upFiles \
+                --memory=1g \
+                --log-opt max-size=100m \
+                --log-opt max-file=3 \
+                "${tag}"
+
+            sleep 3
+            if docker ps | grep -q "${CONTAINER_NAME}"; then
+                echo "[INFO] ✅ 容器启动成功"
+                docker ps | grep "${CONTAINER_NAME}"
+            else
+                echo "[ERROR] 容器启动失败"
+                docker logs "${CONTAINER_NAME}" --tail 30
+                exit 1
+            fi
+
+            echo "============================================================"
+          executeUser: root
+          batchNumber: 1
+        plugins: []
+
+  # ===========================================================================
+  # 阶段 3：健康检查
+  # ===========================================================================
+  stage_health:
+    name: "3. 健康检查"
+    jobs:
+      job_0:
+        name: 健康检查
+        component: VMDockerDeploy
+        driven: auto
+        with:
+          variables:
+            - key: tag
+              value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
+          useEncode: false
+          pauseStrategy: noPause
+          machineGroup: cTY11FaiMYWhg3sK
+          run: |-
+            set -ex
+
+            echo "============================================================"
+            echo "  NeuronCloud 健康检查"
+            echo "============================================================"
+
+            HEALTH_CHECK_URL="http://127.0.0.1:8180/api/sys/health"
+            MAX_RETRIES=12
+            RETRY_INTERVAL=5
+
+            echo "[INFO] 检查地址: ${HEALTH_CHECK_URL}"
+            echo "[INFO] 最大等待: $((MAX_RETRIES * RETRY_INTERVAL))秒"
+            echo "------------------------------------------------------------"
+
+            for i in $(seq 1 $MAX_RETRIES); do
+                HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "${HEALTH_CHECK_URL}" 2>/dev/null || echo "000")
+
+                if [ "${HTTP_STATUS}" = "200" ] || [ "${HTTP_STATUS}" = "401" ]; then
+                    echo "[INFO] ✅ 健康检查通过 (HTTP ${HTTP_STATUS})"
+                    exit 0
+                fi
+
+                echo "[INFO] 等待中... (${i}/${MAX_RETRIES}, HTTP=${HTTP_STATUS})"
+                sleep $RETRY_INTERVAL
+            done
+
+            echo "[WARN] ⚠️ 健康检查超时，请人工确认服务状态"
+            docker ps | grep neuron-backend || echo "容器未运行"
+            docker logs neuron-backend --tail 20 2>/dev/null || true
+          executeUser: root
+          batchNumber: 1
+        plugins: []
+
+  # ===========================================================================
+  # 阶段 4：清理旧镜像
+  # ===========================================================================
+  stage_cleanup:
+    name: "4. 清理"
+    jobs:
+      job_cleanup:
+        name: 清理旧镜像
+        component: VMDockerDeploy
+        driven: auto
+        with:
+          variables:
+            - key: tag
+              value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
+          useEncode: false
+          pauseStrategy: noPause
+          machineGroup: cTY11FaiMYWhg3sK
+          run: |-
+            set -ex
+
+            echo "============================================================"
+            echo "  清理旧镜像"
+            echo "============================================================"
+
+            CURRENT_IMAGE_ID=$(docker inspect neuron-backend --format='{{.Image}}' 2>/dev/null | cut -c8-19 || echo "")
+
+            docker images --format "{{.ID}} {{.Repository}}:{{.Tag}}" | grep neuron-backend | while read IMG_ID IMG_NAME; do
+                if [ "${IMG_ID}" != "${CURRENT_IMAGE_ID}" ]; then
+                    if [ -z "$(docker ps -aq -f ancestor=${IMG_ID})" ]; then
+                        echo "[INFO] 删除: ${IMG_NAME} (${IMG_ID})"
+                        docker rmi "${IMG_ID}" 2>/dev/null || true
+                    fi
+                fi
+            done
+
+            docker image prune -f 2>/dev/null || true
+            echo "[INFO] ✅ 清理完成"
+          executeUser: root
+          batchNumber: 1
+        plugins: []
