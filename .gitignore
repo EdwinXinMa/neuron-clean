@@ -3,6 +3,19 @@
 *.iml
 rebel.xml
 
+## claude code
+.claude/
+
+## temp
+222.yml
+
+## docs (generated separately)
+docs/
+
+## local dev config
+docker-compose-local.yml
+deploy.sh
+
 ## backend
 **/target
 **/logs
