@@ -183,7 +183,7 @@ public class MinioUtil {
             String url = minioClient.getPresignedObjectUrl(objectArgs);
             url = URLDecoder.decode(url,"UTF-8");
             // 将内网地址替换为相对路径，走 nginx /minio/ 代理
-            url = url.replace(minioUrl, "/minio/");
+            url = url.replace(minioUrl, "http://47.121.136.99:19000/");
             return url;
         }catch (Exception e){
             log.info("文件路径获取失败" + e.getMessage());
