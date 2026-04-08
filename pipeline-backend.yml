@@ -90,7 +90,7 @@ stages:
               value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
           useEncode: false
           pauseStrategy: noPause
-          machineGroup: cTY11FaiMYWhg3sK
+          machineGroup: icVASlgYemILyYwK
           run: |-
             set -ex
 
@@ -165,7 +165,7 @@ stages:
                 -e SPRING_KAFKA_BOOTSTRAP_SERVERS=neuron-kafka:9092 \
                 -e NEURON_UPLOADTYPE=minio \
                 -e NEURON_MINIO_MINIO_URL="http://neuron-minio:9000" \
-                -e NEURON_MINIO_MINIO_PUBLIC_URL="http://47.121.136.99:19000" \
+                -e NEURON_MINIO_MINIO_PUBLIC_URL="http://47.120.29.191:19000" \
                 -e NEURON_MINIO_MINIO_NAME=neuron \
                 -e NEURON_MINIO_MINIO_PASS=neuron123 \
                 -e NEURON_MINIO_BUCKETNAME=neuron-firmware \
@@ -211,7 +211,7 @@ stages:
               value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
           useEncode: false
           pauseStrategy: noPause
-          machineGroup: cTY11FaiMYWhg3sK
+          machineGroup: icVASlgYemILyYwK
           run: |-
             set -ex
 
@@ -262,7 +262,7 @@ stages:
               value: $[stages.stage_build.job_0.step_docker.artifacts.artifact]
           useEncode: false
           pauseStrategy: noPause
-          machineGroup: cTY11FaiMYWhg3sK
+          machineGroup: icVASlgYemILyYwK
           run: |-
             set -ex
 
