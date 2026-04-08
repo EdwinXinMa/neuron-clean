@@ -28,6 +28,8 @@ public class MinioConfig {
     private String minioPass;
     @Value(value = "${neuron.minio.bucketName}")
     private String bucketName;
+    @Value(value = "${neuron.minio.minio_public_url:}")
+    private String minioPublicUrl;
 
     @PostConstruct
     public void initMinio(){
@@ -38,6 +40,7 @@ public class MinioConfig {
             minioUrl = minioUrl.concat(SymbolConstant.SINGLE_SLASH);
         }
         MinioUtil.setMinioUrl(minioUrl);
+        MinioUtil.setMinioPublicUrl(minioPublicUrl);
         MinioUtil.setMinioName(minioName);
         MinioUtil.setMinioPass(minioPass);
         MinioUtil.setBucketName(bucketName);

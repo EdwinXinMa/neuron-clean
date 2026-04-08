@@ -165,9 +165,11 @@ stages:
                 -e SPRING_KAFKA_BOOTSTRAP_SERVERS=neuron-kafka:9092 \
                 -e NEURON_UPLOADTYPE=minio \
                 -e NEURON_MINIO_MINIO_URL="http://neuron-minio:9000" \
+                -e NEURON_MINIO_MINIO_PUBLIC_URL="http://47.121.136.99:19000" \
                 -e NEURON_MINIO_MINIO_NAME=neuron \
                 -e NEURON_MINIO_MINIO_PASS=neuron123 \
                 -e NEURON_MINIO_BUCKETNAME=neuron-firmware \
+                -e NEURON_PROTOCOL_AUTH_ENABLED=false \
                 -e NEURON_REDISSON_ADDRESS="neuron-redis:6379" \
                 -p ${HOST_PORT_API}:8080 \
                 -p ${HOST_PORT_OCPP}:9001 \

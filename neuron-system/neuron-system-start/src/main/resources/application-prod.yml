@@ -144,6 +144,7 @@ neuron:
   uploadType: minio
   minio:
     minio_url: http://127.0.0.1:9000
+    minio_public_url: http://127.0.0.1:9000
     minio_name: neuron
     minio_pass: neuron123
     bucketName: neuron-firmware

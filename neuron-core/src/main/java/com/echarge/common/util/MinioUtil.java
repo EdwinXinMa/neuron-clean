@@ -18,12 +18,17 @@ import java.net.URLDecoder;
 @Slf4j
 public class MinioUtil {
     private static String minioUrl;
+    private static String minioPublicUrl;
     private static String minioName;
     private static String minioPass;
     private static String bucketName;
 
     public static void setMinioUrl(String minioUrl) {
         MinioUtil.minioUrl = minioUrl;
+    }
+
+    public static void setMinioPublicUrl(String minioPublicUrl) {
+        MinioUtil.minioPublicUrl = minioPublicUrl;
     }
 
     public static void setMinioName(String minioName) {
@@ -62,6 +67,7 @@ public class MinioUtil {
     }
 
     private static MinioClient minioClient = null;
+    private static MinioClient publicClient = null;
 
     /**
      * 上传文件
@@ -174,21 +180,31 @@ public class MinioUtil {
      * @return
      */
     public static String getObjectUrl(String bucketName, String objectName, Integer expires) {
-        initMinio(minioUrl, minioName,minioPass);
+        initPublicClient();
         try{
-            // 代码逻辑说明: 获取文件外链报错提示method不能为空，导致文件下载和预览失败----
             GetPresignedObjectUrlArgs objectArgs = GetPresignedObjectUrlArgs.builder().object(objectName)
                     .bucket(bucketName)
                     .expiry(expires).method(Method.GET).build();
-            String url = minioClient.getPresignedObjectUrl(objectArgs);
-            url = URLDecoder.decode(url,"UTF-8");
-            // 将内网地址替换为相对路径，走 nginx /minio/ 代理
-            url = url.replace(minioUrl, "http://47.121.136.99:19000/");
-            return url;
+            String url = publicClient.getPresignedObjectUrl(objectArgs);
+            return URLDecoder.decode(url,"UTF-8");
         }catch (Exception e){
             log.info("文件路径获取失败" + e.getMessage());
         }
         return null;
+    }
+
+    private static void initPublicClient() {
+        if (publicClient == null) {
+            try {
+                String endpoint = (minioPublicUrl != null && !minioPublicUrl.isEmpty()) ? minioPublicUrl : minioUrl;
+                publicClient = MinioClient.builder()
+                        .endpoint(endpoint)
+                        .credentials(minioName, minioPass)
+                        .build();
+            } catch (Exception e) {
+                log.error("初始化 MinIO publicClient 失败", e);
+            }
+        }
     }
 
     /**
