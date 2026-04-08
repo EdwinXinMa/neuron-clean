@@ -181,7 +181,10 @@ public class MinioUtil {
                     .bucket(bucketName)
                     .expiry(expires).method(Method.GET).build();
             String url = minioClient.getPresignedObjectUrl(objectArgs);
-            return URLDecoder.decode(url,"UTF-8");
+            url = URLDecoder.decode(url,"UTF-8");
+            // 将内网地址替换为相对路径，走 nginx /minio/ 代理
+            url = url.replace(minioUrl, "/minio/");
+            return url;
         }catch (Exception e){
             log.info("文件路径获取失败" + e.getMessage());
         }
