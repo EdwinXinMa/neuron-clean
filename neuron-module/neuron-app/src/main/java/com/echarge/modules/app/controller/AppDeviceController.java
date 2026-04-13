@@ -1,7 +1,7 @@
 package com.echarge.modules.app.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.echarge.common.api.vo.Result;
+import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
@@ -37,19 +37,12 @@ public class AppDeviceController {
      */
     @PostMapping("/bind")
     @Operation(summary = "绑定设备到当前用户")
-    public Result<?> bind(@RequestBody Map<String, Object> params, HttpServletRequest request) {
+    public AppResult<?> bind(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         AppUser user = (AppUser) request.getAttribute("appUser");
         String deviceSn = (String) params.get("deviceSn");
 
         if (deviceSn == null || deviceSn.isBlank()) {
-            return Result.error("设备序列号不能为空");
-        }
-
-        // 检查设备是否存在于云端
-        NcDevice device = deviceService.getOne(
-                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
-        if (device == null) {
-            return Result.error("设备未上线，请确保设备已联网");
+            return AppResult.error("设备序列号不能为空");
         }
 
         // 检查是否已绑定
@@ -58,13 +51,39 @@ public class AppDeviceController {
                         .eq(AppUserDevice::getUserId, user.getId())
                         .eq(AppUserDevice::getDeviceSn, deviceSn));
         if (count > 0) {
-            return Result.error("该设备已绑定");
+            return AppResult.error("该设备已绑定");
         }
 
-        // 绑定
         Double longitude = params.get("longitude") != null ? ((Number) params.get("longitude")).doubleValue() : null;
         Double latitude = params.get("latitude") != null ? ((Number) params.get("latitude")).doubleValue() : null;
 
+        // 查询设备是否已上线过
+        NcDevice device = deviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
+        boolean online = false;
+
+        if (device == null) {
+            // 设备未上线过，自动创建离线记录
+            device = new NcDevice();
+            device.setSn(deviceSn);
+            device.setOnlineStatus("OFFLINE");
+            if (longitude != null && latitude != null) {
+                device.setLng(java.math.BigDecimal.valueOf(longitude));
+                device.setLat(java.math.BigDecimal.valueOf(latitude));
+            }
+            device.setCreateTime(new Date());
+            deviceService.save(device);
+        } else {
+            online = "ONLINE".equals(device.getOnlineStatus());
+            // 如果有坐标，同步更新 nc_device 表
+            if (longitude != null && latitude != null) {
+                device.setLng(java.math.BigDecimal.valueOf(longitude));
+                device.setLat(java.math.BigDecimal.valueOf(latitude));
+                deviceService.updateById(device);
+            }
+        }
+
+        // 绑定
         AppUserDevice binding = new AppUserDevice()
                 .setUserId(user.getId())
                 .setDeviceSn(deviceSn)
@@ -73,17 +92,10 @@ public class AppDeviceController {
                 .setCreateTime(new Date());
         userDeviceMapper.insert(binding);
 
-        // 如果有坐标，同步更新 nc_device 表（运维后台地图可用）
-        if (longitude != null && latitude != null) {
-            device.setLng(java.math.BigDecimal.valueOf(longitude));
-            device.setLat(java.math.BigDecimal.valueOf(latitude));
-            deviceService.updateById(device);
-        }
-
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("deviceSn", deviceSn);
-        data.put("online", "ONLINE".equals(device.getOnlineStatus()));
-        return Result.ok("绑定成功", data);
+        data.put("online", online);
+        return AppResult.ok("绑定成功", data);
     }
 
     /**
@@ -91,12 +103,12 @@ public class AppDeviceController {
      */
     @PostMapping("/unbind")
     @Operation(summary = "解绑设备")
-    public Result<?> unbind(@RequestBody Map<String, String> params, HttpServletRequest request) {
+    public AppResult<?> unbind(@RequestBody Map<String, String> params, HttpServletRequest request) {
         AppUser user = (AppUser) request.getAttribute("appUser");
         String deviceSn = params.get("deviceSn");
 
         if (deviceSn == null || deviceSn.isBlank()) {
-            return Result.error("设备序列号不能为空");
+            return AppResult.error("设备序列号不能为空");
         }
 
         userDeviceMapper.delete(
@@ -104,7 +116,7 @@ public class AppDeviceController {
                         .eq(AppUserDevice::getUserId, user.getId())
                         .eq(AppUserDevice::getDeviceSn, deviceSn));
 
-        return Result.ok("解绑成功");
+        return AppResult.ok("解绑成功");
     }
 
     /**
@@ -112,7 +124,7 @@ public class AppDeviceController {
      */
     @GetMapping("/list")
     @Operation(summary = "查询绑定的设备列表")
-    public Result<?> list(HttpServletRequest request) {
+    public AppResult<?> list(HttpServletRequest request) {
         AppUser user = (AppUser) request.getAttribute("appUser");
 
         List<AppUserDevice> bindings = userDeviceMapper.selectList(
@@ -134,6 +146,6 @@ public class AppDeviceController {
             devices.add(d);
         }
 
-        return Result.ok(Map.of("devices", devices));
+        return AppResult.ok(Map.of("devices", devices));
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -89,7 +90,12 @@ public class AppTokenFilter implements Filter {
     private void writeError(HttpServletResponse res, int code, String message) throws IOException {
         res.setStatus(code);
         res.setContentType("application/json;charset=UTF-8");
-        res.getWriter().write(MAPPER.writeValueAsString(Map.of(
-                "code", code, "success", false, "message", message)));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", code);
+        body.put("success", false);
+        body.put("message", message);
+        body.put("data", null);
+        body.put("timestamp", System.currentTimeMillis());
+        res.getWriter().write(MAPPER.writeValueAsString(body));
     }
 }
