@@ -6,9 +6,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
+import com.echarge.common.ocpp.OcppCommandSender;
 import com.echarge.modules.device.entity.NcChargingSession;
+import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.mapper.NcChargingSessionMapper;
+import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.*;
 
@@ -42,6 +49,12 @@ public class AppRpcController {
 
     @Autowired
     private NcChargingSessionMapper chargingSessionMapper;
+
+    @Autowired
+    private INcConnectorService connectorService;
+
+    @Autowired
+    private OcppCommandSender ocppCommandSender;
 
     /**
      * RPC 统一入口
@@ -79,10 +92,8 @@ public class AppRpcController {
             case "SubDeviceManager.SelectChargingHistory" -> handleSelectChargingHistory(method, deviceSn, data);
             case "ConfigManager.GetConfig" -> handleGetConfig(method, deviceSn, data);
             case "ConfigManager.SetConfig" -> handleSetConfig(method, deviceSn, data, request);
-            // 预留接口
-            case "SubDeviceManager.StartChargingRequest",
-                 "SubDeviceManager.StopChargingRequest" ->
-                    rpcError(method, 501, "远程充电控制功能暂未开放");
+            case "SubDeviceManager.StartChargingRequest" -> handleStartCharging(method, deviceSn, data);
+            case "SubDeviceManager.StopChargingRequest" -> handleStopCharging(method, deviceSn, data);
             // 云模式不需要的接口
             case "SubDeviceManager.SearchChargeStationRequest",
                  "SubDeviceManager.UpdateMajorSubDeviceByPortName",
@@ -343,6 +354,121 @@ public class AppRpcController {
         }
 
         return rpcSuccess(method, deviceSn, Map.of("configname", configname));
+    }
+
+    // ═══════════════════════════════════════════════
+    // 远程启停充电
+    // ═══════════════════════════════════════════════
+
+    /**
+     * 启动充电 — OCPP RemoteStartTransaction
+     */
+    private Map<String, Object> handleStartCharging(String method, String deviceSn, Map<String, Object> data) {
+        String mac = getMac(data);
+        if (mac == null) {
+            return rpcError(method, 400, "mac 不能为空");
+        }
+
+        // 检查设备在线
+        if (!ocppCommandSender.isDeviceConnected(deviceSn)) {
+            return rpcError(method, 400, "设备不在线，无法发起充电");
+        }
+
+        // 通过桩 SN 查第一把枪的 connectorId
+        NcDevice pile = deviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, mac));
+        if (pile == null) {
+            return rpcError(method, 400, "未找到桩: " + mac);
+        }
+
+        NcConnector connector = connectorService.getOne(
+                new LambdaQueryWrapper<NcConnector>()
+                        .eq(NcConnector::getDeviceId, pile.getId())
+                        .orderByAsc(NcConnector::getConnectorId)
+                        .last("LIMIT 1"));
+        if (connector == null) {
+            return rpcError(method, 400, "该桩未上报枪信息，请等待设备上线后重试");
+        }
+
+        // 构建 OCPP RemoteStartTransaction
+        String messageId = "rs-" + UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("connectorId", connector.getConnectorId());
+        payload.addProperty("idTag", "app_remote");
+
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("RemoteStartTransaction");
+        call.add(payload);
+
+        // 发送并等待设备响应（10秒超时）
+        String response = ocppCommandSender.sendCallAndWait(deviceSn, call.toString(), messageId, 10);
+        if (response == null) {
+            return rpcError(method, 504, "设备响应超时");
+        }
+
+        // 解析响应
+        JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
+        String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
+        if (!"Accepted".equals(status)) {
+            return rpcError(method, 400, "设备拒绝启动充电（" + status + "）");
+        }
+
+        return rpcSuccess(method, deviceSn, Map.of());
+    }
+
+    /**
+     * 停止充电 — OCPP RemoteStopTransaction
+     */
+    private Map<String, Object> handleStopCharging(String method, String deviceSn, Map<String, Object> data) {
+        String mac = getMac(data);
+        if (mac == null) {
+            return rpcError(method, 400, "mac 不能为空");
+        }
+
+        // 检查设备在线
+        if (!ocppCommandSender.isDeviceConnected(deviceSn)) {
+            return rpcError(method, 400, "设备不在线，无法停止充电");
+        }
+
+        // 查找该桩正在充电的会话，取 transactionId
+        NcChargingSession session = chargingSessionMapper.selectOne(
+                new LambdaQueryWrapper<NcChargingSession>()
+                        .eq(NcChargingSession::getDeviceSn, deviceSn)
+                        .eq(NcChargingSession::getPileSn, mac)
+                        .eq(NcChargingSession::getStatus, NcChargingSession.CHARGING)
+                        .orderByDesc(NcChargingSession::getStartTime)
+                        .last("LIMIT 1"));
+        if (session == null || session.getTransactionId() == null) {
+            return rpcError(method, 400, "该桩当前没有进行中的充电会话");
+        }
+
+        // 构建 OCPP RemoteStopTransaction
+        String messageId = "rp-" + UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("transactionId", session.getTransactionId());
+
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("RemoteStopTransaction");
+        call.add(payload);
+
+        // 发送并等待设备响应（10秒超时）
+        String response = ocppCommandSender.sendCallAndWait(deviceSn, call.toString(), messageId, 10);
+        if (response == null) {
+            return rpcError(method, 504, "设备响应超时");
+        }
+
+        // 解析响应
+        JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
+        String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
+        if (!"Accepted".equals(status)) {
+            return rpcError(method, 400, "设备拒绝停止充电（" + status + "）");
+        }
+
+        return rpcSuccess(method, deviceSn, Map.of());
     }
 
     // ═══════════════════════════════════════════════

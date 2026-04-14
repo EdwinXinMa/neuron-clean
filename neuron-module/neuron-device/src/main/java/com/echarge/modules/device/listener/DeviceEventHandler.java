@@ -133,6 +133,12 @@ public class DeviceEventHandler implements DeviceEventListener {
             case DeviceEvent.DLM_STATUS:
                 handleDlmStatus(event);
                 break;
+            case DeviceEvent.START_TRANSACTION:
+                handleStartTransaction(event);
+                break;
+            case DeviceEvent.STOP_TRANSACTION:
+                handleStopTransaction(event);
+                break;
             default:
                 log.warn("[DeviceEvent] Unknown event type: {}", event.getEventType());
         }
@@ -744,6 +750,109 @@ public class DeviceEventHandler implements DeviceEventListener {
         msg.addProperty("detail", detail);
         msg.addProperty("timestamp", java.time.Instant.now().toString());
         FrontendPushChannel.broadcast(msg.toString());
+    }
+
+    // ==================== 充电事务处理 ====================
+
+    /**
+     * 处理 StartTransaction — 设备开始充电，创建充电会话
+     */
+    private void handleStartTransaction(DeviceEvent event) {
+        String chargePointId = event.getChargePointId();
+        JsonObject payload = gson.fromJson(event.getPayload(), JsonObject.class);
+        int transactionId = payload.get("transactionId").getAsInt();
+        int connectorId = payload.has("connectorId") ? payload.get("connectorId").getAsInt() : 1;
+        String idTag = getJsonString(payload, "idTag");
+        int meterStart = payload.has("meterStart") ? payload.get("meterStart").getAsInt() : 0;
+
+        log.info("[DeviceEvent] StartTransaction: device={}, txId={}, connector={}, idTag={}",
+                chargePointId, transactionId, connectorId, idTag);
+
+        // 通过 connectorId 查找对应的桩 SN
+        String pileSn = findPileSnByConnector(chargePointId, connectorId);
+
+        NcChargingSession session = new NcChargingSession();
+        session.setDeviceSn(chargePointId);
+        session.setPileSn(pileSn);
+        session.setConnectorId(connectorId);
+        session.setTransactionId(transactionId);
+        session.setStartTime(new Date());
+        session.setEnergy(0);
+        session.setDuration(0);
+        session.setStatus(NcChargingSession.CHARGING);
+        session.setCreateTime(new Date());
+        chargingSessionMapper.insert(session);
+
+        log.info("[DeviceEvent] Charging session created: txId={}, pile={}, connector={}",
+                transactionId, pileSn, connectorId);
+    }
+
+    /**
+     * 处理 StopTransaction — 设备结束充电，更新充电会话
+     */
+    private void handleStopTransaction(DeviceEvent event) {
+        String chargePointId = event.getChargePointId();
+        JsonObject payload = gson.fromJson(event.getPayload(), JsonObject.class);
+        int transactionId = payload.get("transactionId").getAsInt();
+        int meterStop = payload.has("meterStop") ? payload.get("meterStop").getAsInt() : 0;
+        String reason = getJsonString(payload, "reason");
+
+        log.info("[DeviceEvent] StopTransaction: device={}, txId={}, meterStop={}, reason={}",
+                chargePointId, transactionId, meterStop, reason);
+
+        // 通过 transactionId 查找充电会话
+        NcChargingSession session = chargingSessionMapper.selectOne(
+                new LambdaQueryWrapper<NcChargingSession>()
+                        .eq(NcChargingSession::getDeviceSn, chargePointId)
+                        .eq(NcChargingSession::getTransactionId, transactionId)
+                        .eq(NcChargingSession::getStatus, NcChargingSession.CHARGING)
+        );
+
+        if (session == null) {
+            log.warn("[DeviceEvent] No CHARGING session found for txId={}", transactionId);
+            return;
+        }
+
+        Date now = new Date();
+        session.setEndTime(now);
+        session.setStatus(NcChargingSession.FINISHED);
+        if (session.getStartTime() != null) {
+            session.setDuration((int) ((now.getTime() - session.getStartTime().getTime()) / 1000));
+        }
+        session.setEnergy(meterStop);
+        chargingSessionMapper.updateById(session);
+
+        log.info("[DeviceEvent] Charging session finished: txId={}, duration={}s, energy={}Wh",
+                transactionId, session.getDuration(), meterStop);
+    }
+
+    /**
+     * 通过 connectorId 反查桩 SN：connector 属于哪个桩
+     */
+    private String findPileSnByConnector(String gatewaySn, int connectorId) {
+        NcDevice gateway = ncDeviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, gatewaySn));
+        if (gateway == null) {
+            return gatewaySn;
+        }
+
+        // 查该网关下所有桩
+        List<NcDevice> piles = ncDeviceService.list(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getParentDeviceId, gateway.getId()));
+
+        for (NcDevice pile : piles) {
+            NcConnector connector = ncConnectorService.getOne(
+                    new LambdaQueryWrapper<NcConnector>()
+                            .eq(NcConnector::getDeviceId, pile.getId())
+                            .eq(NcConnector::getConnectorId, connectorId));
+            if (connector != null) {
+                return pile.getSn();
+            }
+        }
+
+        // 找不到就用网关 SN
+        log.warn("[DeviceEvent] No pile found for connector {} under gateway {}", connectorId, gatewaySn);
+        return gatewaySn;
     }
 
     private String getJsonString(JsonObject obj, String key) {

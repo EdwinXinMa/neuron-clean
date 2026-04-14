@@ -56,6 +56,9 @@ public class NcChargingSession implements Serializable {
     @Schema(description = "充电模式：0=iCharger / 1=N3Lite")
     private Integer chargingMethod;
 
+    @Schema(description = "OCPP transactionId（云端生成，用于 RemoteStopTransaction）")
+    private Integer transactionId;
+
     @Schema(description = "状态：CHARGING / FINISHED")
     private String status;
 

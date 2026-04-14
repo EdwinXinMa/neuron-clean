@@ -38,4 +38,6 @@ public class DeviceEvent implements Serializable {
     public static final String TOPOLOGY_REPORT = "TOPOLOGY_REPORT";
     public static final String DLM_STATUS = "DLM_STATUS";
     public static final String FIRMWARE_STATUS = "FIRMWARE_STATUS";
+    public static final String START_TRANSACTION = "START_TRANSACTION";
+    public static final String STOP_TRANSACTION = "STOP_TRANSACTION";
 }

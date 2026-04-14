@@ -1,12 +1,17 @@
 package com.echarge.protocol.ocpp.v16.action;
 
+import com.echarge.common.event.DeviceEvent;
+import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.core.session.Session;
 import com.echarge.protocol.ocpp.common.OcppAction;
 import com.echarge.protocol.ocpp.v16.Ocpp16ActionHandler;
 import com.echarge.protocol.ocpp.v16.model.IdTagInfo;
 import com.echarge.protocol.ocpp.v16.model.StartTransactionReq;
 import com.echarge.protocol.ocpp.v16.model.StartTransactionResp;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,6 +24,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransactionReq, StartTransactionResp> {
 
     private final AtomicInteger transactionIdGenerator = new AtomicInteger(1);
+    private final Gson gson = new Gson();
+
+    @Autowired
+    private DeviceEventPublisher eventPublisher;
 
     /** {@inheritDoc} */
     @Override
@@ -39,8 +48,23 @@ public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransac
                 session.getChargePointId(), request.getConnectorId(),
                 request.getIdTag(), request.getMeterStart());
 
-        // TODO: create transaction record in database, generate real transactionId
         int transactionId = transactionIdGenerator.getAndIncrement();
+
+        // 发布事件，让 DeviceEventHandler 创建充电会话记录
+        JsonObject payload = new JsonObject();
+        payload.addProperty("transactionId", transactionId);
+        payload.addProperty("connectorId", request.getConnectorId());
+        payload.addProperty("idTag", request.getIdTag());
+        payload.addProperty("meterStart", request.getMeterStart());
+        payload.addProperty("timestamp", request.getTimestamp());
+
+        DeviceEvent event = new DeviceEvent(
+                DeviceEvent.START_TRANSACTION,
+                session.getChargePointId(),
+                payload.toString()
+        );
+        eventPublisher.publish(event);
+
         IdTagInfo idTagInfo = new IdTagInfo("Accepted", null, null);
         return new StartTransactionResp(transactionId, idTagInfo);
     }

@@ -224,6 +224,10 @@ function connect() {
       const arr = JSON.parse(e.data);
       if (arr[0] === 3) log("sys", "CALLRESULT for " + arr[1]);
       if (arr[0] === 4) log("err", "CALLERROR: " + arr[2] + " - " + arr[3]);
+      // 自动响应服务端发来的 CALL（type=2）
+      if (arr[0] === 2) {
+        handleServerCall(arr[1], arr[2], arr[3]);
+      }
     } catch(_) {}
   };
 }
@@ -248,6 +252,40 @@ function sendMsg() {
 document.getElementById("msgInput").addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "Enter") { sendMsg(); e.preventDefault(); }
 });
+
+// 自动响应服务端发来的 CALL
+function handleServerCall(messageId, action, payload) {
+  log("sys", "Server CALL: " + action);
+  let resp;
+  switch (action) {
+    case "RemoteStartTransaction":
+      resp = [3, messageId, {"status": "Accepted"}];
+      log("sys", "Auto-reply RemoteStartTransaction -> Accepted");
+      break;
+    case "RemoteStopTransaction":
+      resp = [3, messageId, {"status": "Accepted"}];
+      log("sys", "Auto-reply RemoteStopTransaction -> Accepted");
+      break;
+    case "UpdateFirmware":
+      resp = [3, messageId, {}];
+      log("sys", "Auto-reply UpdateFirmware -> OK");
+      break;
+    case "Reset":
+      resp = [3, messageId, {"status": "Accepted"}];
+      log("sys", "Auto-reply Reset -> Accepted");
+      break;
+    case "DataTransfer":
+      resp = [3, messageId, {"status": "Accepted"}];
+      log("sys", "Auto-reply DataTransfer -> Accepted");
+      break;
+    default:
+      resp = [3, messageId, {}];
+      log("sys", "Auto-reply " + action + " -> empty CALLRESULT");
+  }
+  const msg = JSON.stringify(resp);
+  ws.send(msg);
+  log("out", msg);
+}
 
 // load default preset
 loadPreset("boot16");

@@ -1,12 +1,17 @@
 package com.echarge.protocol.ocpp.v16.action;
 
+import com.echarge.common.event.DeviceEvent;
+import com.echarge.common.event.DeviceEventPublisher;
 import com.echarge.protocol.core.session.Session;
 import com.echarge.protocol.ocpp.common.OcppAction;
 import com.echarge.protocol.ocpp.v16.Ocpp16ActionHandler;
 import com.echarge.protocol.ocpp.v16.model.IdTagInfo;
 import com.echarge.protocol.ocpp.v16.model.StopTransactionReq;
 import com.echarge.protocol.ocpp.v16.model.StopTransactionResp;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,6 +20,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class StopTransactionHandler implements Ocpp16ActionHandler<StopTransactionReq, StopTransactionResp> {
+
+    private final Gson gson = new Gson();
+
+    @Autowired
+    private DeviceEventPublisher eventPublisher;
 
     /** {@inheritDoc} */
     @Override
@@ -35,7 +45,20 @@ public class StopTransactionHandler implements Ocpp16ActionHandler<StopTransacti
                 session.getChargePointId(), request.getTransactionId(),
                 request.getMeterStop(), request.getReason());
 
-        // TODO: update transaction record in database
+        // 发布事件，让 DeviceEventHandler 更新充电会话记录
+        JsonObject payload = new JsonObject();
+        payload.addProperty("transactionId", request.getTransactionId());
+        payload.addProperty("meterStop", request.getMeterStop());
+        payload.addProperty("reason", request.getReason());
+        payload.addProperty("timestamp", request.getTimestamp());
+
+        DeviceEvent event = new DeviceEvent(
+                DeviceEvent.STOP_TRANSACTION,
+                session.getChargePointId(),
+                payload.toString()
+        );
+        eventPublisher.publish(event);
+
         IdTagInfo idTagInfo = new IdTagInfo("Accepted", null, null);
         return new StopTransactionResp(idTagInfo);
     }

@@ -65,7 +65,9 @@ public class KafkaDeviceEventPublisher implements DeviceEventPublisher {
                  DeviceEvent.DLM_STATUS,
                  DeviceEvent.STATUS_NOTIFICATION -> KafkaTopics.DEVICE_TELEMETRY;
 
-            case DeviceEvent.FIRMWARE_STATUS -> KafkaTopics.DEVICE_TASK;
+            case DeviceEvent.FIRMWARE_STATUS,
+                 DeviceEvent.START_TRANSACTION,
+                 DeviceEvent.STOP_TRANSACTION -> KafkaTopics.DEVICE_TASK;
 
             default -> {
                 log.warn("[KAFKA] Unknown event type: {}, routing to lifecycle", eventType);
