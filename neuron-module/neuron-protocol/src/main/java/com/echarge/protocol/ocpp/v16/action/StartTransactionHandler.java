@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Edwin
@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransactionReq, StartTransactionResp> {
 
-    private final AtomicInteger transactionIdGenerator = new AtomicInteger(1);
     private final Gson gson = new Gson();
 
     @Autowired
@@ -48,7 +47,9 @@ public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransac
                 session.getChargePointId(), request.getConnectorId(),
                 request.getIdTag(), request.getMeterStart());
 
-        int transactionId = transactionIdGenerator.getAndIncrement();
+        // 秒级时间戳后6位 + 随机2位，保证唯一且不超 int 范围
+        int transactionId = (int) (System.currentTimeMillis() / 1000 % 1_000_000) * 100
+                + ThreadLocalRandom.current().nextInt(100);
 
         // 发布事件，让 DeviceEventHandler 创建充电会话记录
         JsonObject payload = new JsonObject();
