@@ -19,6 +19,7 @@ import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.common.websocket.FrontendPushChannel;
+import com.echarge.modules.device.websocket.AppOtaWebSocket;
 import com.echarge.modules.device.websocket.OtaWebSocket;
 import com.echarge.common.util.RedisUtil;
 import com.google.gson.Gson;
@@ -681,7 +682,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             log.info("[DeviceEvent] OTA failure logged: sn={}, reason={}", chargePointId, msg);
         }
 
-        // 推送到前端 WebSocket
+        // 推送到 Web 端 WebSocket
         JsonObject wsMsg = new JsonObject();
         wsMsg.addProperty("taskId", task.getId());
         wsMsg.addProperty("deviceSn", chargePointId);
@@ -689,6 +690,9 @@ public class DeviceEventHandler implements DeviceEventListener {
         wsMsg.addProperty("progress", progress);
         wsMsg.addProperty("message", msg);
         OtaWebSocket.sendMessage(chargePointId, wsMsg.toString());
+
+        // 推送到 App 端 WebSocket
+        AppOtaWebSocket.sendMessage(task.getId(), wsMsg.toString());
     }
 
     /**
