@@ -771,20 +771,37 @@ public class DeviceEventHandler implements DeviceEventListener {
         // 通过 connectorId 查找对应的桩 SN
         String pileSn = findPileSnByConnector(chargePointId, connectorId);
 
-        NcChargingSession session = new NcChargingSession();
-        session.setDeviceSn(chargePointId);
-        session.setPileSn(pileSn);
-        session.setConnectorId(connectorId);
-        session.setTransactionId(transactionId);
-        session.setStartTime(new Date());
-        session.setEnergy(0);
-        session.setDuration(0);
-        session.setStatus(NcChargingSession.CHARGING);
-        session.setCreateTime(new Date());
-        chargingSessionMapper.insert(session);
+        // 先查是否已有 CHARGING 会话（可能由 DLMStatus detectChargingSession 创建）
+        NcChargingSession existing = chargingSessionMapper.selectOne(
+                new LambdaQueryWrapper<NcChargingSession>()
+                        .eq(NcChargingSession::getDeviceSn, chargePointId)
+                        .eq(NcChargingSession::getPileSn, pileSn)
+                        .eq(NcChargingSession::getConnectorId, connectorId)
+                        .eq(NcChargingSession::getStatus, NcChargingSession.CHARGING)
+                        .last("LIMIT 1"));
 
-        log.info("[DeviceEvent] Charging session created: txId={}, pile={}, connector={}",
-                transactionId, pileSn, connectorId);
+        if (existing != null) {
+            // 已有会话，补上 transactionId
+            existing.setTransactionId(transactionId);
+            chargingSessionMapper.updateById(existing);
+            log.info("[DeviceEvent] Charging session updated with txId={}, pile={}, connector={}",
+                    transactionId, pileSn, connectorId);
+        } else {
+            // 没有会话，新建
+            NcChargingSession session = new NcChargingSession();
+            session.setDeviceSn(chargePointId);
+            session.setPileSn(pileSn);
+            session.setConnectorId(connectorId);
+            session.setTransactionId(transactionId);
+            session.setStartTime(new Date());
+            session.setEnergy(0);
+            session.setDuration(0);
+            session.setStatus(NcChargingSession.CHARGING);
+            session.setCreateTime(new Date());
+            chargingSessionMapper.insert(session);
+            log.info("[DeviceEvent] Charging session created: txId={}, pile={}, connector={}",
+                    transactionId, pileSn, connectorId);
+        }
     }
 
     /**
