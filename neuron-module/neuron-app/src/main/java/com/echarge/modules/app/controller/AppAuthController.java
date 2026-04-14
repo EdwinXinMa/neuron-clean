@@ -74,6 +74,7 @@ public class AppAuthController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("userId", user.getId());
         data.put("email", user.getEmail());
+        data.put("name", user.getName());
         data.put("token", token);
 
         return AppResult.ok("注册成功", data);
@@ -125,6 +126,7 @@ public class AppAuthController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("userId", user.getId());
         data.put("email", user.getEmail());
+        data.put("name", user.getName());
         data.put("token", token);
         data.put("devices", devices);
 
