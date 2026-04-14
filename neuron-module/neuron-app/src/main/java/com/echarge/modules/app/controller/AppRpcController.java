@@ -199,13 +199,16 @@ public class AppRpcController {
             result.put("energy", String.valueOf(session.getEnergy() != null ? session.getEnergy() : 0));
             result.put("duration", String.valueOf(session.getDuration() != null ? session.getDuration() : 0));
             result.put("chargingMethod", session.getChargingMethod() != null ? session.getChargingMethod() : 0);
+            result.put("isPlugged", true);
         } else {
+            String evStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
             result.put("startTime", "0");
             result.put("endTime", "0");
-            result.put("EVStatus", pile != null ? pile.getString("charge_EVStatus") : "Available");
+            result.put("EVStatus", evStatus);
             result.put("energy", "0");
             result.put("duration", "0");
             result.put("chargingMethod", 0);
+            result.put("isPlugged", !"Available".equals(evStatus) && !"Unavailable".equals(evStatus));
         }
 
         return rpcSuccess(method, deviceSn, result);
