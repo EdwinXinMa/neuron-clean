@@ -817,11 +817,14 @@ public class DeviceEventHandler implements DeviceEventListener {
         log.info("[DeviceEvent] StopTransaction: device={}, txId={}, meterStop={}, reason={}",
                 chargePointId, transactionId, meterStop, reason);
 
-        // 通过 transactionId 查找充电会话（不限状态，因为 detectChargingSession 可能已标记 FINISHED）
+        // 通过 transactionId 查找最近的充电会话（不限状态，可能已被 detectChargingSession 标记 FINISHED）
+        // transactionId 可能重复（服务重启后 AtomicInteger 归零），所以取最新的一条
         NcChargingSession session = chargingSessionMapper.selectOne(
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, chargePointId)
                         .eq(NcChargingSession::getTransactionId, transactionId)
+                        .orderByDesc(NcChargingSession::getCreateTime)
+                        .last("LIMIT 1")
         );
 
         if (session == null) {
@@ -834,7 +837,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             session.setEndTime(now);
         }
         session.setStatus(NcChargingSession.FINISHED);
-        if (session.getStartTime() != null && session.getDuration() == null) {
+        if (session.getStartTime() != null) {
             session.setDuration((int) ((now.getTime() - session.getStartTime().getTime()) / 1000));
         }
         // meterStop 以设备上报为准，覆盖 DLM 的值
