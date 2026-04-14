@@ -817,26 +817,30 @@ public class DeviceEventHandler implements DeviceEventListener {
         log.info("[DeviceEvent] StopTransaction: device={}, txId={}, meterStop={}, reason={}",
                 chargePointId, transactionId, meterStop, reason);
 
-        // 通过 transactionId 查找充电会话
+        // 通过 transactionId 查找充电会话（不限状态，因为 detectChargingSession 可能已标记 FINISHED）
         NcChargingSession session = chargingSessionMapper.selectOne(
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, chargePointId)
                         .eq(NcChargingSession::getTransactionId, transactionId)
-                        .eq(NcChargingSession::getStatus, NcChargingSession.CHARGING)
         );
 
         if (session == null) {
-            log.warn("[DeviceEvent] No CHARGING session found for txId={}", transactionId);
+            log.warn("[DeviceEvent] No session found for txId={}", transactionId);
             return;
         }
 
         Date now = new Date();
-        session.setEndTime(now);
+        if (session.getEndTime() == null) {
+            session.setEndTime(now);
+        }
         session.setStatus(NcChargingSession.FINISHED);
-        if (session.getStartTime() != null) {
+        if (session.getStartTime() != null && session.getDuration() == null) {
             session.setDuration((int) ((now.getTime() - session.getStartTime().getTime()) / 1000));
         }
-        session.setEnergy(meterStop);
+        // meterStop 以设备上报为准，覆盖 DLM 的值
+        if (meterStop > 0) {
+            session.setEnergy(meterStop);
+        }
         chargingSessionMapper.updateById(session);
 
         log.info("[DeviceEvent] Charging session finished: txId={}, duration={}s, energy={}Wh",
