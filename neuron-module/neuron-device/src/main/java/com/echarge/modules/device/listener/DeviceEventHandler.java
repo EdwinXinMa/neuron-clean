@@ -535,7 +535,8 @@ public class DeviceEventHandler implements DeviceEventListener {
     }
 
     /**
-     * 充电会话检测：按枪的 startTime/endTime 自动创建和关闭会话
+     * 充电会话数据更新：DLMStatus 只负责更新进行中会话的 energy/duration/chargingMethod，
+     * 会话的创建由 StartTransaction、结束由 StopTransaction 负责
      */
     private void detectChargingSession(String deviceSn, String pileSn, JsonObject conn,
                                        Integer energy, Integer chargingMethod) {
@@ -544,12 +545,10 @@ public class DeviceEventHandler implements DeviceEventListener {
             if (connectorId == 0) {
                 return;
             }
-            String startTimeStr = getJsonString(conn, "startTime");
-            String endTimeStr = getJsonString(conn, "endTime");
             Integer duration = conn.has("duration") && !conn.get("duration").isJsonNull()
                     ? conn.get("duration").getAsInt() : null;
 
-            // 查找该枪的进行中会话
+            // 查找该枪的进行中会话（由 StartTransaction 创建）
             NcChargingSession active = chargingSessionMapper.selectOne(
                     new LambdaQueryWrapper<NcChargingSession>()
                             .eq(NcChargingSession::getDeviceSn, deviceSn)
@@ -559,40 +558,16 @@ public class DeviceEventHandler implements DeviceEventListener {
                             .last("LIMIT 1")
             );
 
-            boolean hasStartTime = startTimeStr != null && !startTimeStr.isEmpty();
-            boolean hasEndTime = endTimeStr != null && !endTimeStr.isEmpty();
-
-            if (hasStartTime && active == null) {
-                // 新充电会话：startTime 有值且无进行中会话
-                NcChargingSession session = new NcChargingSession()
-                        .setDeviceSn(deviceSn)
-                        .setPileSn(pileSn)
-                        .setConnectorId(connectorId)
-                        .setStartTime(parseUnixTimestamp(startTimeStr))
-                        .setDuration(duration)
-                        .setEnergy(energy)
-                        .setChargingMethod(chargingMethod)
-                        .setStatus(NcChargingSession.CHARGING)
-                        .setCreateTime(new Date());
-                chargingSessionMapper.insert(session);
-                log.info("[ChargingSession] Started: device={}, pile={}, connector={}", deviceSn, pileSn, connectorId);
-            } else if (active != null && hasEndTime) {
-                // 充电结束：有进行中会话且 endTime 有值
-                active.setEndTime(parseUnixTimestamp(endTimeStr));
+            if (active != null) {
                 active.setDuration(duration);
                 active.setEnergy(energy);
-                active.setStatus(NcChargingSession.FINISHED);
-                chargingSessionMapper.updateById(active);
-                log.info("[ChargingSession] Finished: device={}, pile={}, connector={}, energy={}Wh",
-                        deviceSn, pileSn, connectorId, energy);
-            } else if (active != null) {
-                // 充电进行中：更新 duration 和 energy
-                active.setDuration(duration);
-                active.setEnergy(energy);
+                if (chargingMethod != null) {
+                    active.setChargingMethod(chargingMethod);
+                }
                 chargingSessionMapper.updateById(active);
             }
         } catch (Exception e) {
-            log.warn("[ChargingSession] Detection failed for {}/{}: {}", deviceSn, pileSn, e.getMessage());
+            log.warn("[ChargingSession] Update failed for {}/{}: {}", deviceSn, pileSn, e.getMessage());
         }
     }
 
