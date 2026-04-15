@@ -183,7 +183,7 @@ public class AppRpcController {
         result.put("name", "充电桩");
         result.put("mac", mac);
 
-        // 从充电会话获取充电信息
+        // 先查充电中的会话
         NcChargingSession session = chargingSessionMapper.selectOne(
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, deviceSn)
@@ -193,6 +193,7 @@ public class AppRpcController {
                         .last("LIMIT 1"));
 
         if (session != null) {
+            // 充电中：返回实时数据
             result.put("startTime", String.valueOf(session.getStartTime().getTime()));
             result.put("endTime", "0");
             result.put("EVStatus", "Charging");
@@ -201,14 +202,36 @@ public class AppRpcController {
             result.put("chargingMethod", session.getChargingMethod() != null ? session.getChargingMethod() : 0);
             result.put("isPlugged", 1);
         } else {
-            String evStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
-            result.put("startTime", "0");
-            result.put("endTime", "0");
-            result.put("EVStatus", evStatus);
-            result.put("energy", "0");
-            result.put("duration", "0");
-            result.put("chargingMethod", 0);
-            result.put("isPlugged", (!"Available".equals(evStatus) && !"Unavailable".equals(evStatus)) ? 1 : 0);
+            // 查最近一条已完成的会话（5分钟内结束的），用于结单页面
+            NcChargingSession finished = chargingSessionMapper.selectOne(
+                    new LambdaQueryWrapper<NcChargingSession>()
+                            .eq(NcChargingSession::getDeviceSn, deviceSn)
+                            .eq(NcChargingSession::getPileSn, mac)
+                            .eq(NcChargingSession::getStatus, NcChargingSession.FINISHED)
+                            .ge(NcChargingSession::getEndTime, new Date(System.currentTimeMillis() - 5 * 60 * 1000))
+                            .orderByDesc(NcChargingSession::getEndTime)
+                            .last("LIMIT 1"));
+
+            if (finished != null) {
+                // 刚结束的充电：返回结单数据
+                result.put("startTime", String.valueOf(finished.getStartTime().getTime()));
+                result.put("endTime", String.valueOf(finished.getEndTime().getTime()));
+                result.put("EVStatus", "Finishing");
+                result.put("energy", String.valueOf(finished.getEnergy() != null ? finished.getEnergy() : 0));
+                result.put("duration", String.valueOf(finished.getDuration() != null ? finished.getDuration() : 0));
+                result.put("chargingMethod", finished.getChargingMethod() != null ? finished.getChargingMethod() : 0);
+                result.put("isPlugged", 0);
+            } else {
+                // 空闲状态
+                String evStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
+                result.put("startTime", "0");
+                result.put("endTime", "0");
+                result.put("EVStatus", evStatus);
+                result.put("energy", "0");
+                result.put("duration", "0");
+                result.put("chargingMethod", 0);
+                result.put("isPlugged", (!"Available".equals(evStatus) && !"Unavailable".equals(evStatus)) ? 1 : 0);
+            }
         }
 
         return rpcSuccess(method, deviceSn, result);
@@ -469,6 +492,20 @@ public class AppRpcController {
         String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
         if (!"Accepted".equals(status)) {
             return rpcError(method, 400, "设备拒绝停止充电（" + status + "）");
+        }
+
+        // 等待 StopTransaction 处理完成，会话变为 FINISHED 后再返回 App（最多等 10 秒）
+        for (int i = 0; i < 10; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            NcChargingSession updated = chargingSessionMapper.selectById(session.getId());
+            if (updated != null && NcChargingSession.FINISHED.equals(updated.getStatus())) {
+                break;
+            }
         }
 
         return rpcSuccess(method, deviceSn, Map.of());
