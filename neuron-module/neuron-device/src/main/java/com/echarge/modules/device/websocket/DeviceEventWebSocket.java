@@ -40,7 +40,7 @@ public class DeviceEventWebSocket {
     @OnError
     public void onError(Session session, Throwable error) {
         SESSIONS.remove(session);
-        log.error("DeviceEventWebSocket error", error);
+        log.warn("DeviceEventWebSocket disconnected: {}", error.getMessage());
     }
 
     @OnMessage
@@ -54,7 +54,7 @@ public class DeviceEventWebSocket {
                 try {
                     session.getAsyncRemote().sendText(message);
                 } catch (Exception e) {
-                    log.error("DeviceEventWebSocket broadcast failed", e);
+                    log.warn("DeviceEventWebSocket broadcast failed: {}", e.getMessage());
                 }
             }
         }
