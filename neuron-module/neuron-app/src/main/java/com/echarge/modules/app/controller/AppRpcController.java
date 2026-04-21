@@ -249,7 +249,8 @@ public class AppRpcController {
         deviceInfo.put("subDevId", mac);
         deviceInfo.put("mac", mac);
         deviceInfo.put("ChargingCurrent", pile != null ? pile.getString("allocatedCurrent") : "0");
-        deviceInfo.put("LoadCurrent", dlm != null ? dlm.getString("loadCurrent") : "0");
+        deviceInfo.put("LoadCurrent", dlm != null ? String.valueOf(
+                dlm.getDoubleValue("loadCurrentA") + dlm.getDoubleValue("loadCurrentB") + dlm.getDoubleValue("loadCurrentC")) : "0");
         deviceInfo.put("MeterCurrent", dlm != null ? String.valueOf(
                 dlm.getDoubleValue("totalCurrentA") + dlm.getDoubleValue("totalCurrentB") + dlm.getDoubleValue("totalCurrentC")) : "0");
         deviceInfo.put("energy", pile != null ? String.valueOf(pile.getIntValue("energy")) : "0");
@@ -268,9 +269,11 @@ public class AppRpcController {
         double totalB = dlm != null ? dlm.getDoubleValue("totalCurrentB") : 0;
         double totalC = dlm != null ? dlm.getDoubleValue("totalCurrentC") : 0;
 
-        result.put("LoadCurrent", dlm != null ? dlm.getString("loadCurrent") : "0");
+        result.put("LoadCurrent", dlm != null ? String.valueOf(
+                dlm.getDoubleValue("loadCurrentA") + dlm.getDoubleValue("loadCurrentB") + dlm.getDoubleValue("loadCurrentC")) : "0");
         result.put("MeterCurrent", String.valueOf(totalA + totalB + totalC));
-        result.put("totalChargingCurrent", dlm != null ? dlm.getString("totalChargingCurrent") : "0");
+        result.put("totalChargingCurrent", dlm != null ? String.valueOf(
+                dlm.getDoubleValue("totalChargingCurrentA") + dlm.getDoubleValue("totalChargingCurrentB") + dlm.getDoubleValue("totalChargingCurrentC")) : "0");
 
         List<Map<String, Object>> deviceList = new ArrayList<>();
         if (dlm != null && dlm.containsKey("pileAllocations")) {
