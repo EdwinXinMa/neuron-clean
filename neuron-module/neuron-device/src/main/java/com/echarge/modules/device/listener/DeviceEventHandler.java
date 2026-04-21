@@ -13,7 +13,9 @@ import com.echarge.modules.device.service.impl.NcDeviceServiceImpl;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.entity.NcOpLog;
 import com.echarge.modules.device.mapper.NcChargingSessionMapper;
+import com.echarge.modules.device.entity.FirmwareVersion;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
+import com.echarge.modules.device.service.IFirmwareVersionService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcDlmHistoryService;
@@ -53,6 +55,9 @@ public class DeviceEventHandler implements DeviceEventListener {
 
     @Autowired
     private IFirmwareUpgradeTaskService upgradeTaskService;
+
+    @Autowired
+    private IFirmwareVersionService firmwareVersionService;
 
     @Autowired
     private INcOpLogService opLogService;
@@ -623,6 +628,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                 progress = 100;
                 msg = "固件升级完成";
                 task.setFinishTime(new Date());
+                updateDeviceFirmwareVersion(chargePointId, task.getFirmwareId());
                 break;
             case "DownloadFailed":
                 taskStatus = BizConstant.TASK_FAILED;
@@ -674,6 +680,31 @@ public class DeviceEventHandler implements DeviceEventListener {
 
         // 推送到 App 端 WebSocket
         AppOtaWebSocket.sendMessage(task.getId(), wsMsg.toString());
+    }
+
+    /**
+     * OTA 升级成功后，根据固件记录更新设备的固件版本号
+     */
+    private void updateDeviceFirmwareVersion(String deviceSn, String firmwareId) {
+        try {
+            FirmwareVersion firmware = firmwareVersionService.getById(firmwareId);
+            if (firmware == null) {
+                log.warn("[OTA] Firmware not found: firmwareId={}", firmwareId);
+                return;
+            }
+            NcDevice device = ncDeviceService.getOne(
+                    new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn)
+            );
+            if (device == null) {
+                log.warn("[OTA] Device not found: sn={}", deviceSn);
+                return;
+            }
+            device.setFirmwareVersion(firmware.getVersion());
+            ncDeviceService.updateById(device);
+            log.info("[OTA] Device firmware version updated: sn={}, version={}", deviceSn, firmware.getVersion());
+        } catch (Exception e) {
+            log.error("[OTA] Failed to update device firmware version: sn={}, error={}", deviceSn, e.getMessage());
+        }
     }
 
     /**

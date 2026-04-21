@@ -127,6 +127,32 @@ public class MinioUtil {
     }
 
     /**
+     * 上传文件到指定的完整路径（不做文件名重命名）
+     * @param file 文件
+     * @param objectName 完整的对象路径，如 firmware/N3Lite/1.2.3/N3Lite-1.2.3_20260421.bin
+     * @return 相对路径 /bucket/objectName
+     */
+    public static String uploadWithName(MultipartFile file, String objectName) throws Exception {
+        initMinio(minioUrl, minioName, minioPass);
+        if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        }
+        if (objectName.startsWith(SymbolConstant.SINGLE_SLASH)) {
+            objectName = objectName.substring(1);
+        }
+        try (InputStream stream = file.getInputStream()) {
+            PutObjectArgs objectArgs = PutObjectArgs.builder()
+                    .object(objectName)
+                    .bucket(bucketName)
+                    .contentType("application/octet-stream")
+                    .stream(stream, file.getSize(), -1)
+                    .build();
+            minioClient.putObject(objectArgs);
+        }
+        return "/" + bucketName + "/" + objectName;
+    }
+
+    /**
      * 文件上传
      * @param file
      * @param bizPath

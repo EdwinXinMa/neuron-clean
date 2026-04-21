@@ -28,7 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * App OTA 固件升级
@@ -95,6 +99,13 @@ public class AppFirmwareController {
             return AppResult.error("设备 OCPP 连接不存在，无法下发升级指令");
         }
 
+        // 从文件名解析版本号（格式：N3Lite-X.Y.Z.bin 或 N3Lite-X.Y.Z_XXXXX.bin）
+        String originalFilename = file.getOriginalFilename();
+        String fwVersion = parseFirmwareVersion(originalFilename);
+        if (fwVersion == null) {
+            return AppResult.error("文件名格式不正确，应为 N3Lite-X.Y.Z.bin 或 N3Lite-X.Y.Z_XXXXX.bin");
+        }
+
         // 上传固件到 MinIO
         String fileUrl;
         String checksum;
@@ -108,9 +119,11 @@ public class AppFirmwareController {
             }
             checksum = sb.toString();
 
-            // 上传到独立路径
-            String bizPath = "firmware/app/" + user.getId();
-            fileUrl = MinioUtil.upload(file, bizPath);
+            // 自动重命名为 N3Lite-{version}_{yyyyMMdd}.bin
+            String dateStr = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+            String standardName = "N3Lite-" + fwVersion + "_" + dateStr + ".bin";
+            String objectName = "firmware/app/" + user.getId() + "/" + standardName;
+            fileUrl = MinioUtil.uploadWithName(file, objectName);
         } catch (Exception e) {
             log.error("[AppOTA] 文件上传失败", e);
             return AppResult.error("文件上传失败: " + e.getMessage());
@@ -228,6 +241,20 @@ public class AppFirmwareController {
 
         log.info("[AppOTA] Sending UpdateFirmware to {}: messageId={}", deviceSn, messageId);
         ocppCommandSender.sendCall(deviceSn, call.toString());
+    }
+
+    /** 从文件名解析版本号，如 N3Lite-1.2.3.bin → 1.2.3，N3Lite-1.2.3_abc.bin → 1.2.3 */
+    private static final Pattern FIRMWARE_NAME_PATTERN = Pattern.compile("^N3Lite-(\\d+\\.\\d+\\.\\d+)[_.]");
+
+    private String parseFirmwareVersion(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return null;
+        }
+        Matcher matcher = FIRMWARE_NAME_PATTERN.matcher(filename);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
     private String getStatusMessage(String status, String errorMsg) {

@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -85,9 +87,11 @@ public class FirmwareVersionController {
             }
             String checksum = sb.toString();
 
-            // upload to MinIO
-            String bizPath = "firmware/" + deviceType + "/" + version;
-            String fileUrl = MinioUtil.upload(file, bizPath);
+            // upload to MinIO（自动重命名为 N3Lite-{version}_{yyyyMMdd}.bin）
+            String dateStr = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+            String standardName = "N3Lite-" + version + "_" + dateStr + ".bin";
+            String objectName = "firmware/" + deviceType + "/" + version + "/" + standardName;
+            String fileUrl = MinioUtil.uploadWithName(file, objectName);
 
             // save record
             FirmwareVersion fw = new FirmwareVersion();
