@@ -128,8 +128,12 @@ public class NcDeviceController {
                 }
                 ctData.put("voltage", dlm.getDoubleValue("voltage"));
                 ctData.put("totalPower", dlm.getDoubleValue("totalPower"));
-                ctData.put("loadCurrent", dlm.getDoubleValue("loadCurrent"));
-                ctData.put("totalChargingCurrent", dlm.getDoubleValue("totalChargingCurrent"));
+                ctData.put("loadCurrentA", dlm.getDoubleValue("loadCurrentA"));
+                ctData.put("loadCurrentB", dlm.getDoubleValue("loadCurrentB"));
+                ctData.put("loadCurrentC", dlm.getDoubleValue("loadCurrentC"));
+                ctData.put("totalChargingCurrentA", dlm.getDoubleValue("totalChargingCurrentA"));
+                ctData.put("totalChargingCurrentB", dlm.getDoubleValue("totalChargingCurrentB"));
+                ctData.put("totalChargingCurrentC", dlm.getDoubleValue("totalChargingCurrentC"));
                 ctData.put("wifiRssi", dlm.getIntValue("wifiRssi"));
                 ctData.put("breakerRating", dlm.getIntValue("breakerRating"));
                 ctData.put("dataFresh", true);

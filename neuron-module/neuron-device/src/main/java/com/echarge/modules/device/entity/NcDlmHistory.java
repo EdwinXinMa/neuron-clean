@@ -42,11 +42,23 @@ public class NcDlmHistory implements Serializable {
     @Schema(description = "总功率 (W)")
     private Float totalPower;
 
-    @Schema(description = "家庭负载电流 (A)")
-    private Float loadCurrent;
+    @Schema(description = "家庭负载电流 A 相 (A)")
+    private Float loadCurrentA;
 
-    @Schema(description = "充电总电流 (A)")
-    private Float totalChargingCurrent;
+    @Schema(description = "家庭负载电流 B 相 (A)，单相时为 0")
+    private Float loadCurrentB;
+
+    @Schema(description = "家庭负载电流 C 相 (A)，单相时为 0")
+    private Float loadCurrentC;
+
+    @Schema(description = "充电总电流 A 相 (A)")
+    private Float totalChargingCurrentA;
+
+    @Schema(description = "充电总电流 B 相 (A)，单相时为 0")
+    private Float totalChargingCurrentB;
+
+    @Schema(description = "充电总电流 C 相 (A)，单相时为 0")
+    private Float totalChargingCurrentC;
 
     @Schema(description = "WiFi 信号强度 (dBm)")
     private Short wifiRssi;

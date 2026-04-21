@@ -11,13 +11,18 @@
             ROUND(AVG(breaker_rating)::numeric, 1)                           AS breaker_rating,
             ROUND(AVG(voltage)::numeric, 1)                                  AS voltage,
             ROUND(AVG(total_power)::numeric, 0)                              AS total_power,
-            ROUND(COALESCE(AVG(load_current), 0)::numeric, 1)               AS load_current,
-            ROUND(COALESCE(AVG(total_charging_current), 0)::numeric, 1)      AS total_charging_current
+            ROUND(COALESCE(AVG(load_current_a), 0)::numeric, 1)               AS load_current_a,
+            ROUND(COALESCE(AVG(load_current_b), 0)::numeric, 1)               AS load_current_b,
+            ROUND(COALESCE(AVG(load_current_c), 0)::numeric, 1)               AS load_current_c,
+            ROUND(COALESCE(AVG(total_charging_current_a), 0)::numeric, 1)      AS total_charging_current_a,
+            ROUND(COALESCE(AVG(total_charging_current_b), 0)::numeric, 1)      AS total_charging_current_b,
+            ROUND(COALESCE(AVG(total_charging_current_c), 0)::numeric, 1)      AS total_charging_current_c
         FROM (
             SELECT
                 time_bucket(CAST(#{bucketInterval} AS interval), h.time) AS bucket,
                 h.total_current_a, h.total_current_b, h.total_current_c, h.breaker_rating, h.voltage, h.total_power,
-                h.load_current, h.total_charging_current
+                h.load_current_a, h.load_current_b, h.load_current_c,
+                h.total_charging_current_a, h.total_charging_current_b, h.total_charging_current_c
             FROM nc_dlm_history h
             WHERE h.device_sn = #{deviceSn}
               AND h.time &gt;= #{since}

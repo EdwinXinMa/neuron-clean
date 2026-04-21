@@ -54,7 +54,29 @@ stages:
                 cp neuron-system/neuron-system-start/target/neuron-system-start-1.0.0.jar neuron-system-start.jar
                 echo "============================================================"
 
-          # 步骤 1.2：Docker 镜像构建推送
+          # 步骤 1.2：SpotBugs 代码扫描
+          step_spotbugs:
+            name: SpotBugs代码扫描
+            step: JavaBuild
+            with:
+              jdkVersion: "17"
+              mavenVersion: "3.9.3"
+              run: |
+                echo "============================================================"
+                echo "  SpotBugs 代码扫描"
+                echo "============================================================"
+                mvn -B com.github.spotbugs:spotbugs-maven-plugin:4.8.6.6:spotbugs -DskipTests || true
+                echo "[INFO] 扫描报告:"
+                find . -name "spotbugsXml.xml" -exec echo "  {}" \;
+                # 输出 bug 数量摘要
+                for f in $(find . -name "spotbugsXml.xml"); do
+                    MODULE=$(dirname "$f" | sed 's|./||;s|/target.*||')
+                    COUNT=$(grep -c '<BugInstance' "$f" 2>/dev/null || echo "0")
+                    echo "  ${MODULE}: ${COUNT} bugs"
+                done
+                echo "============================================================"
+
+          # 步骤 1.3：Docker 镜像构建推送
           step_docker:
             name: 镜像构建推送
             step: ACRDockerBuild
