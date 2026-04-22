@@ -515,6 +515,15 @@ public class DeviceEventHandler implements DeviceEventListener {
             if (device != null) {
                 boolean needUpdate = false;
 
+                // 防御：收到 DLMStatus 说明设备在线，修正可能遗漏的离线状态
+                if (!BizConstant.DEVICE_ONLINE.equals(device.getOnlineStatus())) {
+                    device.setOnlineStatus(BizConstant.DEVICE_ONLINE);
+                    device.setLastOnlineTime(new Date());
+                    needUpdate = true;
+                    log.info("[DeviceEvent] Device auto-recovered to ONLINE via DLMStatus: sn={}", chargePointId);
+                    broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "DLMStatus 自动恢复上线");
+                }
+
                 if (data.has("breakerRating")) {
                     int breakerRating = data.get("breakerRating").getAsInt();
                     if (device.getBreakerRating() == null || device.getBreakerRating() != breakerRating) {
