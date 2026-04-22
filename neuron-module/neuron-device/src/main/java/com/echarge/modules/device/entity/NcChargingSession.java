@@ -53,6 +53,9 @@ public class NcChargingSession implements Serializable {
     @Schema(description = "充电能量（Wh，桩级别合计）")
     private Integer energy;
 
+    @Schema(description = "电表起始读数（Wh，StartTransaction 上报）")
+    private Integer meterStart;
+
     @Schema(description = "充电模式：0=iCharger / 1=N3Lite")
     private Integer chargingMethod;
 

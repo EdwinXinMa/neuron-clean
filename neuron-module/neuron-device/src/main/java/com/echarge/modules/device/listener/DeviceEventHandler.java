@@ -821,8 +821,11 @@ public class DeviceEventHandler implements DeviceEventListener {
                         .last("LIMIT 1"));
 
         if (existing != null) {
-            // 已有会话，补上 transactionId
+            // 已有会话，补上 transactionId 和 meterStart
             existing.setTransactionId(transactionId);
+            if (meterStart > 0) {
+                existing.setMeterStart(meterStart);
+            }
             chargingSessionMapper.updateById(existing);
             log.info("[DeviceEvent] Charging session updated with txId={}, pile={}, connector={}",
                     transactionId, pileSn, connectorId);
@@ -835,6 +838,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             session.setTransactionId(transactionId);
             session.setStartTime(new Date());
             session.setEnergy(0);
+            session.setMeterStart(meterStart > 0 ? meterStart : null);
             session.setDuration(0);
             session.setStatus(NcChargingSession.CHARGING);
             session.setCreateTime(new Date());
@@ -880,14 +884,17 @@ public class DeviceEventHandler implements DeviceEventListener {
         if (session.getStartTime() != null) {
             session.setDuration((int) ((now.getTime() - session.getStartTime().getTime()) / 1000));
         }
-        // meterStop 以设备上报为准，覆盖 DLM 的值
-        if (meterStop > 0) {
-            session.setEnergy(meterStop);
+        // 电量计算：优先用 meterStop - meterStart 差值，算不出则保留 DLMStatus 的 energy
+        if (meterStop > 0 && session.getMeterStart() != null && session.getMeterStart() > 0) {
+            int meterEnergy = meterStop - session.getMeterStart();
+            if (meterEnergy > 0) {
+                session.setEnergy(meterEnergy);
+            }
         }
         chargingSessionMapper.updateById(session);
 
         log.info("[DeviceEvent] Charging session finished: txId={}, duration={}s, energy={}Wh",
-                transactionId, session.getDuration(), meterStop);
+                transactionId, session.getDuration(), session.getEnergy());
     }
 
     /**
