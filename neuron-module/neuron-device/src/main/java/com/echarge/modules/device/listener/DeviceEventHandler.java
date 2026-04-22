@@ -22,6 +22,7 @@ import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.common.websocket.FrontendPushChannel;
 import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.modules.device.websocket.DeviceEventWebSocket;
 import com.echarge.modules.device.websocket.OtaWebSocket;
 import com.echarge.common.util.RedisUtil;
 import com.google.gson.Gson;
@@ -493,6 +494,13 @@ public class DeviceEventHandler implements DeviceEventListener {
         // 完整 JSON 写入 Redis（实时展示）
         String redisKey = "device:dlm:" + chargePointId;
         redisUtil.set(redisKey, payload, 300);
+
+        // 推送 DLMStatus 给订阅了该设备的前端
+        JsonObject wsMsg = new JsonObject();
+        wsMsg.addProperty("type", "DLM_UPDATE");
+        wsMsg.addProperty("deviceSn", chargePointId);
+        wsMsg.addProperty("data", payload);
+        DeviceEventWebSocket.pushToSubscribers(chargePointId, wsMsg.toString());
 
         // 异步写入时序表（历史图表）
         dlmHistoryService.saveDlmReport(chargePointId, payload);
