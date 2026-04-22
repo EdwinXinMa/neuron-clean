@@ -500,16 +500,33 @@ public class DeviceEventHandler implements DeviceEventListener {
         try {
             JsonObject data = gson.fromJson(payload, JsonObject.class);
 
-            // 同步 breakerRating 到数据库
-            if (data.has("breakerRating")) {
-                int breakerRating = data.get("breakerRating").getAsInt();
-                NcDevice device = ncDeviceService.getOne(
-                        new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, chargePointId)
-                );
-                if (device != null && (device.getBreakerRating() == null || device.getBreakerRating() != breakerRating)) {
-                    device.setBreakerRating(breakerRating);
+            // 同步 breakerRating / macAddress 到数据库
+            NcDevice device = ncDeviceService.getOne(
+                    new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, chargePointId)
+            );
+            if (device != null) {
+                boolean needUpdate = false;
+
+                if (data.has("breakerRating")) {
+                    int breakerRating = data.get("breakerRating").getAsInt();
+                    if (device.getBreakerRating() == null || device.getBreakerRating() != breakerRating) {
+                        device.setBreakerRating(breakerRating);
+                        needUpdate = true;
+                        log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
+                    }
+                }
+
+                if (data.has("macAddress") && !data.get("macAddress").isJsonNull()) {
+                    String macAddress = data.get("macAddress").getAsString();
+                    if (!macAddress.isEmpty() && !macAddress.equals(device.getMacAddress())) {
+                        device.setMacAddress(macAddress);
+                        needUpdate = true;
+                        log.info("[DeviceEvent] MacAddress updated: sn={}, mac={}", chargePointId, macAddress);
+                    }
+                }
+
+                if (needUpdate) {
                     ncDeviceService.updateById(device);
-                    log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
                 }
             }
 
