@@ -45,7 +45,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
     public void register(NcDevice device) {
         String sn = device.getSn();
         if (StringUtils.isNotBlank(sn)) {
-            sn = sn.trim().replaceAll("\\s+", "").toUpperCase();
+            sn = sn.trim().replaceAll("\\s+", "");
             device.setSn(sn);
         }
         if (StringUtils.isBlank(device.getSn())) {

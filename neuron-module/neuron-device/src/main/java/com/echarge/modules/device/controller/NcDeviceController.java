@@ -309,6 +309,22 @@ public class NcDeviceController {
         return Result.ok(result);
     }
 
+    @Operation(summary = "台账删除（仅未激活设备）")
+    @DeleteMapping("/delete")
+    public Result<?> delete(@RequestParam String id) {
+        NcDevice device = ncDeviceService.getById(id);
+        if (device == null) {
+            return Result.error("设备不存在");
+        }
+        if (BizConstant.DEVICE_ONLINE.equals(device.getOnlineStatus())
+                || BizConstant.DEVICE_OFFLINE.equals(device.getOnlineStatus())
+                || BizConstant.DEVICE_FAULT.equals(device.getOnlineStatus())) {
+            return Result.error("已激活的设备不允许删除");
+        }
+        ncDeviceService.removeById(id);
+        return Result.ok("删除成功");
+    }
+
     @Operation(summary = "台账编辑")
     @PutMapping("/edit")
     public Result<?> edit(@RequestBody NcDevice device) {
@@ -372,7 +388,7 @@ public class NcDeviceController {
 
                 String sn = device.getSn();
                 if (StringUtils.isNotBlank(sn)) {
-                    sn = sn.trim().replaceAll("\\s+", "").toUpperCase();
+                    sn = sn.trim().replaceAll("\\s+", "");
                     device.setSn(sn);
                 }
 
