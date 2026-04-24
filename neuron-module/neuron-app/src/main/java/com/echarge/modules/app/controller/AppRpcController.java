@@ -421,6 +421,7 @@ public class AppRpcController {
         }
 
         // 构建 OCPP RemoteStartTransaction
+        log.info("[充电] App请求启动充电 — 设备={}, 桩={}, 枪={}", deviceSn, mac, connector.getConnectorId());
         String messageId = "rs-" + UUID.randomUUID().toString().substring(0, 8);
         JsonObject payload = new JsonObject();
         payload.addProperty("connectorId", connector.getConnectorId());
@@ -435,6 +436,7 @@ public class AppRpcController {
         // 发送并等待设备响应（10秒超时）
         String response = ocppCommandSender.sendCallAndWait(deviceSn, call.toString(), messageId, 10);
         if (response == null) {
+            log.warn("[充电] 启动充电超时 — 设备={}, 桩={}, 设备未响应", deviceSn, mac);
             return rpcError(method, 504, "设备响应超时");
         }
 
@@ -442,9 +444,11 @@ public class AppRpcController {
         JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
         String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
         if (!"Accepted".equals(status)) {
+            log.warn("[充电] 启动充电被拒 — 设备={}, 桩={}, 响应={}", deviceSn, mac, status);
             return rpcError(method, 400, "设备拒绝启动充电（" + status + "）");
         }
 
+        log.info("[充电] 启动充电成功 — 设备={}, 桩={}, 枪={}, 设备回复=Accepted", deviceSn, mac, connector.getConnectorId());
         return rpcSuccess(method, deviceSn, Map.of());
     }
 
@@ -475,6 +479,7 @@ public class AppRpcController {
         }
 
         // 构建 OCPP RemoteStopTransaction
+        log.info("[充电] App请求停止充电 — 设备={}, 桩={}, txId={}", deviceSn, mac, session.getTransactionId());
         String messageId = "rp-" + UUID.randomUUID().toString().substring(0, 8);
         JsonObject payload = new JsonObject();
         payload.addProperty("transactionId", session.getTransactionId());
@@ -488,6 +493,7 @@ public class AppRpcController {
         // 发送并等待设备响应（10秒超时）
         String response = ocppCommandSender.sendCallAndWait(deviceSn, call.toString(), messageId, 10);
         if (response == null) {
+            log.warn("[充电] 停止充电超时 — 设备={}, 桩={}, txId={}, 设备未响应", deviceSn, mac, session.getTransactionId());
             return rpcError(method, 504, "设备响应超时");
         }
 
@@ -495,8 +501,11 @@ public class AppRpcController {
         JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
         String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
         if (!"Accepted".equals(status)) {
+            log.warn("[充电] 停止充电被拒 — 设备={}, 桩={}, txId={}, 响应={}", deviceSn, mac, session.getTransactionId(), status);
             return rpcError(method, 400, "设备拒绝停止充电（" + status + "）");
         }
+
+        log.info("[充电] 停止充电指令已接受 — 设备={}, 桩={}, txId={}, 等待设备StopTransaction...", deviceSn, mac, session.getTransactionId());
 
         // 等待 StopTransaction 处理完成，会话变为 FINISHED 后再返回 App（最多等 10 秒）
         for (int i = 0; i < 10; i++) {
@@ -508,6 +517,7 @@ public class AppRpcController {
             }
             NcChargingSession updated = chargingSessionMapper.selectById(session.getId());
             if (updated != null && NcChargingSession.FINISHED.equals(updated.getStatus())) {
+                log.info("[充电] 订单已结束 — 设备={}, 桩={}, txId={}, 等待{}秒", deviceSn, mac, session.getTransactionId(), i + 1);
                 break;
             }
         }

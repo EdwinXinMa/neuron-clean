@@ -43,7 +43,7 @@ public class StartTransactionHandler implements Ocpp16ActionHandler<StartTransac
     /** {@inheritDoc} */
     @Override
     public StartTransactionResp handle(Session session, StartTransactionReq request) {
-        log.info("[OCPP1.6] StartTransaction from {}: connector={}, idTag={}, meterStart={}",
+        log.info("[充电] 设备上报开始充电(StartTransaction) — 设备={}, 枪={}, idTag={}, meterStart={}",
                 session.getChargePointId(), request.getConnectorId(),
                 request.getIdTag(), request.getMeterStart());
 

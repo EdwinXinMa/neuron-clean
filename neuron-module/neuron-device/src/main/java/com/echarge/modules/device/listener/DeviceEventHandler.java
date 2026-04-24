@@ -604,6 +604,9 @@ public class DeviceEventHandler implements DeviceEventListener {
                     active.setChargingMethod(chargingMethod);
                 }
                 chargingSessionMapper.updateById(active);
+                log.debug("[充电] DLM数据更新 — 设备={}, 桩={}, 枪={}, txId={}, 电量={}Wh, 时长={}秒, 模式={}",
+                        deviceSn, pileSn, connectorId, active.getTransactionId(), energy, duration,
+                        chargingMethod != null && chargingMethod == 0 ? "iCharger" : "N3Lite");
             }
         } catch (Exception e) {
             log.warn("[ChargingSession] Update failed for {}/{}: {}", deviceSn, pileSn, e.getMessage());
@@ -805,8 +808,8 @@ public class DeviceEventHandler implements DeviceEventListener {
         String idTag = getJsonString(payload, "idTag");
         int meterStart = payload.has("meterStart") ? payload.get("meterStart").getAsInt() : 0;
 
-        log.info("[DeviceEvent] StartTransaction: device={}, txId={}, connector={}, idTag={}",
-                chargePointId, transactionId, connectorId, idTag);
+        log.info("[充电] 处理StartTransaction — 设备={}, txId={}, 枪={}, idTag={}, meterStart={}",
+                chargePointId, transactionId, connectorId, idTag, meterStart);
 
         // 通过 connectorId 查找对应的桩 SN
         String pileSn = findPileSnByConnector(chargePointId, connectorId);
@@ -827,8 +830,8 @@ public class DeviceEventHandler implements DeviceEventListener {
                 existing.setMeterStart(meterStart);
             }
             chargingSessionMapper.updateById(existing);
-            log.info("[DeviceEvent] Charging session updated with txId={}, pile={}, connector={}",
-                    transactionId, pileSn, connectorId);
+            log.info("[充电] 订单已存在，补充txId — 设备={}, 桩={}, 枪={}, txId={}",
+                    chargePointId, pileSn, connectorId, transactionId);
         } else {
             // 没有会话，新建
             NcChargingSession session = new NcChargingSession();
@@ -843,8 +846,8 @@ public class DeviceEventHandler implements DeviceEventListener {
             session.setStatus(NcChargingSession.CHARGING);
             session.setCreateTime(new Date());
             chargingSessionMapper.insert(session);
-            log.info("[DeviceEvent] Charging session created: txId={}, pile={}, connector={}",
-                    transactionId, pileSn, connectorId);
+            log.info("[充电] 创建充电订单 — 设备={}, 桩={}, 枪={}, txId={}, meterStart={}",
+                    chargePointId, pileSn, connectorId, transactionId, meterStart);
         }
     }
 
@@ -858,7 +861,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         int meterStop = payload.has("meterStop") ? payload.get("meterStop").getAsInt() : 0;
         String reason = getJsonString(payload, "reason");
 
-        log.info("[DeviceEvent] StopTransaction: device={}, txId={}, meterStop={}, reason={}",
+        log.info("[充电] 处理StopTransaction — 设备={}, txId={}, meterStop={}, reason={}",
                 chargePointId, transactionId, meterStop, reason);
 
         // 通过 transactionId 查找最近的充电会话（不限状态，可能已被 detectChargingSession 标记 FINISHED）
@@ -872,7 +875,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         );
 
         if (session == null) {
-            log.warn("[DeviceEvent] No session found for txId={}", transactionId);
+            log.warn("[充电] 未找到充电订单 — 设备={}, txId={}", chargePointId, transactionId);
             return;
         }
 
@@ -893,8 +896,10 @@ public class DeviceEventHandler implements DeviceEventListener {
         }
         chargingSessionMapper.updateById(session);
 
-        log.info("[DeviceEvent] Charging session finished: txId={}, duration={}s, energy={}Wh",
-                transactionId, session.getDuration(), session.getEnergy());
+        log.info("[充电] 订单结束 — 设备={}, 桩={}, 枪={}, txId={}, 时长={}秒, 电量={}Wh, meterStart={}, meterStop={}, reason={}",
+                chargePointId, session.getPileSn(), session.getConnectorId(),
+                transactionId, session.getDuration(), session.getEnergy(),
+                session.getMeterStart(), meterStop, reason);
     }
 
     /**

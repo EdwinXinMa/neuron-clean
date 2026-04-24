@@ -41,7 +41,7 @@ public class StopTransactionHandler implements Ocpp16ActionHandler<StopTransacti
     /** {@inheritDoc} */
     @Override
     public StopTransactionResp handle(Session session, StopTransactionReq request) {
-        log.info("[OCPP1.6] StopTransaction from {}: txId={}, meterStop={}, reason={}",
+        log.info("[充电] 设备上报结束充电(StopTransaction) — 设备={}, txId={}, meterStop={}, reason={}",
                 session.getChargePointId(), request.getTransactionId(),
                 request.getMeterStop(), request.getReason());
 
