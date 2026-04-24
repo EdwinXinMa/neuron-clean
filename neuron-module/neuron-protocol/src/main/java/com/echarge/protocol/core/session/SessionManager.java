@@ -89,6 +89,7 @@ public class SessionManager {
     public void sendMessage(String chargePointId, String message) {
         Session session = sessionsByChargePointId.get(chargePointId);
         if (session != null && session.isActive()) {
+            log.info("OCPP SEND to {}: {}", chargePointId, message);
             session.getChannel().writeAndFlush(new TextWebSocketFrame(message));
         } else {
             log.warn("Cannot send message to {}: session not found or inactive", chargePointId);
