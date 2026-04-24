@@ -220,7 +220,8 @@ public class AppRpcController {
                 result.put("energy", String.valueOf(finished.getEnergy() != null ? finished.getEnergy() : 0));
                 result.put("duration", String.valueOf(finished.getDuration() != null ? finished.getDuration() : 0));
                 result.put("chargingMethod", finished.getChargingMethod() != null ? finished.getChargingMethod() : 0);
-                result.put("isPlugged", 0);
+                String finishEvStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
+                result.put("isPlugged", (!"Available".equals(finishEvStatus) && !"Unavailable".equals(finishEvStatus)) ? 1 : 0);
             } else {
                 // 空闲状态
                 String evStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
