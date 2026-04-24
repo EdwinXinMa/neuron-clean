@@ -604,7 +604,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                     active.setChargingMethod(chargingMethod);
                 }
                 chargingSessionMapper.updateById(active);
-                log.debug("[充电] DLM数据更新 — 设备={}, 桩={}, 枪={}, txId={}, 电量={}Wh, 时长={}秒, 模式={}",
+                log.info("[充电] DLM数据更新 — 设备={}, 桩={}, 枪={}, txId={}, 电量={}Wh, 时长={}秒, 模式={}",
                         deviceSn, pileSn, connectorId, active.getTransactionId(), energy, duration,
                         chargingMethod != null && chargingMethod == 0 ? "iCharger" : "N3Lite");
             }
