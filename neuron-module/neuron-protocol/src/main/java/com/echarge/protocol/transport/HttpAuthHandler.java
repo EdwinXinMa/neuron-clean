@@ -33,6 +33,11 @@ public class HttpAuthHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest request) {
+            // 无论认证是否开启，都记录连接密码信息（用于调试）
+            String authHeader = request.headers().get("Authorization");
+            log.info("OCPP connect: uri={}, hasAuth={}, authHeader={}",
+                    request.uri(), authHeader != null, authHeader);
+
             // 认证未开启，直接放行
             if (!properties.isAuthEnabled()) {
                 ctx.fireChannelRead(msg);
