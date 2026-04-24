@@ -216,7 +216,7 @@ public class AppRpcController {
                 // 刚结束的充电：返回结单数据
                 result.put("startTime", String.valueOf(finished.getStartTime().getTime()));
                 result.put("endTime", String.valueOf(finished.getEndTime().getTime()));
-                result.put("EVStatus", "Finish");
+                result.put("EVStatus", "Finishing");
                 result.put("energy", String.valueOf(finished.getEnergy() != null ? finished.getEnergy() : 0));
                 result.put("duration", String.valueOf(finished.getDuration() != null ? finished.getDuration() : 0));
                 result.put("chargingMethod", finished.getChargingMethod() != null ? finished.getChargingMethod() : 0);
