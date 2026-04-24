@@ -197,7 +197,7 @@ public class AppRpcController {
             result.put("startTime", String.valueOf(session.getStartTime().getTime()));
             result.put("endTime", "0");
             result.put("EVStatus", "Charging");
-            result.put("energy", String.valueOf(session.getEnergy() != null ? session.getEnergy() : 0));
+            result.put("energy", whToKwh(session.getEnergy()));
             result.put("duration", String.valueOf(session.getDuration() != null ? session.getDuration() : 0));
             result.put("chargingMethod", session.getChargingMethod() != null ? session.getChargingMethod() : 0);
             result.put("isPlugged", 1);
@@ -217,7 +217,7 @@ public class AppRpcController {
                 result.put("startTime", String.valueOf(finished.getStartTime().getTime()));
                 result.put("endTime", String.valueOf(finished.getEndTime().getTime()));
                 result.put("EVStatus", "Finishing");
-                result.put("energy", String.valueOf(finished.getEnergy() != null ? finished.getEnergy() : 0));
+                result.put("energy", whToKwh(finished.getEnergy()));
                 result.put("duration", String.valueOf(finished.getDuration() != null ? finished.getDuration() : 0));
                 result.put("chargingMethod", finished.getChargingMethod() != null ? finished.getChargingMethod() : 0);
                 String finishEvStatus = pile != null ? pile.getString("charge_EVStatus") : "Available";
@@ -254,7 +254,7 @@ public class AppRpcController {
                 dlm.getDoubleValue("loadCurrentA") + dlm.getDoubleValue("loadCurrentB") + dlm.getDoubleValue("loadCurrentC")) : "0");
         deviceInfo.put("MeterCurrent", dlm != null ? String.valueOf(
                 dlm.getDoubleValue("totalCurrentA") + dlm.getDoubleValue("totalCurrentB") + dlm.getDoubleValue("totalCurrentC")) : "0");
-        deviceInfo.put("energy", pile != null ? String.valueOf(pile.getIntValue("energy")) : "0");
+        deviceInfo.put("energy", pile != null ? whToKwh(pile.getIntValue("energy")) : "0");
 
         return rpcSuccess(method, deviceSn, Map.of("deviceInfo", deviceInfo));
     }
@@ -284,7 +284,7 @@ public class AppRpcController {
                 item.put("subDevId", pile.getString("sn"));
                 item.put("mac", pile.getString("sn"));
                 item.put("ChargingCurrent", pile.getString("allocatedCurrent"));
-                item.put("energy", String.valueOf(pile.getIntValue("energy")));
+                item.put("energy", whToKwh(pile.getIntValue("energy")));
                 item.put("EVStatus", pile.getString("charge_EVStatus"));
                 item.put("connectStatus", pile.getString("connectStatus"));
                 deviceList.add(item);
@@ -314,7 +314,7 @@ public class AppRpcController {
             item.put("id", s.getId());
             item.put("startTime", s.getStartTime() != null ? String.valueOf(s.getStartTime().getTime() / 1000) : "");
             item.put("endTime", s.getEndTime() != null ? String.valueOf(s.getEndTime().getTime() / 1000) : "");
-            item.put("energy", String.valueOf(s.getEnergy() != null ? s.getEnergy() : 0));
+            item.put("energy", whToKwh(s.getEnergy()));
             item.put("duration", String.valueOf(s.getDuration() != null ? s.getDuration() : 0));
             item.put("subDevId", s.getPileSn());
             historyList.add(item);
@@ -528,6 +528,13 @@ public class AppRpcController {
     // ═══════════════════════════════════════════════
     // 工具方法
     // ═══════════════════════════════════════════════
+
+    private String whToKwh(Integer wh) {
+        if (wh == null || wh == 0) {
+            return "0";
+        }
+        return String.format("%.2f", wh / 1000.0);
+    }
 
     private JSONObject getDlmData(String deviceSn) {
         Object raw = redisTemplate.opsForValue().get("device:dlm:" + deviceSn);
