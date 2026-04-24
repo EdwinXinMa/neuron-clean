@@ -479,6 +479,18 @@ public class CommonUtils {
     }
 
     /**
+     * Wh 转 kWh（保留两位小数）
+     * @param wh 瓦时
+     * @return kWh 字符串，null/0 返回 "0"
+     */
+    public static String whToKwh(Integer wh) {
+        if (wh == null || wh == 0) {
+            return "0";
+        }
+        return String.format("%.2f", wh / 1000.0);
+    }
+
+    /**
      * 输出info日志，会捕获异常，防止因为日志问题导致程序异常
      *
      * @param msg
