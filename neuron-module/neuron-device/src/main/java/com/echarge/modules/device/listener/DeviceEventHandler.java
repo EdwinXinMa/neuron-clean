@@ -574,8 +574,11 @@ public class DeviceEventHandler implements DeviceEventListener {
     }
 
     /**
-     * 充电会话数据更新：DLMStatus 只负责更新进行中会话的 energy/duration/chargingMethod，
-     * 会话的创建由 StartTransaction、结束由 StopTransaction 负责
+     * 充电会话检测：
+     * 1. 枪状态为 Charging 且无进行中会话 → 自动创建（兼容 iCharger 模式无 StartTransaction）
+     * 2. 枪状态为 Charging 且有进行中会话 → 更新 energy/duration/chargingMethod
+     * 3. 枪状态非 Charging 且有进行中会话且无 transactionId → 自动结束（仅 iCharger 模式）
+     * 4. 枪状态非 Charging 且有进行中会话且有 transactionId → 不处理（交给 StopTransaction）
      */
     private void detectChargingSession(String deviceSn, String pileSn, JsonObject conn,
                                        Integer energy, Integer chargingMethod) {
@@ -584,10 +587,10 @@ public class DeviceEventHandler implements DeviceEventListener {
             if (connectorId == 0) {
                 return;
             }
+            String connStatus = getJsonString(conn, "status");
             Integer duration = conn.has("duration") && !conn.get("duration").isJsonNull()
                     ? conn.get("duration").getAsInt() : null;
 
-            // 查找该枪的进行中会话（由 StartTransaction 创建）
             NcChargingSession active = chargingSessionMapper.selectOne(
                     new LambdaQueryWrapper<NcChargingSession>()
                             .eq(NcChargingSession::getDeviceSn, deviceSn)
@@ -597,13 +600,41 @@ public class DeviceEventHandler implements DeviceEventListener {
                             .last("LIMIT 1")
             );
 
-            if (active != null) {
+            boolean isCharging = "Charging".equals(connStatus);
+
+            if (isCharging && active == null) {
+                // 无进行中会话 → 自动创建
+                NcChargingSession session = new NcChargingSession();
+                session.setDeviceSn(deviceSn);
+                session.setPileSn(pileSn);
+                session.setConnectorId(connectorId);
+                session.setStartTime(new Date());
+                session.setEnergy(energy);
+                session.setDuration(duration);
+                session.setChargingMethod(chargingMethod);
+                session.setStatus(NcChargingSession.CHARGING);
+                session.setCreateTime(new Date());
+                chargingSessionMapper.insert(session);
+                log.info("[ChargingSession] Auto-created: device={}, pile={}, connector={}, method={}",
+                        deviceSn, pileSn, connectorId, chargingMethod);
+            } else if (isCharging) {
+                // 有进行中会话 → 更新数据
                 active.setDuration(duration);
                 active.setEnergy(energy);
                 if (chargingMethod != null) {
                     active.setChargingMethod(chargingMethod);
                 }
                 chargingSessionMapper.updateById(active);
+            } else if (active != null && active.getTransactionId() == null) {
+                // 不再充电 + 无 transactionId（iCharger 模式）→ 自动结束
+                active.setEndTime(new Date());
+                active.setStatus(NcChargingSession.FINISHED);
+                if (energy != null) {
+                    active.setEnergy(energy);
+                }
+                chargingSessionMapper.updateById(active);
+                log.info("[ChargingSession] Auto-finished: device={}, pile={}, connector={}, energy={}",
+                        deviceSn, pileSn, connectorId, active.getEnergy());
             }
         } catch (Exception e) {
             log.warn("[ChargingSession] Update failed for {}/{}: {}", deviceSn, pileSn, e.getMessage());
