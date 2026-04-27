@@ -8,12 +8,21 @@ import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
 import com.echarge.common.ocpp.OcppCommandSender;
+import com.echarge.modules.device.entity.FirmwareLatest;
+import com.echarge.modules.device.entity.FirmwareVersion;
 import com.echarge.modules.device.entity.NcChargingSession;
 import com.echarge.modules.device.entity.NcConnector;
 import com.echarge.modules.device.entity.NcDevice;
+import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.mapper.NcChargingSessionMapper;
+import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
+import com.echarge.modules.device.service.IFirmwareVersionService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.impl.FirmwareVersionServiceImpl;
+import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.common.constant.BizConstant;
+import com.echarge.common.util.MinioUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,6 +66,12 @@ public class AppRpcController {
     @Autowired
     private OcppCommandSender ocppCommandSender;
 
+    @Autowired
+    private IFirmwareVersionService firmwareVersionService;
+
+    @Autowired
+    private IFirmwareUpgradeTaskService upgradeTaskService;
+
     /**
      * RPC 统一入口
      */
@@ -95,6 +110,7 @@ public class AppRpcController {
             case "ConfigManager.SetConfig" -> handleSetConfig(method, deviceSn, data, request);
             case "SubDeviceManager.StartChargingRequest" -> handleStartCharging(method, deviceSn, data);
             case "SubDeviceManager.StopChargingRequest" -> handleStopCharging(method, deviceSn, data);
+            case "SubDeviceManager.RequestFirmwareUpdate" -> handleRequestFirmwareUpdate(method, deviceSn);
             // 云模式不需要的接口
             case "SubDeviceManager.SearchChargeStationRequest",
                  "SubDeviceManager.UpdateMajorSubDeviceByPortName",
@@ -525,6 +541,95 @@ public class AppRpcController {
         }
 
         return rpcSuccess(method, deviceSn, Map.of());
+    }
+
+    // ═══════════════════════════════════════════════
+    // 远程固件升级
+    // ═══════════════════════════════════════════════
+
+    /**
+     * 请求固件更新 — OCPP UpdateFirmware
+     */
+    private Map<String, Object> handleRequestFirmwareUpdate(String method, String deviceSn) {
+        // 查最新已发布固件
+        FirmwareLatest latest = firmwareVersionService.getLatest(BizConstant.TYPE_N3_LITE);
+        if (latest == null || latest.getLatestFirmwareId() == null) {
+            return rpcError(method, 400, "暂无已发布的固件版本");
+        }
+
+        // 检查设备当前版本
+        NcDevice device = deviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
+        if (device == null) {
+            return rpcError(method, 400, "设备不存在");
+        }
+        String currentVersion = device.getFirmwareVersion();
+        if (currentVersion != null && FirmwareVersionServiceImpl.compareVersion(
+                currentVersion, latest.getLatestVersion()) >= 0) {
+            return rpcError(method, 400, "当前已是最新版本，无需更新");
+        }
+
+        // 检查设备在线
+        if (!ocppCommandSender.isDeviceConnected(deviceSn)) {
+            return rpcError(method, 400, "设备不在线，无法下发更新");
+        }
+
+        // 获取固件文件 URL
+        FirmwareVersion fw = firmwareVersionService.getById(latest.getLatestFirmwareId());
+        if (fw == null || fw.getFileUrl() == null) {
+            return rpcError(method, 400, "固件文件不存在");
+        }
+
+        String downloadUrl;
+        try {
+            String bucketName = MinioUtil.getBucketName();
+            String objectName = MinioUtil.extractObjectName(fw.getFileUrl(), bucketName);
+            downloadUrl = MinioUtil.getObjectUrl(bucketName, objectName, 3600);
+        } catch (Exception e) {
+            log.error("[AppOTA] 生成下载链接失败", e);
+            return rpcError(method, 500, "生成固件下载链接失败");
+        }
+
+        // 创建升级任务
+        FirmwareUpgradeTask task = new FirmwareUpgradeTask();
+        task.setFirmwareId(fw.getId());
+        task.setDeviceSn(deviceSn);
+        task.setStatus(BizConstant.TASK_PENDING);
+        task.setProgress(0);
+        task.setStartTime(new Date());
+        upgradeTaskService.save(task);
+        String taskId = task.getId();
+
+        // OCPP UpdateFirmware 下发
+        String messageId = "ota-" + UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("location", downloadUrl);
+        payload.addProperty("retrieveDate", java.time.Instant.now().toString());
+        payload.addProperty("retries", 1);
+        payload.addProperty("retryInterval", 30);
+
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("UpdateFirmware");
+        call.add(payload);
+
+        log.info("[AppOTA] RPC触发云端OTA — 设备={}, 目标版本={}, taskId={}", deviceSn, fw.getVersion(), taskId);
+        ocppCommandSender.sendCall(deviceSn, call.toString());
+
+        // 推送初始状态
+        JSONObject wsMsg = new JSONObject();
+        wsMsg.put("taskId", taskId);
+        wsMsg.put("deviceSn", deviceSn);
+        wsMsg.put("status", BizConstant.TASK_PENDING);
+        wsMsg.put("progress", 0);
+        wsMsg.put("message", "升级指令已下发，等待设备响应");
+        AppOtaWebSocket.sendMessage(taskId, wsMsg.toJSONString());
+
+        return rpcSuccess(method, deviceSn, Map.of(
+                "message", "固件更新指令已下发",
+                "targetVersion", fw.getVersion(),
+                "taskId", taskId));
     }
 
     // ═══════════════════════════════════════════════

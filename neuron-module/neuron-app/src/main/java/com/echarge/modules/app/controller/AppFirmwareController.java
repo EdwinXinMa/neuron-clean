@@ -12,10 +12,14 @@ import com.echarge.modules.app.mapper.AppFirmwareMapper;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
 import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.modules.device.entity.FirmwareLatest;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
+import com.echarge.modules.device.entity.FirmwareVersion;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.service.IFirmwareUpgradeTaskService;
+import com.echarge.modules.device.service.IFirmwareVersionService;
 import com.echarge.modules.device.service.INcDeviceService;
+import com.echarge.modules.device.service.impl.FirmwareVersionServiceImpl;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +62,74 @@ public class AppFirmwareController {
 
     @Autowired
     private OcppCommandSender ocppCommandSender;
+
+    @Autowired
+    private IFirmwareVersionService firmwareVersionService;
+
+    /**
+     * 检查固件更新（免登录）
+     */
+    @GetMapping("/check")
+    @Operation(summary = "检查固件更新（免登录）")
+    public AppResult<?> checkUpdate(@RequestParam String currentVersion) {
+        if (currentVersion == null || currentVersion.isBlank()) {
+            return AppResult.error("currentVersion 不能为空");
+        }
+
+        FirmwareLatest latest = firmwareVersionService.getLatest(BizConstant.TYPE_N3_LITE);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        if (latest == null || latest.getLatestVersion() == null) {
+            data.put("needUpdate", false);
+            data.put("currentVersion", currentVersion);
+            data.put("latestVersion", null);
+            return AppResult.ok(data);
+        }
+
+        boolean needUpdate = FirmwareVersionServiceImpl.compareVersion(
+                latest.getLatestVersion(), currentVersion) > 0;
+        data.put("needUpdate", needUpdate);
+        data.put("currentVersion", currentVersion);
+        data.put("latestVersion", latest.getLatestVersion());
+        if (needUpdate) {
+            data.put("releaseNotes", latest.getReleaseNotes());
+            data.put("latestUploadTime", latest.getLatestUploadTime());
+        }
+        return AppResult.ok(data);
+    }
+
+    /**
+     * 下载最新固件（免登录，本地模式专用）
+     */
+    @GetMapping("/download/latest")
+    @Operation(summary = "下载最新固件（免登录）")
+    public AppResult<?> downloadLatest() {
+        FirmwareLatest latest = firmwareVersionService.getLatest(BizConstant.TYPE_N3_LITE);
+        if (latest == null || latest.getLatestFirmwareId() == null) {
+            return AppResult.error(404, "暂无已发布的固件版本");
+        }
+
+        FirmwareVersion fw = firmwareVersionService.getById(latest.getLatestFirmwareId());
+        if (fw == null || fw.getFileUrl() == null) {
+            return AppResult.error(404, "固件文件不存在");
+        }
+
+        try {
+            String bucketName = MinioUtil.getBucketName();
+            String objectName = MinioUtil.extractObjectName(fw.getFileUrl(), bucketName);
+            String downloadUrl = MinioUtil.getObjectUrl(bucketName, objectName, 3600);
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("downloadUrl", downloadUrl);
+            data.put("version", fw.getVersion());
+            data.put("fileSize", fw.getFileSize());
+            data.put("fileName", fw.getFileName());
+            return AppResult.ok(data);
+        } catch (Exception e) {
+            log.error("[AppFirmware] 生成下载链接失败", e);
+            return AppResult.error("生成下载链接失败: " + e.getMessage());
+        }
+    }
 
     /**
      * 上传固件并发起升级（一步到位）

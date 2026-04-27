@@ -61,19 +61,31 @@ public class FirmwareVersionController {
         return Result.ok(page);
     }
 
+    @Operation(summary = "获取最新版本信息")
+    @GetMapping("/latest")
+    public Result<?> latest(@RequestParam(defaultValue = BizConstant.TYPE_N3_LITE) String deviceType) {
+        return Result.ok(firmwareVersionService.getLatest(deviceType));
+    }
+
     @Operation(summary = "上传固件文件")
     @PostMapping("/upload")
     public Result<?> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam String version,
             @RequestParam(defaultValue = BizConstant.TYPE_N3_LITE) String deviceType,
-            @RequestParam(required = false) String releaseNotes) {
+            @RequestParam String releaseNotes) {
 
         if (file.isEmpty()) {
             return Result.error("文件不能为空");
         }
+        if (StringUtils.isBlank(releaseNotes)) {
+            return Result.error("版本说明不能为空");
+        }
 
         try {
+            // 校验版本号：查重 + 不能倒退
+            firmwareVersionService.checkUploadVersion(version, deviceType);
+
             String originalFilename = file.getOriginalFilename();
             long fileSize = file.getSize();
 
@@ -106,6 +118,8 @@ public class FirmwareVersionController {
             firmwareVersionService.save(fw);
 
             return Result.ok("上传成功", fw);
+        } catch (NeuronBootException e) {
+            return Result.error(e.getMessage());
         } catch (Exception e) {
             log.error("固件上传失败", e);
             return Result.error("上传失败: " + e.getMessage());

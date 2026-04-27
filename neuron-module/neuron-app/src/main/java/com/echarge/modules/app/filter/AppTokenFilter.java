@@ -45,6 +45,12 @@ public class AppTokenFilter implements Filter {
             return;
         }
 
+        // 放行固件检查和下载接口（免登录）
+        if ("/app/firmware/check".equals(path) || path.startsWith("/app/firmware/download/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // 非 /app/ 路径不拦截
         if (!path.startsWith("/app/")) {
             chain.doFilter(request, response);
