@@ -324,6 +324,7 @@ public class AppRpcController {
                 new Page<>(page + 1, pageSize),
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, deviceSn)
+                        .eq(NcChargingSession::getStatus, NcChargingSession.FINISHED)
                         .orderByDesc(NcChargingSession::getStartTime));
 
         List<Map<String, Object>> historyList = new ArrayList<>();
