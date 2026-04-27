@@ -141,8 +141,8 @@ public class FirmwareVersionController {
         if (fw == null) {
             return Result.error("固件不存在");
         }
-        if (!BizConstant.FIRMWARE_DRAFT.equals(fw.getStatus())) {
-            return Result.error("只有草稿状态的固件才能删除");
+        if (!BizConstant.FIRMWARE_DRAFT.equals(fw.getStatus()) && !BizConstant.FIRMWARE_DEPRECATED.equals(fw.getStatus())) {
+            return Result.error("只有草稿或已废弃状态的固件才能删除");
         }
         // remove file from MinIO
         try {
