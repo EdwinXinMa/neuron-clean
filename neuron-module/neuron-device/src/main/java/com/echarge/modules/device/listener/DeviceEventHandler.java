@@ -599,7 +599,10 @@ public class DeviceEventHandler implements DeviceEventListener {
 
             if (active != null) {
                 active.setDuration(duration);
-                active.setEnergy(energy);
+                // 兜底：DLM 在 Finishing 状态会上报 energy=0，不能覆盖已有电量
+                if (energy != null && energy > 0) {
+                    active.setEnergy(energy);
+                }
                 if (chargingMethod != null) {
                     active.setChargingMethod(chargingMethod);
                 }
