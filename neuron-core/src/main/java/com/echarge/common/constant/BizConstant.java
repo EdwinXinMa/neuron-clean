@@ -72,6 +72,8 @@ public final class BizConstant {
     public static final String DT_DLM_STATUS = "DLMStatus";
     /** DLM 配置下发 */
     public static final String DT_SET_DLM_CONFIG = "SetDLMConfig";
+    /** 工作模式切换 */
+    public static final String DT_SET_WORK_MODE = "SetWorkMode";
     /** breakerRating 合法值（协议 §6.2） */
     public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(16, 20, 25, 32, 40, 50, 63);
 

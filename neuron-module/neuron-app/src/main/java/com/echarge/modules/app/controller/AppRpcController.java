@@ -111,10 +111,12 @@ public class AppRpcController {
             case "SubDeviceManager.StartChargingRequest" -> handleStartCharging(method, deviceSn, data);
             case "SubDeviceManager.StopChargingRequest" -> handleStopCharging(method, deviceSn, data);
             case "SubDeviceManager.RequestFirmwareUpdate" -> handleRequestFirmwareUpdate(method, deviceSn);
+            case "SubDeviceManager.GetChargingWorkMode" -> handleGetWorkMode(method, deviceSn);
+            case "SubDeviceManager.SetChargingStationWorkMode",
+                 "SubDeviceManager.SetChargingWorkMode" -> handleSetWorkMode(method, deviceSn, data);
             // 云模式不需要的接口
             case "SubDeviceManager.SearchChargeStationRequest",
-                 "SubDeviceManager.UpdateMajorSubDeviceByPortName",
-                 "SubDeviceManager.SetChargingStationWorkMode" ->
+                 "SubDeviceManager.UpdateMajorSubDeviceByPortName" ->
                     rpcError(method, 400, "该功能仅在本地模式下可用");
             default -> rpcError(method, 400, "不支持的 method: " + method);
         };
@@ -539,6 +541,60 @@ public class AppRpcController {
                 log.info("[充电] 订单已结束 — 设备={}, 桩={}, txId={}, 等待{}秒", deviceSn, mac, session.getTransactionId(), i + 1);
                 break;
             }
+        }
+
+        return rpcSuccess(method, deviceSn, Map.of());
+    }
+
+    // ═══════════════════════════════════════════════
+    // 工作模式
+    // ═══════════════════════════════════════════════
+
+    /**
+     * 获取充电桩工作模式 — 从 Redis DLMStatus 读取
+     */
+    private Map<String, Object> handleGetWorkMode(String method, String deviceSn) {
+        JSONObject dlm = getDlmData(deviceSn);
+        List<Map<String, Object>> deviceList = new ArrayList<>();
+
+        if (dlm != null && dlm.containsKey("pileAllocations")) {
+            for (Object obj : dlm.getJSONArray("pileAllocations")) {
+                JSONObject pile = (JSONObject) obj;
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("mac", pile.getString("sn"));
+                item.put("subDevId", pile.getString("sn"));
+                item.put("workMode", pile.containsKey("workMode") ? pile.getString("workMode") : "unknown");
+                deviceList.add(item);
+            }
+        }
+
+        return rpcSuccess(method, deviceSn, Map.of("deviceList", deviceList));
+    }
+
+    /**
+     * 设置充电桩工作模式 — OCPP DataTransfer(SetWorkMode)
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> handleSetWorkMode(String method, String deviceSn, Map<String, Object> data) {
+        List<Map<String, String>> rawList = (List<Map<String, String>>) data.get("deviceList");
+        if (rawList == null || rawList.isEmpty()) {
+            return rpcError(method, 400, "deviceList 不能为空");
+        }
+
+        // App 端用 mac 字段标识桩，映射为 OCPP 协议的 sn 字段
+        List<Map<String, String>> deviceList = new ArrayList<>();
+        for (Map<String, String> raw : rawList) {
+            String pileSn = raw.get("mac") != null ? raw.get("mac") : raw.get("sn");
+            Map<String, String> item = new LinkedHashMap<>();
+            item.put("sn", pileSn);
+            item.put("workMode", raw.get("workMode"));
+            deviceList.add(item);
+        }
+
+        try {
+            deviceService.sendWorkMode(deviceSn, deviceList, "app");
+        } catch (Exception e) {
+            return rpcError(method, 400, e.getMessage());
         }
 
         return rpcSuccess(method, deviceSn, Map.of());

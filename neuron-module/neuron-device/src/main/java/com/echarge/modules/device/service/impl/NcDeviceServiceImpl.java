@@ -22,6 +22,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -155,6 +158,70 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         opLog.setOpUser(opUser);
         opLog.setOpType(NcOpLog.DLM_CONFIG);
         opLog.setOpContent((oldRating != null ? oldRating : "?") + "A → " + breakerRating + "A");
+        opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void sendWorkMode(String sn, List<Map<String, String>> deviceList, String opUser) {
+        NcDevice device = this.getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
+        if (device == null) {
+            throw new NeuronBootException("设备不存在: " + sn);
+        }
+        if (!ocppCommandSender.isDeviceConnected(sn)) {
+            throw new NeuronBootException("设备离线，无法下发工作模式切换");
+        }
+
+        Set<String> validModes = Set.of("Plc", "App", "Ocpp");
+        for (Map<String, String> item : deviceList) {
+            if (item.get("sn") == null || item.get("sn").isBlank()) {
+                throw new NeuronBootException("桩 SN 不能为空");
+            }
+            if (!validModes.contains(item.get("workMode"))) {
+                throw new NeuronBootException("workMode 必须是 Plc/App/Ocpp 之一");
+            }
+        }
+
+        // 构建 OCPP DataTransfer CALL
+        JsonObject payload = new JsonObject();
+        com.google.gson.JsonArray list = new com.google.gson.JsonArray();
+        StringBuilder desc = new StringBuilder();
+        for (Map<String, String> item : deviceList) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("sn", item.get("sn"));
+            obj.addProperty("workMode", item.get("workMode"));
+            list.add(obj);
+            if (!desc.isEmpty()) {
+                desc.append(", ");
+            }
+            desc.append(item.get("sn")).append("→").append(item.get("workMode"));
+        }
+        payload.add("deviceList", list);
+
+        String messageId = "wm-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("DataTransfer");
+
+        JsonObject dtPayload = new JsonObject();
+        dtPayload.addProperty("vendorId", "AlwaysControl");
+        dtPayload.addProperty("messageId", BizConstant.DT_SET_WORK_MODE);
+        dtPayload.addProperty("data", payload.toString());
+        call.add(dtPayload);
+
+        ocppCommandSender.sendCall(sn, call.toString());
+        log.info("[WorkMode] Command sent to {}: {}", sn, desc);
+
+        // 操作日志
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.WORK_MODE);
+        opLog.setOpContent("工作模式切换: " + desc);
         opLog.setOpResult(NcOpLog.SUCCESS);
         opLog.setOpTime(new Date());
         opLog.setCreateTime(new Date());

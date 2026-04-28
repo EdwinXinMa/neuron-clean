@@ -188,6 +188,7 @@ public class NcDeviceController {
                 charger.put("energy", dlmPile.getIntValue("energy"));
                 charger.put("charge_Method", dlmPile.getIntValue("charge_Method"));
                 charger.put("charge_version", dlmPile.getString("charge_version"));
+                charger.put("workMode", dlmPile.containsKey("workMode") ? dlmPile.getString("workMode") : "unknown");
                 charger.put("snr", dlmPile.getIntValue("snr"));
                 charger.put("atten", dlmPile.getIntValue("atten"));
             }
@@ -458,6 +459,36 @@ public class NcDeviceController {
         }
 
         return Result.ok("DLM 配置已更新");
+    }
+
+    /**
+     * 设置充电桩工作模式
+     * 通过 OCPP DataTransfer(SetWorkMode) 下发到设备
+     */
+    @Operation(summary = "设置充电桩工作模式")
+    @PostMapping("/{sn}/workmode")
+    @SuppressWarnings("unchecked")
+    public Result<?> setWorkMode(@PathVariable String sn, @RequestBody JSONObject params) {
+        List<Map<String, String>> deviceList = (List<Map<String, String>>) params.get("deviceList");
+        if (deviceList == null || deviceList.isEmpty()) {
+            return Result.error("deviceList 不能为空");
+        }
+
+        String opUser = "system";
+        try {
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser != null) {
+                opUser = loginUser.getUsername();
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            ncDeviceService.sendWorkMode(sn, deviceList, opUser);
+        } catch (NeuronBootException e) {
+            return Result.error(e.getMessage());
+        }
+
+        return Result.ok("工作模式切换指令已下发");
     }
 
     /**
