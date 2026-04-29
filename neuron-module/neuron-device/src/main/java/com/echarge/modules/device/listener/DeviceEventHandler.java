@@ -21,8 +21,7 @@ import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.common.websocket.FrontendPushChannel;
-import com.echarge.modules.device.websocket.AppDeviceStatusWebSocket;
-import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.modules.device.websocket.AppWebSocket;
 import com.echarge.modules.device.websocket.DeviceEventWebSocket;
 import com.echarge.modules.device.websocket.OtaWebSocket;
 import com.echarge.common.util.RedisUtil;
@@ -202,7 +201,10 @@ public class DeviceEventHandler implements DeviceEventListener {
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }
         broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
-        AppDeviceStatusWebSocket.push(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
+        JSONObject onlineMsg = new JSONObject();
+        onlineMsg.put("status", BizConstant.DEVICE_ONLINE);
+        onlineMsg.put("message", "设备上线");
+        AppWebSocket.publish("deviceStatus:" + chargePointId, onlineMsg);
     }
 
     /**
@@ -304,7 +306,10 @@ public class DeviceEventHandler implements DeviceEventListener {
             ncDeviceService.updateById(device);
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
             broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
-            AppDeviceStatusWebSocket.push(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
+            JSONObject offlineMsg = new JSONObject();
+            offlineMsg.put("status", BizConstant.DEVICE_OFFLINE);
+            offlineMsg.put("message", "设备离线");
+            AppWebSocket.publish("deviceStatus:" + chargePointId, offlineMsg);
 
             // 清除 Redis 中的 DLM 实时数据，避免离线后前端还显示旧数据
             redisUtil.del("device:dlm:" + chargePointId);
@@ -721,8 +726,14 @@ public class DeviceEventHandler implements DeviceEventListener {
         wsMsg.addProperty("message", msg);
         OtaWebSocket.sendMessage(chargePointId, wsMsg.toString());
 
-        // 推送到 App 端 WebSocket
-        AppOtaWebSocket.sendMessage(task.getId(), wsMsg.toString());
+        // 推送到 App 端统一 WebSocket
+        JSONObject appOtaMsg = new JSONObject();
+        appOtaMsg.put("taskId", task.getId());
+        appOtaMsg.put("deviceSn", chargePointId);
+        appOtaMsg.put("status", taskStatus);
+        appOtaMsg.put("progress", progress);
+        appOtaMsg.put("message", msg);
+        AppWebSocket.publish("ota:" + task.getId(), appOtaMsg);
     }
 
     /**

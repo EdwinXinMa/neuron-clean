@@ -11,7 +11,7 @@ import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppFirmwareMapper;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
 import com.echarge.modules.app.vo.AppResult;
-import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.modules.device.websocket.AppWebSocket;
 import com.echarge.modules.device.entity.FirmwareLatest;
 import com.echarge.modules.device.entity.FirmwareUpgradeTask;
 import com.echarge.modules.device.entity.FirmwareVersion;
@@ -253,7 +253,7 @@ public class AppFirmwareController {
         wsMsg.put("status", BizConstant.TASK_PENDING);
         wsMsg.put("progress", 0);
         wsMsg.put("message", "升级指令已下发，等待设备响应");
-        AppOtaWebSocket.sendMessage(taskId, wsMsg.toJSONString());
+        AppWebSocket.publish("ota:" + taskId, wsMsg);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("taskId", taskId);

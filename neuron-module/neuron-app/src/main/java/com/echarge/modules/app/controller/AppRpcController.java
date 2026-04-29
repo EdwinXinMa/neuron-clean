@@ -20,7 +20,7 @@ import com.echarge.modules.device.service.IFirmwareVersionService;
 import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.impl.FirmwareVersionServiceImpl;
-import com.echarge.modules.device.websocket.AppOtaWebSocket;
+import com.echarge.modules.device.websocket.AppWebSocket;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.util.MinioUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -718,7 +718,7 @@ public class AppRpcController {
         wsMsg.put("status", BizConstant.TASK_PENDING);
         wsMsg.put("progress", 0);
         wsMsg.put("message", "升级指令已下发，等待设备响应");
-        AppOtaWebSocket.sendMessage(taskId, wsMsg.toJSONString());
+        AppWebSocket.publish("ota:" + taskId, wsMsg);
 
         return rpcSuccess(method, deviceSn, Map.of(
                 "message", "固件更新指令已下发",
