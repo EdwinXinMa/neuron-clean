@@ -184,6 +184,19 @@ public class AppRpcController {
                 item.put("connectStatus", pile.getString("connectStatus"));
                 stations.add(item);
             }
+        } else {
+            List<NcDevice> children = deviceService.list(
+                    new LambdaQueryWrapper<NcDevice>()
+                            .eq(NcDevice::getParentDeviceId, getDeviceId(deviceSn))
+                            .orderByAsc(NcDevice::getSn));
+            for (NcDevice child : children) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("mac", child.getSn());
+                item.put("name", child.getDeviceModel() != null ? child.getDeviceModel() : "充电桩");
+                item.put("status", "Unavailable");
+                item.put("connectStatus", "offline");
+                stations.add(item);
+            }
         }
 
         return rpcSuccess(method, deviceSn, Map.of("chargingStations", stations));
@@ -303,7 +316,10 @@ public class AppRpcController {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", pile.getString("sn"));
                 item.put("mac", pile.getString("sn"));
-                item.put("ChargingCurrent", pile.getString("allocatedCurrent"));
+                String rawAllocated = pile.getString("allocatedCurrent");
+                log.info("[DLM] allocatedCurrent raw — 桩={}, 原始值={}, 类型={}", pile.getString("sn"), rawAllocated,
+                        pile.get("allocatedCurrent") != null ? pile.get("allocatedCurrent").getClass().getSimpleName() : "null");
+                item.put("ChargingCurrent", rawAllocated);
                 item.put("energy", CommonUtils.whToKwh(pile.getIntValue("energy")));
                 item.put("EVStatus", pile.getString("charge_EVStatus"));
                 item.put("connectStatus", pile.getString("connectStatus"));
@@ -321,12 +337,33 @@ public class AppRpcController {
     private Map<String, Object> handleSelectChargingHistory(String method, String deviceSn, Map<String, Object> data) {
         int page = data.get("page") != null ? ((Number) data.get("page")).intValue() : 0;
         int pageSize = 10;
+        Integer year = data.get("year") != null ? ((Number) data.get("year")).intValue() : null;
+        Integer month = data.get("month") != null ? ((Number) data.get("month")).intValue() : null;
+
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        java.util.Date startOfRange = null;
+        java.util.Date endOfRange = null;
+        if (year != null && month != null) {
+            cal.set(year, month - 1, 1, 0, 0, 0);
+            cal.set(java.util.Calendar.MILLISECOND, 0);
+            startOfRange = cal.getTime();
+            cal.add(java.util.Calendar.MONTH, 1);
+            endOfRange = cal.getTime();
+        } else if (year != null) {
+            cal.set(year, 0, 1, 0, 0, 0);
+            cal.set(java.util.Calendar.MILLISECOND, 0);
+            startOfRange = cal.getTime();
+            cal.add(java.util.Calendar.YEAR, 1);
+            endOfRange = cal.getTime();
+        }
 
         Page<NcChargingSession> result = chargingSessionMapper.selectPage(
                 new Page<>(page + 1, pageSize),
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, deviceSn)
                         .eq(NcChargingSession::getStatus, NcChargingSession.FINISHED)
+                        .ge(startOfRange != null, NcChargingSession::getStartTime, startOfRange)
+                        .lt(endOfRange != null, NcChargingSession::getStartTime, endOfRange)
                         .orderByDesc(NcChargingSession::getStartTime));
 
         List<Map<String, Object>> historyList = new ArrayList<>();

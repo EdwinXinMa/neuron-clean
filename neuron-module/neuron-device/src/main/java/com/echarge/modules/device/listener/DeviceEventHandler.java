@@ -21,6 +21,7 @@ import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcDlmHistoryService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.echarge.common.websocket.FrontendPushChannel;
+import com.echarge.modules.device.websocket.AppDeviceStatusWebSocket;
 import com.echarge.modules.device.websocket.AppOtaWebSocket;
 import com.echarge.modules.device.websocket.DeviceEventWebSocket;
 import com.echarge.modules.device.websocket.OtaWebSocket;
@@ -201,6 +202,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }
         broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
+        AppDeviceStatusWebSocket.push(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
     }
 
     /**
@@ -302,6 +304,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             ncDeviceService.updateById(device);
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
             broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
+            AppDeviceStatusWebSocket.push(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
 
             // 清除 Redis 中的 DLM 实时数据，避免离线后前端还显示旧数据
             redisUtil.del("device:dlm:" + chargePointId);
