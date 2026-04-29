@@ -201,7 +201,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             log.info("[DeviceEvent] New device registered (unregistered): sn={}", chargePointId);
         }
         broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "设备上线");
-        JSONObject onlineMsg = new JSONObject();
+        com.alibaba.fastjson.JSONObject onlineMsg = new com.alibaba.fastjson.JSONObject();
         onlineMsg.put("status", BizConstant.DEVICE_ONLINE);
         onlineMsg.put("message", "设备上线");
         AppWebSocket.publish("deviceStatus:" + chargePointId, onlineMsg);
@@ -306,7 +306,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             ncDeviceService.updateById(device);
             log.info("[DeviceEvent] Device offline: sn={}", chargePointId);
             broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_OFFLINE, "设备离线");
-            JSONObject offlineMsg = new JSONObject();
+            com.alibaba.fastjson.JSONObject offlineMsg = new com.alibaba.fastjson.JSONObject();
             offlineMsg.put("status", BizConstant.DEVICE_OFFLINE);
             offlineMsg.put("message", "设备离线");
             AppWebSocket.publish("deviceStatus:" + chargePointId, offlineMsg);
@@ -727,7 +727,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         OtaWebSocket.sendMessage(chargePointId, wsMsg.toString());
 
         // 推送到 App 端统一 WebSocket
-        JSONObject appOtaMsg = new JSONObject();
+        com.alibaba.fastjson.JSONObject appOtaMsg = new com.alibaba.fastjson.JSONObject();
         appOtaMsg.put("taskId", task.getId());
         appOtaMsg.put("deviceSn", chargePointId);
         appOtaMsg.put("status", taskStatus);
