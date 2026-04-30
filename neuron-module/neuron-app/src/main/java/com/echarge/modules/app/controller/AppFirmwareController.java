@@ -335,7 +335,7 @@ public class AppFirmwareController {
         if (status == null) {
             return "";
         }
-        return switch (status) {
+        String zh = switch (status) {
             case "PENDING" -> "升级指令已下发，等待设备响应";
             case "DOWNLOADING" -> "设备正在下载固件";
             case "INSTALLING" -> "设备正在安装固件";
@@ -343,5 +343,7 @@ public class AppFirmwareController {
             case "FAILED" -> errorMsg != null ? errorMsg : "升级失败";
             default -> "";
         };
+        return com.echarge.modules.app.i18n.AppI18n.get(zh,
+                com.echarge.modules.app.i18n.LangContext.get());
     }
 }

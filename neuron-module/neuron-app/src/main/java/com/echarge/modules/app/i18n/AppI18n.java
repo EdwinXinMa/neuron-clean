@@ -61,6 +61,30 @@ public class AppI18n {
         put("升级指令已下发，等待设备响应",  "Upgrade command sent, waiting for device response", "升級指令已下發，等待裝置回應");
         put("设备不在线",                  "Device is offline",                       "設備不在線");
         put("发送指令超时",                "Command timed out",                       "發送指令逾時");
+        put("该功能仅在本地模式下可用",      "This feature is only available in local mode",  "此功能僅在本地模式下可用");
+        put("method 不能为空",             "method is required",                             "method 不能為空");
+        put("云模式仅支持设置 InflowMaxCurrent", "Only InflowMaxCurrent can be set in cloud mode", "雲端模式僅支援設置 InflowMaxCurrent");
+        put("InflowMaxCurrent 不能为空",   "InflowMaxCurrent is required",                   "InflowMaxCurrent 不能為空");
+        put("mac 不能为空",                "mac is required",                                "mac 不能為空");
+        put("设备不在线，无法发起充电",     "Device is offline, cannot start charging",       "設備不在線，無法發起充電");
+        put("该桩未上报枪信息，请等待设备上线后重试", "Connector info not available, please wait for device to come online", "充電槍信息未上報，請等待設備上線後重試");
+        put("设备响应超时",                "Device response timeout",                        "設備回應逾時");
+        put("设备不在线，无法停止充电",     "Device is offline, cannot stop charging",        "設備不在線，無法停止充電");
+        put("该桩当前没有进行中的充电会话", "No active charging session on this charger",     "此充電樁當前無進行中的充電會話");
+        put("deviceList 不能为空",         "deviceList is required",                         "deviceList 不能為空");
+        put("设备不存在",                  "Device not found",                               "設備不存在");
+        put("当前已是最新版本，无需更新",   "Already on the latest version",                  "當前已是最新版本，無需更新");
+        put("设备不在线，无法下发更新",     "Device is offline, cannot send update",          "設備不在線，無法下發更新");
+        put("生成固件下载链接失败",         "Failed to generate firmware download link",      "生成韌體下載連結失敗");
+        put("升级失败",                    "Upgrade failed",                                 "升級失敗");
+        put("充电桩",                      "Charger",                                        "充電樁");
+
+        // ── 动态前缀 ────────────────────────────────────────────────
+        put("不支持的 method: ",           "Unsupported method: ",                    "不支援的 method: ");
+        put("不支持的 configname: ",       "Unsupported configname: ",                "不支援的 configname: ");
+        put("未找到桩: ",                  "Charger not found: ",                     "未找到充電樁: ");
+        put("设备拒绝启动充电（",          "Device rejected start charging (",        "設備拒絕啟動充電（");
+        put("设备拒绝停止充电（",          "Device rejected stop charging (",         "設備拒絕停止充電（");
     }
 
     private static void put(String zh, String en, String tw) {

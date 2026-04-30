@@ -139,7 +139,7 @@ public class AppRpcController {
                 Map<String, Object> item = new LinkedHashMap<>();
                 String pileSn = pile.getString("sn");
                 item.put("subDevId", pileSn);
-                item.put("name", "充电桩");
+                item.put("name", com.echarge.modules.app.i18n.AppI18n.get("充电桩", com.echarge.modules.app.i18n.LangContext.get()));
                 item.put("mdcFwVersion", pile.getString("charge_version"));
                 item.put("connectStatus", pile.getString("connectStatus"));
                 item.put("mac", pileSn);
@@ -155,7 +155,7 @@ public class AppRpcController {
             for (NcDevice child : children) {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", child.getSn());
-                item.put("name", child.getDeviceModel() != null ? child.getDeviceModel() : "充电桩");
+                item.put("name", child.getDeviceModel() != null ? child.getDeviceModel() : com.echarge.modules.app.i18n.AppI18n.get("充电桩", com.echarge.modules.app.i18n.LangContext.get()));
                 item.put("mdcFwVersion", child.getFirmwareVersion());
                 item.put("connectStatus", "ONLINE".equals(child.getOnlineStatus()) ? "online" : "offline");
                 item.put("mac", child.getSn());
@@ -179,7 +179,7 @@ public class AppRpcController {
                 JSONObject pile = (JSONObject) obj;
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("mac", pile.getString("sn"));
-                item.put("name", "充电桩");
+                item.put("name", com.echarge.modules.app.i18n.AppI18n.get("充电桩", com.echarge.modules.app.i18n.LangContext.get()));
                 item.put("status", pile.getString("charge_EVStatus"));
                 item.put("connectStatus", pile.getString("connectStatus"));
                 stations.add(item);
@@ -192,7 +192,7 @@ public class AppRpcController {
             for (NcDevice child : children) {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("mac", child.getSn());
-                item.put("name", child.getDeviceModel() != null ? child.getDeviceModel() : "充电桩");
+                item.put("name", child.getDeviceModel() != null ? child.getDeviceModel() : com.echarge.modules.app.i18n.AppI18n.get("充电桩", com.echarge.modules.app.i18n.LangContext.get()));
                 item.put("status", "Unavailable");
                 item.put("connectStatus", "offline");
                 stations.add(item);
@@ -212,7 +212,7 @@ public class AppRpcController {
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("subDevId", mac);
-        result.put("name", "充电桩");
+        result.put("name", com.echarge.modules.app.i18n.AppI18n.get("充电桩", com.echarge.modules.app.i18n.LangContext.get()));
         result.put("mac", mac);
 
         // 先查充电中的会话
