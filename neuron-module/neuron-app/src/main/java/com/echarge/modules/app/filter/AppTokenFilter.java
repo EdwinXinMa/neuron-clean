@@ -58,6 +58,10 @@ public class AppTokenFilter implements Filter {
         }
 
         String token = req.getHeader(TOKEN_HEADER);
+        // WebSocket 握手时无法设置自定义 Header，兼容 query param 传 token
+        if (token == null || token.isBlank()) {
+            token = req.getParameter("token");
+        }
         if (token == null || token.isBlank()) {
             writeError(res, 401, "未提供 Token");
             return;
