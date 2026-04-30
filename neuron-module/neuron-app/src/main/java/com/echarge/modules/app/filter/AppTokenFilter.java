@@ -1,6 +1,8 @@
 package com.echarge.modules.app.filter;
 
 import com.echarge.modules.app.entity.AppUser;
+import com.echarge.modules.app.i18n.AppI18n;
+import com.echarge.modules.app.i18n.LangContext;
 import com.echarge.modules.app.mapper.AppUserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.system.util.JwtUtil;
@@ -39,21 +41,32 @@ public class AppTokenFilter implements Filter {
         HttpServletResponse res = (HttpServletResponse) response;
         String path = req.getServletPath();
 
+        // 解析请求语言，写入 ThreadLocal，finally 统一清除
+        LangContext.set(AppI18n.parseLang(req.getHeader("Accept-Language")));
+        try {
+            doFilterInternal(req, res, chain, path);
+        } finally {
+            LangContext.clear();
+        }
+    }
+
+    private void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
+                                   FilterChain chain, String path) throws IOException, ServletException {
         // 放行认证接口
         if (path.startsWith("/app/auth/")) {
-            chain.doFilter(request, response);
+            chain.doFilter(req, res);
             return;
         }
 
         // 放行固件检查和下载接口（免登录）
         if ("/app/firmware/check".equals(path) || path.startsWith("/app/firmware/download/")) {
-            chain.doFilter(request, response);
+            chain.doFilter(req, res);
             return;
         }
 
         // 非 /app/ 路径不拦截
         if (!path.startsWith("/app/")) {
-            chain.doFilter(request, response);
+            chain.doFilter(req, res);
             return;
         }
 
@@ -94,7 +107,7 @@ public class AppTokenFilter implements Filter {
 
         // 将用户信息放入 request attribute，供 Controller 使用
         req.setAttribute("appUser", user);
-        chain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 
     private void writeError(HttpServletResponse res, int code, String message) throws IOException {
@@ -103,7 +116,7 @@ public class AppTokenFilter implements Filter {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", code);
         body.put("success", false);
-        body.put("message", message);
+        body.put("message", AppI18n.get(message, LangContext.get()));
         body.put("data", null);
         body.put("timestamp", System.currentTimeMillis());
         res.getWriter().write(MAPPER.writeValueAsString(body));

@@ -1,5 +1,7 @@
 package com.echarge.modules.app.vo;
 
+import com.echarge.modules.app.i18n.AppI18n;
+import com.echarge.modules.app.i18n.LangContext;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -23,7 +25,7 @@ public class AppResult<T> implements Serializable {
         AppResult<?> r = new AppResult<>();
         r.setSuccess(true);
         r.setCode(200);
-        r.setMessage(msg);
+        r.setMessage(AppI18n.get(msg, LangContext.get()));
         return r;
     }
 
@@ -39,7 +41,7 @@ public class AppResult<T> implements Serializable {
         AppResult<T> r = new AppResult<>();
         r.setSuccess(true);
         r.setCode(200);
-        r.setMessage(msg);
+        r.setMessage(AppI18n.get(msg, LangContext.get()));
         r.setData(data);
         return r;
     }
@@ -48,7 +50,7 @@ public class AppResult<T> implements Serializable {
         AppResult<T> r = new AppResult<>();
         r.setSuccess(false);
         r.setCode(500);
-        r.setMessage(msg);
+        r.setMessage(AppI18n.get(msg, LangContext.get()));
         return r;
     }
 
@@ -56,7 +58,7 @@ public class AppResult<T> implements Serializable {
         AppResult<T> r = new AppResult<>();
         r.setSuccess(false);
         r.setCode(code);
-        r.setMessage(msg);
+        r.setMessage(AppI18n.get(msg, LangContext.get()));
         return r;
     }
 }

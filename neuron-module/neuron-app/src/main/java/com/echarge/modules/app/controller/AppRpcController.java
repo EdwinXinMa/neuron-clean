@@ -801,7 +801,8 @@ public class AppRpcController {
         result.put("ret", Map.of(method != null ? method : "unknown", "failed"));
         result.put("code", code);
         result.put("data", Map.of());
-        result.put("message", message);
+        result.put("message", com.echarge.modules.app.i18n.AppI18n.get(message,
+                com.echarge.modules.app.i18n.LangContext.get()));
         return result;
     }
 }
