@@ -325,6 +325,22 @@ public class AppRpcController {
                 item.put("connectStatus", pile.getString("connectStatus"));
                 deviceList.add(item);
             }
+        } else {
+            // N3 Lite 离线时回退到数据库查子设备
+            List<NcDevice> children = deviceService.list(
+                    new LambdaQueryWrapper<NcDevice>()
+                            .eq(NcDevice::getParentDeviceId, getDeviceId(deviceSn))
+                            .orderByAsc(NcDevice::getSn));
+            for (NcDevice child : children) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("subDevId", child.getSn());
+                item.put("mac", child.getSn());
+                item.put("ChargingCurrent", "0");
+                item.put("energy", "0.0");
+                item.put("EVStatus", "Unavailable");
+                item.put("connectStatus", "offline");
+                deviceList.add(item);
+            }
         }
         result.put("deviceList", deviceList);
 
@@ -718,6 +734,8 @@ public class AppRpcController {
         wsMsg.put("status", BizConstant.TASK_PENDING);
         wsMsg.put("progress", 0);
         wsMsg.put("message", "升级指令已下发，等待设备响应");
+        wsMsg.put("message_en", "Upgrade command sent, waiting for device response");
+        wsMsg.put("message_tw", "升級指令已下發，等待裝置回應");
         AppWebSocket.publish("ota:" + taskId, wsMsg);
 
         return rpcSuccess(method, deviceSn, Map.of(

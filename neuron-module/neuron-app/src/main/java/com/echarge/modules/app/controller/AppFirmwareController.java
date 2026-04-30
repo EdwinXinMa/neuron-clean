@@ -253,6 +253,8 @@ public class AppFirmwareController {
         wsMsg.put("status", BizConstant.TASK_PENDING);
         wsMsg.put("progress", 0);
         wsMsg.put("message", "升级指令已下发，等待设备响应");
+        wsMsg.put("message_en", "Upgrade command sent, waiting for device response");
+        wsMsg.put("message_tw", "升級指令已下發，等待裝置回應");
         AppWebSocket.publish("ota:" + taskId, wsMsg);
 
         Map<String, Object> data = new LinkedHashMap<>();

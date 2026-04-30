@@ -204,6 +204,8 @@ public class DeviceEventHandler implements DeviceEventListener {
         com.alibaba.fastjson.JSONObject onlineMsg = new com.alibaba.fastjson.JSONObject();
         onlineMsg.put("status", BizConstant.DEVICE_ONLINE);
         onlineMsg.put("message", "设备上线");
+        onlineMsg.put("message_en", "Device online");
+        onlineMsg.put("message_tw", "裝置上線");
         AppWebSocket.publish("deviceStatus:" + chargePointId, onlineMsg);
     }
 
@@ -309,6 +311,8 @@ public class DeviceEventHandler implements DeviceEventListener {
             com.alibaba.fastjson.JSONObject offlineMsg = new com.alibaba.fastjson.JSONObject();
             offlineMsg.put("status", BizConstant.DEVICE_OFFLINE);
             offlineMsg.put("message", "设备离线");
+            offlineMsg.put("message_en", "Device offline");
+            offlineMsg.put("message_tw", "裝置離線");
             AppWebSocket.publish("deviceStatus:" + chargePointId, offlineMsg);
 
             // 清除 Redis 中的 DLM 实时数据，避免离线后前端还显示旧数据
@@ -654,39 +658,53 @@ public class DeviceEventHandler implements DeviceEventListener {
         String taskStatus = task.getStatus();
         int progress = task.getProgress();
         String msg = "";
+        String msgEn = "";
+        String msgTw = "";
 
         switch (status) {
             case "Downloading":
                 taskStatus = BizConstant.TASK_DOWNLOADING;
                 progress = 30;
                 msg = "设备正在下载固件";
+                msgEn = "Downloading firmware";
+                msgTw = "正在下載韌體";
                 break;
             case "Downloaded":
                 taskStatus = BizConstant.TASK_DOWNLOADING;
                 progress = 100;
                 msg = "固件下载完成";
+                msgEn = "Firmware downloaded";
+                msgTw = "韌體下載完成";
                 break;
             case "Installing":
                 taskStatus = BizConstant.TASK_INSTALLING;
                 progress = 50;
                 msg = "设备正在安装固件";
+                msgEn = "Installing firmware";
+                msgTw = "正在安裝韌體";
                 break;
             case "Installed":
                 taskStatus = BizConstant.TASK_COMPLETED;
                 progress = 100;
                 msg = "固件升级完成";
+                msgEn = "Firmware upgrade completed";
+                msgTw = "韌體升級完成";
                 task.setFinishTime(new Date());
                 updateDeviceFirmwareVersion(chargePointId, task.getFirmwareId());
                 break;
             case "DownloadFailed":
                 taskStatus = BizConstant.TASK_FAILED;
                 msg = "固件下载失败";
+                msgEn = "Firmware download failed";
+                msgTw = "韌體下載失敗";
                 task.setErrorMsg(msg);
                 task.setFinishTime(new Date());
                 break;
             case "InstallationFailed":
                 taskStatus = BizConstant.TASK_FAILED;
                 msg = "固件安装失败";
+                msgEn = "Firmware installation failed";
+                msgTw = "韌體安裝失敗";
                 task.setErrorMsg(msg);
                 task.setFinishTime(new Date());
                 break;
@@ -733,6 +751,8 @@ public class DeviceEventHandler implements DeviceEventListener {
         appOtaMsg.put("status", taskStatus);
         appOtaMsg.put("progress", progress);
         appOtaMsg.put("message", msg);
+        appOtaMsg.put("message_en", msgEn);
+        appOtaMsg.put("message_tw", msgTw);
         AppWebSocket.publish("ota:" + task.getId(), appOtaMsg);
     }
 
