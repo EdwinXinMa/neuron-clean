@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
 import com.echarge.common.exception.NeuronBootException;
+import com.echarge.common.i18n.WebI18n;
 import com.echarge.common.ocpp.OcppCommandSender;
+import jakarta.servlet.http.HttpServletRequest;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.RedisUtil;
 import com.echarge.modules.alert.entity.NcAlert;
@@ -70,6 +72,9 @@ public class NcDeviceController {
     @Autowired
     private NcChargingSessionMapper chargingSessionMapper;
 
+    @Autowired
+    private HttpServletRequest request;
+
     @Operation(summary = "设备列表")
     @GetMapping("/list")
     public Result<IPage<NcDevice>> list(
@@ -102,7 +107,8 @@ public class NcDeviceController {
                 new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
         );
         if (device == null) {
-            return Result.error("设备不存在: " + sn);
+            String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+            return Result.error(WebI18n.get("设备不存在: ", lang) + sn);
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -313,65 +319,71 @@ public class NcDeviceController {
     @Operation(summary = "台账删除（仅未激活设备）")
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         NcDevice device = ncDeviceService.getById(id);
         if (device == null) {
-            return Result.error("设备不存在");
+            return Result.error(WebI18n.get("设备不存在", lang));
         }
         if (BizConstant.DEVICE_ONLINE.equals(device.getOnlineStatus())
                 || BizConstant.DEVICE_OFFLINE.equals(device.getOnlineStatus())
                 || BizConstant.DEVICE_FAULT.equals(device.getOnlineStatus())) {
-            return Result.error("已激活的设备不允许删除");
+            return Result.error(WebI18n.get("已激活的设备不允许删除", lang));
         }
         ncDeviceService.removeById(id);
-        return Result.ok("删除成功");
+        return Result.ok(WebI18n.get("删除成功", lang));
     }
 
     @Operation(summary = "台账编辑")
     @PutMapping("/edit")
     public Result<?> edit(@RequestBody NcDevice device) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         if (device.getId() == null) {
-            return Result.error("缺少设备ID");
+            return Result.error(WebI18n.get("缺少设备ID", lang));
         }
         ncDeviceService.updateById(device);
-        return Result.ok("修改成功");
+        return Result.ok(WebI18n.get("修改成功", lang));
     }
 
     @Operation(summary = "台账录入")
     @PostMapping("/add")
     public Result<?> add(@RequestBody NcDevice device) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         try {
             ncDeviceService.register(device);
-            return Result.ok("录入成功");
+            return Result.ok(WebI18n.get("录入成功", lang));
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
     }
 
     @Operation(summary = "禁用设备")
     @PostMapping("/disable")
     public Result<?> disable(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         try {
             ncDeviceService.disable(id);
-            return Result.ok("已禁用");
+            return Result.ok(WebI18n.get("已禁用", lang));
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
     }
 
     @Operation(summary = "启用设备")
     @PostMapping("/enable")
     public Result<?> enable(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         try {
             ncDeviceService.enable(id);
-            return Result.ok("已启用");
+            return Result.ok(WebI18n.get("已启用", lang));
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
     }
 
     @Operation(summary = "Excel批量导入")
     @PostMapping("/importExcel")
     public Result<Map<String, Object>> importExcel(@RequestParam("file") MultipartFile file) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         int success = 0;
         int skipped = 0;
         List<Map<String, String>> errors = new ArrayList<>();
@@ -394,15 +406,15 @@ public class NcDeviceController {
                 }
 
                 if (StringUtils.isBlank(device.getSn())) {
-                    errors.add(buildError(row, device.getSn(), "SN为空"));
+                    errors.add(buildError(row, device.getSn(), WebI18n.get("SN为空", lang)));
                     continue;
                 }
                 if (StringUtils.isBlank(device.getDealer())) {
-                    errors.add(buildError(row, device.getSn(), "经销商为空"));
+                    errors.add(buildError(row, device.getSn(), WebI18n.get("经销商为空", lang)));
                     continue;
                 }
                 if (device.getShipDate() == null) {
-                    errors.add(buildError(row, device.getSn(), "出货日期为空"));
+                    errors.add(buildError(row, device.getSn(), WebI18n.get("出货日期为空", lang)));
                     continue;
                 }
 
@@ -422,7 +434,7 @@ public class NcDeviceController {
             }
         } catch (Exception e) {
             log.error("Excel导入异常", e);
-            return Result.error("导入失败: " + e.getMessage());
+            return Result.error(WebI18n.get("导入失败: ", lang) + e.getMessage());
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -439,9 +451,10 @@ public class NcDeviceController {
     @Operation(summary = "DLM 修改")
     @PostMapping("/{sn}/dlm")
     public Result<?> updateDlm(@PathVariable String sn, @RequestBody JSONObject params) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         Integer breakerRating = params.getInteger("breakerRating");
         if (breakerRating == null) {
-            return Result.error("breakerRating 不能为空");
+            return Result.error(WebI18n.get("breakerRating 不能为空", lang));
         }
 
         String opUser = "system";
@@ -455,10 +468,10 @@ public class NcDeviceController {
         try {
             ncDeviceService.sendDlmConfig(sn, breakerRating, opUser);
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
 
-        return Result.ok("DLM 配置已更新");
+        return Result.ok(WebI18n.get("DLM 配置已更新", lang));
     }
 
     /**
@@ -469,9 +482,10 @@ public class NcDeviceController {
     @PostMapping("/{sn}/workmode")
     @SuppressWarnings("unchecked")
     public Result<?> setWorkMode(@PathVariable String sn, @RequestBody JSONObject params) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         List<Map<String, String>> deviceList = (List<Map<String, String>>) params.get("deviceList");
         if (deviceList == null || deviceList.isEmpty()) {
-            return Result.error("deviceList 不能为空");
+            return Result.error(WebI18n.get("deviceList 不能为空", lang));
         }
 
         String opUser = "system";
@@ -485,10 +499,10 @@ public class NcDeviceController {
         try {
             ncDeviceService.sendWorkMode(sn, deviceList, opUser);
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
 
-        return Result.ok("工作模式切换指令已下发");
+        return Result.ok(WebI18n.get("工作模式切换指令已下发", lang));
     }
 
     /**
@@ -504,7 +518,8 @@ public class NcDeviceController {
                 new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
         );
         if (device == null) {
-            return Result.error("设备不存在: " + sn);
+            String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+            return Result.error(WebI18n.get("设备不存在: ", lang) + sn);
         }
         Map<String, Object> chartData = dlmHistoryService.getChartData(sn, range);
         return Result.ok(chartData);
@@ -534,14 +549,15 @@ public class NcDeviceController {
     @PostMapping("/{sn}/reset")
     public Result<?> resetDevice(@PathVariable String sn,
                                  @RequestParam(defaultValue = "Soft") String type) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         NcDevice device = ncDeviceService.getOne(
                 new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn)
         );
         if (device == null) {
-            return Result.error("设备不存在: " + sn);
+            return Result.error(WebI18n.get("设备不存在: ", lang) + sn);
         }
         if (!ocppCommandSender.isDeviceConnected(sn)) {
-            return Result.error("设备离线，无法下发重启命令");
+            return Result.error(WebI18n.get("设备离线，无法下发重启命令", lang));
         }
 
         // 构建 OCPP CALL: [2, messageId, "Reset", {"type": "Soft"}]
@@ -576,7 +592,7 @@ public class NcDeviceController {
         opLog.setCreateTime(new Date());
         opLogService.save(opLog);
 
-        return Result.ok("重启命令已下发");
+        return Result.ok(WebI18n.get("重启命令已下发", lang));
     }
 
     private Map<String, String> buildError(int row, String sn, String reason) {

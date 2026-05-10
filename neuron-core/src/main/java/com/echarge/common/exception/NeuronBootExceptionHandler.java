@@ -10,6 +10,7 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.echarge.common.api.dto.LogDTO;
 import com.echarge.common.api.vo.Result;
 import com.echarge.common.constant.CommonConstant;
+import com.echarge.common.i18n.WebI18n;
 import com.echarge.common.constant.enums.ClientTerminalTypeEnum;
 import com.echarge.common.system.vo.LoginUser;
 import com.echarge.common.util.BrowserUtils;
@@ -60,10 +61,11 @@ public class NeuronBootExceptionHandler {
 	 * 处理自定义异常
 	 */
 	@ExceptionHandler(NeuronBootException.class)
-	public Result<?> handleNeuronBootException(NeuronBootException e){
+	public Result<?> handleNeuronBootException(NeuronBootException e, HttpServletRequest request) {
 		log.error(e.getMessage(), e);
 		addSysLog(e);
-		return Result.error(e.getErrCode(), e.getMessage());
+		String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+		return Result.error(e.getErrCode(), WebI18n.get(e.getMessage(), lang));
 	}
 	
 	/**

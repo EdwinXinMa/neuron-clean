@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
+import com.echarge.common.i18n.WebI18n;
+import jakarta.servlet.http.HttpServletRequest;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.util.MinioUtil;
@@ -57,6 +59,9 @@ public class FirmwareUpgradeController {
     @Autowired
     private INcOpLogService opLogService;
 
+    @Autowired
+    private HttpServletRequest request;
+
     @Operation(summary = "发起升级")
     @PostMapping("/start")
     public Result<String> start(@RequestBody JSONObject params) {
@@ -64,7 +69,8 @@ public class FirmwareUpgradeController {
         String deviceSn = params.getString("deviceSn");
 
         if (StringUtils.isBlank(firmwareId) || StringUtils.isBlank(deviceSn)) {
-            return Result.error("firmwareId 和 deviceSn 不能为空");
+            String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+            return Result.error(WebI18n.get("firmwareId 和 deviceSn 不能为空", lang));
         }
 
         // 校验固件
@@ -147,7 +153,8 @@ public class FirmwareUpgradeController {
         // 推送初始状态到前端
         pushMessage(taskId, deviceSn, BizConstant.TASK_PENDING, 0, "升级指令已下发，等待设备响应");
 
-        return Result.ok("升级任务已创建", taskId);
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+        return Result.ok(WebI18n.get("升级任务已创建", lang), taskId);
     }
 
     @Operation(summary = "查询任务详情")
@@ -155,7 +162,8 @@ public class FirmwareUpgradeController {
     public Result<FirmwareUpgradeTask> task(@PathVariable String taskId) {
         FirmwareUpgradeTask task = upgradeTaskService.getById(taskId);
         if (task == null) {
-            return Result.error("任务不存在");
+            String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+            return Result.error(WebI18n.get("任务不存在", lang));
         }
         return Result.ok(task);
     }

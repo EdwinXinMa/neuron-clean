@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.echarge.common.api.vo.Result;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
+import com.echarge.common.i18n.WebI18n;
 import com.echarge.common.util.MinioUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import com.echarge.modules.device.entity.FirmwareVersion;
 import com.echarge.modules.device.service.IFirmwareVersionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +37,9 @@ public class FirmwareVersionController {
 
     @Autowired
     private IFirmwareVersionService firmwareVersionService;
+
+    @Autowired
+    private HttpServletRequest request;
 
     @Operation(summary = "固件分页列表")
     @GetMapping("/list")
@@ -75,11 +80,12 @@ public class FirmwareVersionController {
             @RequestParam(defaultValue = BizConstant.TYPE_N3_LITE) String deviceType,
             @RequestParam String releaseNotes) {
 
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         if (file.isEmpty()) {
-            return Result.error("文件不能为空");
+            return Result.error(WebI18n.get("文件不能为空", lang));
         }
         if (StringUtils.isBlank(releaseNotes)) {
-            return Result.error("版本说明不能为空");
+            return Result.error(WebI18n.get("版本说明不能为空", lang));
         }
 
         try {
@@ -117,46 +123,49 @@ public class FirmwareVersionController {
             fw.setStatus(BizConstant.FIRMWARE_DRAFT);
             firmwareVersionService.save(fw);
 
-            return Result.ok("上传成功", fw);
+            return Result.ok(WebI18n.get("上传成功", lang), fw);
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         } catch (Exception e) {
             log.error("固件上传失败", e);
-            return Result.error("上传失败: " + e.getMessage());
+            return Result.error(WebI18n.get("上传失败: ", lang) + e.getMessage());
         }
     }
 
     @Operation(summary = "发布固件")
     @PutMapping("/release")
     public Result<?> release(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         try {
             firmwareVersionService.release(id);
-            return Result.ok("发布成功");
+            return Result.ok(WebI18n.get("发布成功", lang));
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
     }
 
     @Operation(summary = "废弃固件")
     @PutMapping("/deprecate")
     public Result<?> deprecate(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         try {
             firmwareVersionService.deprecate(id);
-            return Result.ok("废弃成功");
+            return Result.ok(WebI18n.get("废弃成功", lang));
         } catch (NeuronBootException e) {
-            return Result.error(e.getMessage());
+            return Result.error(WebI18n.get(e.getMessage(), lang));
         }
     }
 
     @Operation(summary = "删除固件")
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         FirmwareVersion fw = firmwareVersionService.getById(id);
         if (fw == null) {
-            return Result.error("固件不存在");
+            return Result.error(WebI18n.get("固件不存在", lang));
         }
         if (!BizConstant.FIRMWARE_DRAFT.equals(fw.getStatus()) && !BizConstant.FIRMWARE_DEPRECATED.equals(fw.getStatus())) {
-            return Result.error("只有草稿或已废弃状态的固件才能删除");
+            return Result.error(WebI18n.get("只有草稿或已废弃状态的固件才能删除", lang));
         }
         // remove file from MinIO
         try {
@@ -166,15 +175,16 @@ public class FirmwareVersionController {
             log.warn("删除MinIO文件失败: {}", e.getMessage());
         }
         firmwareVersionService.removeById(id);
-        return Result.ok("删除成功");
+        return Result.ok(WebI18n.get("删除成功", lang));
     }
 
     @Operation(summary = "获取固件下载链接")
     @GetMapping("/download")
     public Result<Map<String, String>> download(@RequestParam String id) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
         FirmwareVersion fw = firmwareVersionService.getById(id);
         if (fw == null) {
-            return Result.error("固件不存在");
+            return Result.error(WebI18n.get("固件不存在", lang));
         }
         try {
             String bucketName = MinioUtil.getBucketName();
@@ -187,7 +197,7 @@ public class FirmwareVersionController {
             return Result.ok(result);
         } catch (Exception e) {
             log.error("生成下载链接失败", e);
-            return Result.error("生成下载链接失败: " + e.getMessage());
+            return Result.error(WebI18n.get("生成下载链接失败: ", lang) + e.getMessage());
         }
     }
 }
