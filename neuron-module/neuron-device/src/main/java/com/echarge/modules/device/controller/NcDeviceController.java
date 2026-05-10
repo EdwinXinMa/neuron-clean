@@ -520,6 +520,7 @@ public class NcDeviceController {
                 new Page<>(pageNo, pageSize),
                 new LambdaQueryWrapper<NcChargingSession>()
                         .eq(NcChargingSession::getDeviceSn, sn)
+                        .ne(NcChargingSession::getStatus, NcChargingSession.ABANDONED)
                         .orderByDesc(NcChargingSession::getStartTime)
         );
         return Result.ok(page);

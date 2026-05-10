@@ -861,16 +861,14 @@ public class DeviceEventHandler implements DeviceEventListener {
                         .last("LIMIT 1"));
 
         if (existing != null) {
-            // 已有会话，补上 transactionId 和 meterStart
-            existing.setTransactionId(transactionId);
-            if (meterStart > 0) {
-                existing.setMeterStart(meterStart);
-            }
+            // 设备离线重连后推新 StartTransaction，旧会话遗弃，新建会话
+            existing.setStatus(NcChargingSession.ABANDONED);
             chargingSessionMapper.updateById(existing);
-            log.info("[充电] 订单已存在，补充txId — 设备={}, 桩={}, 枪={}, txId={}",
-                    chargePointId, pileSn, connectorId, transactionId);
-        } else {
-            // 没有会话，新建
+            log.info("[充电] 旧订单已遗弃(设备重连) — 设备={}, 桩={}, 枪={}, 旧txId={}",
+                    chargePointId, pileSn, connectorId, existing.getTransactionId());
+        }
+        {
+            // 新建会话
             NcChargingSession session = new NcChargingSession();
             session.setDeviceSn(chargePointId);
             session.setPileSn(pileSn);

@@ -72,4 +72,6 @@ public class NcChargingSession implements Serializable {
 
     public static final String CHARGING = "CHARGING";
     public static final String FINISHED = "FINISHED";
+    /** 设备离线重连后推新 StartTransaction，旧会话被遗弃，不在页面展示 */
+    public static final String ABANDONED = "ABANDONED";
 }
