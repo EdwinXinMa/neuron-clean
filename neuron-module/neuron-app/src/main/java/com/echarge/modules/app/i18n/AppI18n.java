@@ -89,6 +89,71 @@ public class AppI18n {
                 "設備解綁成功",
                 "Desvinculado exitosamente",
                 "Desvinculado com sucesso");
+        put("授权请求已发送，请等待设备主人同意",
+                "Authorization request sent, waiting for device owner's approval",
+                "授權請求已發送，請等待設備主人同意",
+                "Solicitud enviada, esperando aprobación del propietario",
+                "Solicitação enviada, aguardando aprovação do proprietário");
+        put("请求过于频繁，请 1 分钟后再试",
+                "Too many requests, please try again in 1 minute",
+                "請求過於頻繁，請 1 分鐘後再試",
+                "Demasiadas solicitudes, intente en 1 minuto",
+                "Muitas solicitações, tente novamente em 1 minuto");
+        put("requestId 不能为空",
+                "requestId is required",
+                "requestId 不能為空",
+                "requestId es obligatorio",
+                "requestId é obrigatório");
+        put("action 无效，必须为 APPROVE 或 REJECT",
+                "Invalid action, must be APPROVE or REJECT",
+                "action 無效，必須為 APPROVE 或 REJECT",
+                "Acción inválida, debe ser APPROVE o REJECT",
+                "Ação inválida, deve ser APPROVE ou REJECT");
+        put("请求不存在或已过期",
+                "Request not found or expired",
+                "請求不存在或已過期",
+                "Solicitud no encontrada o expirada",
+                "Solicitação não encontrada ou expirada");
+        put("无权操作",
+                "No permission",
+                "無權操作",
+                "Sin permiso",
+                "Sem permissão");
+        put("已由其他人授权，无需重复操作",
+                "Already approved by another user",
+                "已由其他人授權，無需重複操作",
+                "Ya aprobado por otro usuario",
+                "Já aprovado por outro usuário");
+        put("已同意，授权码已发送给申请人",
+                "Approved, authorization code sent to requester",
+                "已同意，授權碼已發送給申請人",
+                "Aprobado, código enviado al solicitante",
+                "Aprovado, código enviado ao solicitante");
+        put("已拒绝",
+                "Rejected",
+                "已拒絕",
+                "Rechazado",
+                "Rejeitado");
+        put("requestId、authCode、deviceSn 不能为空",
+                "requestId, authCode and deviceSn are required",
+                "requestId、authCode、deviceSn 不能為空",
+                "requestId, authCode y deviceSn son obligatorios",
+                "requestId, authCode e deviceSn são obrigatórios");
+        put("请求状态异常，请重新发起绑定",
+                "Request status error, please initiate binding again",
+                "請求狀態異常，請重新發起綁定",
+                "Estado de solicitud anómalo, inicie el vinculado nuevamente",
+                "Estado da solicitação inválido, inicie a vinculação novamente");
+        put("授权码已过期",
+                "Authorization code expired",
+                "授權碼已過期",
+                "Código de autorización expirado",
+                "Código de autorização expirado");
+        put("授权码错误",
+                "Incorrect authorization code",
+                "授權碼錯誤",
+                "Código de autorización incorrecto",
+                "Código de autorização incorreto");
 
         // ── 固件 ───────────────────────────────────────────────────
         put("currentVersion 不能为空",
