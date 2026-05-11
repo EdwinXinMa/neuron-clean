@@ -74,16 +74,10 @@ public class FirmwareVersionServiceImpl extends ServiceImpl<FirmwareVersionMappe
             throw new NeuronBootException("版本 " + version + " 已存在，不能重复上传");
         }
 
-        // 2. 版本号不能倒退（跟所有已存在的版本中最大的比较）
-        List<FirmwareVersion> allVersions = list(new LambdaQueryWrapper<FirmwareVersion>()
-                .eq(FirmwareVersion::getDeviceType, deviceType)
-                .select(FirmwareVersion::getVersion));
-        String maxVersion = allVersions.stream()
-                .map(FirmwareVersion::getVersion)
-                .max((a, b) -> compareVersion(a, b))
-                .orElse(null);
-        if (maxVersion != null && compareVersion(version, maxVersion) <= 0) {
-            throw new NeuronBootException("版本号不能小于或等于已有版本 " + maxVersion);
+        // 2. 版本号不能倒退（跟已发布的最新版本比较）
+        FirmwareLatest latest = getLatest(deviceType);
+        if (latest != null && compareVersion(version, latest.getLatestVersion()) <= 0) {
+            throw new NeuronBootException("版本号不能小于或等于已有版本 " + latest.getLatestVersion());
         }
     }
 
