@@ -1,6 +1,7 @@
 package com.echarge.modules.app.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.echarge.common.constant.BizConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.app.entity.AppUser;
@@ -377,6 +378,7 @@ public class AppDeviceController {
         if (device == null) {
             device = new NcDevice();
             device.setSn(deviceSn);
+            device.setDeviceType(BizConstant.TYPE_N3_LITE);
             device.setOnlineStatus("OFFLINE");
             if (longitude != null && latitude != null) {
                 device.setLng(BigDecimal.valueOf(longitude));
