@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +46,9 @@ public class AppDeviceController {
 
     @Autowired
     private INcDeviceService deviceService;
+
+    @Value("${app.device.bind-auth-enabled:false}")
+    private boolean bindAuthEnabled;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -78,7 +82,7 @@ public class AppDeviceController {
                         .eq(AppUserDevice::getDeviceSn, deviceSn)
                         .ne(AppUserDevice::getUserId, user.getId()));
 
-        if (otherCount > 0) {
+        if (otherCount > 0 && bindAuthEnabled) {
             return handleAuthBind(user, deviceSn);
         }
 

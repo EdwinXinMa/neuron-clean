@@ -128,6 +128,10 @@ mybatis-plus:
     #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     # 返回类型为Map,显示null对应的字段
     call-setters-on-nulls: true
+app:
+  device:
+    bind-auth-enabled: false  # 多账号绑定授权开关，true=需要授权码，false=直接绑定
+
 neuron:
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:
