@@ -188,7 +188,9 @@ public class NcDeviceController {
             // 从 DLMStatus 合并桩级别数据
             JSONObject dlmPile = dlmPileMap.get(child.getSn());
             if (dlmPile != null) {
-                charger.put("allocatedCurrent", dlmPile.getDoubleValue("allocatedCurrent"));
+                charger.put("allocatedCurrentA", dlmPile.getDoubleValue("allocatedCurrentA"));
+                charger.put("allocatedCurrentB", dlmPile.getDoubleValue("allocatedCurrentB"));
+                charger.put("allocatedCurrentC", dlmPile.getDoubleValue("allocatedCurrentC"));
                 charger.put("connectStatus", dlmPile.getString("connectStatus"));
                 charger.put("charge_EVStatus", dlmPile.getString("charge_EVStatus"));
                 charger.put("energy", dlmPile.getIntValue("energy"));

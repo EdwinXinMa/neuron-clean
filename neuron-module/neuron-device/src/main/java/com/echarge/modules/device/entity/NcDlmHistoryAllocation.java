@@ -30,6 +30,12 @@ public class NcDlmHistoryAllocation implements Serializable {
     @Schema(description = "子桩序列号")
     private String pileSn;
 
-    @Schema(description = "分配电流 (A)")
-    private Float allocatedCurrent;
+    @Schema(description = "分配电流 A 相 (A)，单相设备只有此字段，B/C 为 0")
+    private Float allocatedCurrentA;
+
+    @Schema(description = "分配电流 B 相 (A)，单相时为 0")
+    private Float allocatedCurrentB;
+
+    @Schema(description = "分配电流 C 相 (A)，单相时为 0")
+    private Float allocatedCurrentC;
 }

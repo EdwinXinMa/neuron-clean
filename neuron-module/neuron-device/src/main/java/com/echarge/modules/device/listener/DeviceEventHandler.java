@@ -493,8 +493,8 @@ public class DeviceEventHandler implements DeviceEventListener {
      *   "wifiRssi": -55,
      *   "breakerRating": 32,
      *   "pileAllocations": [
-     *     { "sn": "AT-xxx-01", "allocatedCurrent": 16.0 },
-     *     { "sn": "AT-xxx-02", "allocatedCurrent": 12.5 }
+     *     { "sn": "AT-xxx-01", "allocatedCurrentA": 16.0, "allocatedCurrentB": 15.8, "allocatedCurrentC": 16.1 },
+     *     { "sn": "AT-xxx-02", "allocatedCurrentA": 12.5, "allocatedCurrentB": 0, "allocatedCurrentC": 0 }
      *   ]
      * }
      */

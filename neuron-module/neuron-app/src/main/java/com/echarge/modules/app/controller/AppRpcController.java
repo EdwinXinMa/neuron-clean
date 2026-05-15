@@ -273,20 +273,40 @@ public class AppRpcController {
 
     /**
      * 查询充电桩负载电流（对应本地接口 #10）
+     * 单相：各字段返回字符串；三相：返回 [L1, L2, L3] 数组，App 通过值类型区分
      */
     private Map<String, Object> handleSelectChargingLoadCurrent(String method, String deviceSn, Map<String, Object> data) {
         String mac = getMac(data);
         JSONObject dlm = getDlmData(deviceSn);
         JSONObject pile = findPile(dlm, mac);
+        boolean threePhase = isThreePhase(dlm);
 
         Map<String, Object> deviceInfo = new LinkedHashMap<>();
         deviceInfo.put("subDevId", mac);
         deviceInfo.put("mac", mac);
-        deviceInfo.put("ChargingCurrent", pile != null ? pile.getString("allocatedCurrent") : "0");
-        deviceInfo.put("LoadCurrent", dlm != null ? String.valueOf(
-                dlm.getDoubleValue("loadCurrentA") + dlm.getDoubleValue("loadCurrentB") + dlm.getDoubleValue("loadCurrentC")) : "0");
-        deviceInfo.put("MeterCurrent", dlm != null ? String.valueOf(
-                dlm.getDoubleValue("totalCurrentA") + dlm.getDoubleValue("totalCurrentB") + dlm.getDoubleValue("totalCurrentC")) : "0");
+
+        if (threePhase) {
+            deviceInfo.put("ChargingCurrent", pile != null
+                    ? List.of(pile.getDoubleValue("allocatedCurrentA"),
+                              pile.getDoubleValue("allocatedCurrentB"),
+                              pile.getDoubleValue("allocatedCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+            deviceInfo.put("LoadCurrent", dlm != null
+                    ? List.of(dlm.getDoubleValue("loadCurrentA"),
+                              dlm.getDoubleValue("loadCurrentB"),
+                              dlm.getDoubleValue("loadCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+            deviceInfo.put("MeterCurrent", dlm != null
+                    ? List.of(dlm.getDoubleValue("totalCurrentA"),
+                              dlm.getDoubleValue("totalCurrentB"),
+                              dlm.getDoubleValue("totalCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+        } else {
+            deviceInfo.put("ChargingCurrent", pile != null ? pile.getString("allocatedCurrentA") : "0");
+            deviceInfo.put("LoadCurrent", dlm != null ? String.valueOf(dlm.getDoubleValue("loadCurrentA")) : "0");
+            deviceInfo.put("MeterCurrent", dlm != null ? String.valueOf(dlm.getDoubleValue("totalCurrentA")) : "0");
+        }
+
         deviceInfo.put("energy", pile != null ? CommonUtils.whToKwh(pile.getIntValue("energy")) : "0");
 
         return rpcSuccess(method, deviceSn, Map.of("deviceInfo", deviceInfo));
@@ -294,32 +314,54 @@ public class AppRpcController {
 
     /**
      * 查询总电流负载明细（对应本地接口 #12）
+     * 单相：各字段返回字符串；三相：返回 [L1, L2, L3] 数组，App 通过值类型区分
      */
     private Map<String, Object> handleSelectChargingLoadCurrentList(String method, String deviceSn) {
         JSONObject dlm = getDlmData(deviceSn);
+        boolean threePhase = isThreePhase(dlm);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        double totalA = dlm != null ? dlm.getDoubleValue("totalCurrentA") : 0;
-        double totalB = dlm != null ? dlm.getDoubleValue("totalCurrentB") : 0;
-        double totalC = dlm != null ? dlm.getDoubleValue("totalCurrentC") : 0;
 
-        result.put("LoadCurrent", dlm != null ? String.valueOf(
-                dlm.getDoubleValue("loadCurrentA") + dlm.getDoubleValue("loadCurrentB") + dlm.getDoubleValue("loadCurrentC")) : "0");
-        result.put("MeterCurrent", String.valueOf(totalA + totalB + totalC));
-        result.put("totalChargingCurrent", dlm != null ? String.valueOf(
-                dlm.getDoubleValue("totalChargingCurrentA") + dlm.getDoubleValue("totalChargingCurrentB") + dlm.getDoubleValue("totalChargingCurrentC")) : "0");
+        if (threePhase) {
+            result.put("LoadCurrent", dlm != null
+                    ? List.of(dlm.getDoubleValue("loadCurrentA"),
+                              dlm.getDoubleValue("loadCurrentB"),
+                              dlm.getDoubleValue("loadCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+            result.put("MeterCurrent", dlm != null
+                    ? List.of(dlm.getDoubleValue("totalCurrentA"),
+                              dlm.getDoubleValue("totalCurrentB"),
+                              dlm.getDoubleValue("totalCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+            result.put("totalChargingCurrent", dlm != null
+                    ? List.of(dlm.getDoubleValue("totalChargingCurrentA"),
+                              dlm.getDoubleValue("totalChargingCurrentB"),
+                              dlm.getDoubleValue("totalChargingCurrentC"))
+                    : List.of(0.0, 0.0, 0.0));
+        } else {
+            result.put("LoadCurrent", dlm != null ? String.valueOf(dlm.getDoubleValue("loadCurrentA")) : "0");
+            result.put("MeterCurrent", dlm != null ? String.valueOf(dlm.getDoubleValue("totalCurrentA")) : "0");
+            result.put("totalChargingCurrent", dlm != null ? String.valueOf(dlm.getDoubleValue("totalChargingCurrentA")) : "0");
+        }
 
         List<Map<String, Object>> deviceList = new ArrayList<>();
         if (dlm != null && dlm.containsKey("pileAllocations")) {
             for (Object obj : dlm.getJSONArray("pileAllocations")) {
                 JSONObject pile = (JSONObject) obj;
+                // 桩级三相判断：B/C 分配电流任一不为 0 即为三相
+                boolean pileThreePhase = pile.getDoubleValue("allocatedCurrentB") != 0
+                        || pile.getDoubleValue("allocatedCurrentC") != 0;
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", pile.getString("sn"));
                 item.put("mac", pile.getString("sn"));
-                String rawAllocated = pile.getString("allocatedCurrent");
-                log.info("[DLM] allocatedCurrent raw — 桩={}, 原始值={}, 类型={}", pile.getString("sn"), rawAllocated,
-                        pile.get("allocatedCurrent") != null ? pile.get("allocatedCurrent").getClass().getSimpleName() : "null");
-                item.put("ChargingCurrent", rawAllocated);
+                if (pileThreePhase) {
+                    item.put("ChargingCurrent", List.of(
+                            pile.getDoubleValue("allocatedCurrentA"),
+                            pile.getDoubleValue("allocatedCurrentB"),
+                            pile.getDoubleValue("allocatedCurrentC")));
+                } else {
+                    item.put("ChargingCurrent", pile.getString("allocatedCurrentA"));
+                }
                 item.put("energy", CommonUtils.whToKwh(pile.getIntValue("energy")));
                 item.put("EVStatus", pile.getString("charge_EVStatus"));
                 item.put("connectStatus", pile.getString("connectStatus"));
@@ -747,6 +789,16 @@ public class AppRpcController {
     // ═══════════════════════════════════════════════
     // 工具方法
     // ═══════════════════════════════════════════════
+
+    /**
+     * 判断是否为三相设备：DLM 上报的 B/C 相负载电流任一不为 0 即为三相
+     */
+    private boolean isThreePhase(JSONObject dlm) {
+        if (dlm == null) {
+            return false;
+        }
+        return dlm.getDoubleValue("loadCurrentB") != 0 || dlm.getDoubleValue("loadCurrentC") != 0;
+    }
 
     private JSONObject getDlmData(String deviceSn) {
         Object raw = redisTemplate.opsForValue().get("device:dlm:" + deviceSn);

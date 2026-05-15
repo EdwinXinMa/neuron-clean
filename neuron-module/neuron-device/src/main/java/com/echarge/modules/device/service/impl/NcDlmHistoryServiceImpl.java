@@ -69,7 +69,9 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
                             .setTime(now)
                             .setDeviceSn(deviceSn)
                             .setPileSn(pileSn)
-                            .setAllocatedCurrent(getFloat(alloc, "allocatedCurrent"));
+                            .setAllocatedCurrentA(getFloat(alloc, "allocatedCurrentA"))
+                            .setAllocatedCurrentB(getFloat(alloc, "allocatedCurrentB"))
+                            .setAllocatedCurrentC(getFloat(alloc, "allocatedCurrentC"));
                     allocationMapper.insert(allocation);
                 }
             }
