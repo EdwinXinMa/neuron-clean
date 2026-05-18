@@ -380,6 +380,9 @@ public class DeviceEventHandler implements DeviceEventListener {
         if (phaseType != null) {
             parent.setPhaseType(phaseType);
             ncDeviceService.updateById(parent);
+            log.info("[DeviceEvent] TopologyReport: 设备 {} 相型为 {}", chargePointId, "three".equals(phaseType) ? "三相" : "单相");
+        } else {
+            log.warn("[DeviceEvent] TopologyReport: 设备 {} 未上报相型（固件版本可能不支持）", chargePointId);
         }
 
         Date now = new Date();
