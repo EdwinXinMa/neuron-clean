@@ -279,7 +279,7 @@ public class AppRpcController {
         String mac = getMac(data);
         JSONObject dlm = getDlmData(deviceSn);
         JSONObject pile = findPile(dlm, mac);
-        boolean threePhase = isThreePhase(dlm);
+        boolean threePhase = isThreePhase(deviceSn);
 
         Map<String, Object> deviceInfo = new LinkedHashMap<>();
         deviceInfo.put("subDevId", mac);
@@ -318,7 +318,7 @@ public class AppRpcController {
      */
     private Map<String, Object> handleSelectChargingLoadCurrentList(String method, String deviceSn) {
         JSONObject dlm = getDlmData(deviceSn);
-        boolean threePhase = isThreePhase(dlm);
+        boolean threePhase = isThreePhase(deviceSn);
 
         Map<String, Object> result = new LinkedHashMap<>();
 
@@ -348,13 +348,10 @@ public class AppRpcController {
         if (dlm != null && dlm.containsKey("pileAllocations")) {
             for (Object obj : dlm.getJSONArray("pileAllocations")) {
                 JSONObject pile = (JSONObject) obj;
-                // 桩级三相判断：B/C 分配电流任一不为 0 即为三相
-                boolean pileThreePhase = pile.getDoubleValue("allocatedCurrentB") != 0
-                        || pile.getDoubleValue("allocatedCurrentC") != 0;
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", pile.getString("sn"));
                 item.put("mac", pile.getString("sn"));
-                if (pileThreePhase) {
+                if (threePhase) {
                     item.put("ChargingCurrent", List.of(
                             pile.getDoubleValue("allocatedCurrentA"),
                             pile.getDoubleValue("allocatedCurrentB"),
@@ -791,13 +788,12 @@ public class AppRpcController {
     // ═══════════════════════════════════════════════
 
     /**
-     * 判断是否为三相设备：DLM 上报的 B/C 相负载电流任一不为 0 即为三相
+     * 判断是否为三相设备：从 nc_device.phase_type 读取，"three" 为三相
      */
-    private boolean isThreePhase(JSONObject dlm) {
-        if (dlm == null) {
-            return false;
-        }
-        return dlm.getDoubleValue("loadCurrentB") != 0 || dlm.getDoubleValue("loadCurrentC") != 0;
+    private boolean isThreePhase(String deviceSn) {
+        NcDevice device = deviceService.getOne(
+                new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
+        return device != null && "three".equals(device.getPhaseType());
     }
 
     private JSONObject getDlmData(String deviceSn) {

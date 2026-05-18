@@ -112,6 +112,9 @@ public class NcDevice extends NeuronEntity implements Serializable {
     @Schema(description = "断路器档位（A）: 20/25/32/40/50/63，DLM 设置持久化")
     private Integer breakerRating;
 
+    @Schema(description = "供电相型：single（单相）/ three（三相），由 TopologyReport 上报写入")
+    private String phaseType;
+
     // ==================== 业务控制字段 ====================
 
     @Excel(name = "状态", width = 10)

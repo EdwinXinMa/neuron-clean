@@ -30,10 +30,10 @@ public class NcDlmHistory implements Serializable {
     @Schema(description = "入户总电流 A 相 (A)")
     private Float totalCurrentA;
 
-    @Schema(description = "入户总电流 B 相 (A)，单相时为 0")
+    @Schema(description = "入户总电流 B 相 (A)")
     private Float totalCurrentB;
 
-    @Schema(description = "入户总电流 C 相 (A)，单相时为 0")
+    @Schema(description = "入户总电流 C 相 (A)")
     private Float totalCurrentC;
 
     @Schema(description = "电压 (V)")
@@ -45,19 +45,19 @@ public class NcDlmHistory implements Serializable {
     @Schema(description = "家庭负载电流 A 相 (A)")
     private Float loadCurrentA;
 
-    @Schema(description = "家庭负载电流 B 相 (A)，单相时为 0")
+    @Schema(description = "家庭负载电流 B 相 (A)")
     private Float loadCurrentB;
 
-    @Schema(description = "家庭负载电流 C 相 (A)，单相时为 0")
+    @Schema(description = "家庭负载电流 C 相 (A)")
     private Float loadCurrentC;
 
     @Schema(description = "充电总电流 A 相 (A)")
     private Float totalChargingCurrentA;
 
-    @Schema(description = "充电总电流 B 相 (A)，单相时为 0")
+    @Schema(description = "充电总电流 B 相 (A)")
     private Float totalChargingCurrentB;
 
-    @Schema(description = "充电总电流 C 相 (A)，单相时为 0")
+    @Schema(description = "充电总电流 C 相 (A)")
     private Float totalChargingCurrentC;
 
     @Schema(description = "WiFi 信号强度 (dBm)")

@@ -375,6 +375,13 @@ public class DeviceEventHandler implements DeviceEventListener {
             return;
         }
 
+        // 更新 N3 Lite 相型
+        String phaseType = getJsonString(payload, "phaseType");
+        if (phaseType != null) {
+            parent.setPhaseType(phaseType);
+            ncDeviceService.updateById(parent);
+        }
+
         Date now = new Date();
 
         // 收集本次上报的所有桩SN，用于后续删除不存在的桩
