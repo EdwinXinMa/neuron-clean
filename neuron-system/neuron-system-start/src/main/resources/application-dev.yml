@@ -130,7 +130,7 @@ mybatis-plus:
     call-setters-on-nulls: true
 app:
   device:
-    bind-auth-enabled: false  # 多账号绑定授权开关，true=需要授权码，false=直接绑定
+    bind-auth-enabled: true  # 多账号绑定授权开关，true=需要授权码，false=直接绑定
 
 neuron:
   # Kafka 开关（false=直连模式，true=走Kafka投递）
