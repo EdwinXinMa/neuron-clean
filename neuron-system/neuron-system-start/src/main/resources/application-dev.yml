@@ -169,3 +169,5 @@ logging:
     com.echarge.modules.system.mapper: info
     com.echarge.modules.device.mapper: debug
     cn.jpush: debug
+    cn.jiguang: debug
+    okhttp3: debug
