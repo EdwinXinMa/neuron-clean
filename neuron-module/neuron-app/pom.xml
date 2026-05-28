@@ -21,10 +21,10 @@
             <artifactId>neuron-device</artifactId>
             <version>${neuron.version}</version>
         </dependency>
-        <!-- Firebase Admin SDK（FCM 推送） -->
+        <!-- 极光推送 SDK -->
         <dependency>
-            <groupId>com.google.firebase</groupId>
-            <artifactId>firebase-admin</artifactId>
+            <groupId>cn.jpush.api</groupId>
+            <artifactId>jpush-client</artifactId>
         </dependency>
     </dependencies>
 </project>

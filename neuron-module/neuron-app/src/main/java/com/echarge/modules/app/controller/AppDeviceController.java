@@ -151,11 +151,11 @@ public class AppDeviceController {
                 new LambdaQueryWrapper<AppUserDevice>().eq(AppUserDevice::getDeviceSn, deviceSn));
         for (AppUserDevice bound : boundList) {
             AppUser boundUser = userMapper.selectById(bound.getUserId());
-            if (boundUser != null && boundUser.getFcmToken() != null) {
+            if (boundUser != null && boundUser.getRegistrationId() != null) {
                 Map<String, String> fcmData = new HashMap<>();
                 fcmData.put("requestId", requestId);
                 fcmData.put("requesterName", user.getName());
-                fcmService.sendSilent(boundUser.getFcmToken(), "DEVICE_BIND_REQUEST", fcmData);
+                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", fcmData);
             }
         }
 

@@ -132,6 +132,10 @@ app:
   device:
     bind-auth-enabled: true  # 多账号绑定授权开关，true=需要授权码，false=直接绑定
 
+jpush:
+  app-key: df89f23d994d75ff68f2b68c
+  master-secret: 765696b510915e60b2196724
+
 neuron:
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:

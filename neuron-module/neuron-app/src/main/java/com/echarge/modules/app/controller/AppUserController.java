@@ -31,14 +31,14 @@ public class AppUserController {
      * App 启动时上报 FCM Token，用于离线推送
      */
     @PostMapping("/fcm-token")
-    @Operation(summary = "上报 FCM 推送 Token")
+    @Operation(summary = "上报极光推送 Registration ID")
     public AppResult<?> updateFcmToken(@RequestBody Map<String, String> params, HttpServletRequest request) {
-        String fcmToken = params.get("fcmToken");
-        if (fcmToken == null || fcmToken.isBlank()) {
-            return AppResult.error("fcmToken 不能为空");
+        String registrationId = params.get("registrationId");
+        if (registrationId == null || registrationId.isBlank()) {
+            return AppResult.error("registrationId 不能为空");
         }
         AppUser user = (AppUser) request.getAttribute("appUser");
-        appUserService.updateById(new AppUser().setId(user.getId()).setFcmToken(fcmToken).setUpdateTime(new Date()));
+        appUserService.updateById(new AppUser().setId(user.getId()).setRegistrationId(registrationId).setUpdateTime(new Date()));
         return AppResult.ok("上报成功");
     }
 }

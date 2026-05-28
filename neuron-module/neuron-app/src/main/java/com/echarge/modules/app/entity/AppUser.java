@@ -41,8 +41,8 @@ public class AppUser implements Serializable {
     @Schema(description = "状态：1=正常 0=禁用")
     private Integer status;
 
-    @Schema(description = "FCM 推送 Token")
-    private String fcmToken;
+    @Schema(description = "极光推送 Registration ID")
+    private String registrationId;
 
     private Date createTime;
 

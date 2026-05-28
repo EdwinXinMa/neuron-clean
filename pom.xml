@@ -219,11 +219,11 @@
 				<artifactId>commons-compress</artifactId>
 				<version>1.27.1</version>
 			</dependency>
-			<!-- Firebase Admin SDK（FCM 推送） -->
+			<!-- 极光推送 SDK -->
 			<dependency>
-				<groupId>com.google.firebase</groupId>
-				<artifactId>firebase-admin</artifactId>
-				<version>9.4.2</version>
+				<groupId>cn.jpush.api</groupId>
+				<artifactId>jpush-client</artifactId>
+				<version>3.7.7</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
