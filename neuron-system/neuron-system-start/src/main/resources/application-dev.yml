@@ -168,3 +168,4 @@ logging:
     org.springframework.context.support.PostProcessorRegistrationDelegate: error
     com.echarge.modules.system.mapper: info
     com.echarge.modules.device.mapper: debug
+    cn.jpush: debug
