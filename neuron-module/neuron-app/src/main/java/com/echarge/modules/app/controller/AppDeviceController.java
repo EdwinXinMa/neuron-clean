@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
+import com.echarge.modules.app.mapper.AppUserMapper;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
+import com.echarge.modules.app.service.FcmService;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.websocket.AppWebSocket;
@@ -45,7 +47,13 @@ public class AppDeviceController {
     private AppUserDeviceMapper userDeviceMapper;
 
     @Autowired
+    private AppUserMapper userMapper;
+
+    @Autowired
     private INcDeviceService deviceService;
+
+    @Autowired
+    private FcmService fcmService;
 
     @Value("${app.device.bind-auth-enabled:false}")
     private boolean bindAuthEnabled;
@@ -137,6 +145,19 @@ public class AppDeviceController {
         push.put("requesterName", user.getName());
         push.put("expireSeconds", REQ_TTL);
         AppWebSocket.publish("deviceBindAuth:" + deviceSn, push);
+
+        // FCM 静默推送兜底（App 关闭时也能收到通知）
+        List<AppUserDevice> boundList = userDeviceMapper.selectList(
+                new LambdaQueryWrapper<AppUserDevice>().eq(AppUserDevice::getDeviceSn, deviceSn));
+        for (AppUserDevice bound : boundList) {
+            AppUser boundUser = userMapper.selectById(bound.getUserId());
+            if (boundUser != null && boundUser.getFcmToken() != null) {
+                Map<String, String> fcmData = new HashMap<>();
+                fcmData.put("requestId", requestId);
+                fcmData.put("requesterName", user.getName());
+                fcmService.sendSilent(boundUser.getFcmToken(), "DEVICE_BIND_REQUEST", fcmData);
+            }
+        }
 
         log.info("[BindAuth] 授权请求已推送, deviceSn={}, requesterId={}, requestId={}", deviceSn, user.getId(), requestId);
 

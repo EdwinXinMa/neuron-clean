@@ -16,6 +16,9 @@ docs/
 docker-compose-local.yml
 deploy.sh
 
+## secrets
+**/firebase-service-account.json
+
 ## backend
 **/target
 **/logs

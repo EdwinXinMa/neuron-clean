@@ -219,6 +219,12 @@
 				<artifactId>commons-compress</artifactId>
 				<version>1.27.1</version>
 			</dependency>
+			<!-- Firebase Admin SDK（FCM 推送） -->
+			<dependency>
+				<groupId>com.google.firebase</groupId>
+				<artifactId>firebase-admin</artifactId>
+				<version>9.4.2</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
