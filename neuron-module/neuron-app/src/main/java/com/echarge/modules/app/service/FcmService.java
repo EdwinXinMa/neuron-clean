@@ -58,6 +58,7 @@ public class FcmService {
                             .setTimeToLive(600)
                             .build())
                     .build();
+            log.info("[JPush] payload={}", payload.toJSON());
             PushResult result = jpushClient.sendPush(payload);
             log.info("[JPush] 发送成功 type={}, msgId={}", type, result.msg_id);
         } catch (Exception e) {
