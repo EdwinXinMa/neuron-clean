@@ -27,7 +27,7 @@ public class FcmService {
     @Autowired
     private JPushClient jpushClient;
 
-    public void sendSilent(String registrationId, String type, Map<String, String> data) {
+    public void sendSilent(String registrationId, String type, String title, String alert, Map<String, String> data) {
         if (registrationId == null || registrationId.isBlank()) {
             return;
         }
@@ -36,12 +36,12 @@ public class FcmService {
             intent.addProperty("url", "intent:#Intent;component=com.xuheng.charge/com.xuheng.charge.MainActivity;end");
 
             AndroidNotification.Builder androidBuilder = AndroidNotification.newBuilder()
-                    .setTitle("N3 Lite")
-                    .setAlert(type)
+                    .setTitle(title)
+                    .setAlert(alert)
                     .setIntent(intent)
                     .addExtra("type", type);
             IosNotification.Builder iosBuilder = IosNotification.newBuilder()
-                    .setAlert(type)
+                    .setAlert(title + " - " + alert)
                     .setSound("default")
                     .addExtra("type", type);
             if (data != null) {

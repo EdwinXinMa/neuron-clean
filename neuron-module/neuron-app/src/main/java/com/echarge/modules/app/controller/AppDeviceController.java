@@ -163,7 +163,8 @@ public class AppDeviceController {
                 Map<String, String> fcmData = new HashMap<>();
                 fcmData.put("requestId", requestId);
                 fcmData.put("requesterName", user.getName());
-                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", fcmData);
+                String title = user.getName() + " 申请绑定您的 N3 Lite";
+                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", title, "点击查看请求详情", fcmData);
             } else {
                 log.warn("[BindAuth] 用户 userId={} 无 registrationId，跳过极光推送", boundUser.getId());
             }
