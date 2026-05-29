@@ -9,6 +9,7 @@ import cn.jpush.api.push.model.audience.Audience;
 import cn.jpush.api.push.model.notification.AndroidNotification;
 import cn.jpush.api.push.model.notification.IosNotification;
 import cn.jpush.api.push.model.notification.Notification;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,13 @@ public class FcmService {
             return;
         }
         try {
+            JsonObject intent = new JsonObject();
+            intent.addProperty("url", "intent:#Intent;component=com.xuheng.charge/com.xuheng.charge.MainActivity;end");
+
             AndroidNotification.Builder androidBuilder = AndroidNotification.newBuilder()
                     .setTitle("N3 Lite")
                     .setAlert(type)
+                    .setIntent(intent)
                     .addExtra("type", type);
             IosNotification.Builder iosBuilder = IosNotification.newBuilder()
                     .setAlert(type)
