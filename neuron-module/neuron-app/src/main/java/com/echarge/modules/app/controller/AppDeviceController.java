@@ -90,6 +90,7 @@ public class AppDeviceController {
                         .eq(AppUserDevice::getDeviceSn, deviceSn)
                         .ne(AppUserDevice::getUserId, user.getId()));
 
+        log.info("[Bind] userId={}, deviceSn={}, otherCount={}, bindAuthEnabled={}", user.getId(), deviceSn, otherCount, bindAuthEnabled);
         if (otherCount > 0 && bindAuthEnabled) {
             return handleAuthBind(user, deviceSn);
         }
@@ -144,22 +145,31 @@ public class AppDeviceController {
         push.put("requestId", requestId);
         push.put("requesterName", user.getName());
         push.put("expireSeconds", REQ_TTL);
+        log.info("[BindAuth] WS推送, topic=deviceBindAuth:{}, requestId={}", deviceSn, requestId);
         AppWebSocket.publish("deviceBindAuth:" + deviceSn, push);
 
-        // FCM 静默推送兜底（App 关闭时也能收到通知）
+        // 极光推送兜底（App 关闭时也能收到通知）
         List<AppUserDevice> boundList = userDeviceMapper.selectList(
                 new LambdaQueryWrapper<AppUserDevice>().eq(AppUserDevice::getDeviceSn, deviceSn));
+        log.info("[BindAuth] 已绑用户数={}, deviceSn={}", boundList.size(), deviceSn);
         for (AppUserDevice bound : boundList) {
             AppUser boundUser = userMapper.selectById(bound.getUserId());
-            if (boundUser != null && boundUser.getRegistrationId() != null) {
+            if (boundUser == null) {
+                log.warn("[BindAuth] 用户不存在, userId={}", bound.getUserId());
+                continue;
+            }
+            log.info("[BindAuth] 已绑用户 userId={}, registrationId={}", boundUser.getId(), boundUser.getRegistrationId());
+            if (boundUser.getRegistrationId() != null) {
                 Map<String, String> fcmData = new HashMap<>();
                 fcmData.put("requestId", requestId);
                 fcmData.put("requesterName", user.getName());
                 fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", fcmData);
+            } else {
+                log.warn("[BindAuth] 用户 userId={} 无 registrationId，跳过极光推送", boundUser.getId());
             }
         }
 
-        log.info("[BindAuth] 授权请求已推送, deviceSn={}, requesterId={}, requestId={}", deviceSn, user.getId(), requestId);
+        log.info("[BindAuth] 授权请求处理完成, deviceSn={}, requesterId={}, requestId={}", deviceSn, user.getId(), requestId);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("needAuth", true);

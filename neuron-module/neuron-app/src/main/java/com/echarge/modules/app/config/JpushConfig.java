@@ -1,6 +1,5 @@
 package com.echarge.modules.app.config;
 
-import cn.jiguang.common.ClientConfig;
 import cn.jpush.api.JPushClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +21,7 @@ public class JpushConfig {
 
     @Bean
     public JPushClient jpushClient() {
-        JPushClient client = new JPushClient(masterSecret, appKey, null, ClientConfig.getInstance());
+        JPushClient client = new JPushClient(masterSecret, appKey);
         log.info("[JPush] 极光推送客户端初始化成功");
         return client;
     }

@@ -2,10 +2,13 @@ package com.echarge.modules.app.service;
 
 import cn.jpush.api.JPushClient;
 import cn.jpush.api.push.PushResult;
-import cn.jpush.api.push.model.Message;
+import cn.jpush.api.push.model.Options;
 import cn.jpush.api.push.model.Platform;
 import cn.jpush.api.push.model.PushPayload;
 import cn.jpush.api.push.model.audience.Audience;
+import cn.jpush.api.push.model.notification.AndroidNotification;
+import cn.jpush.api.push.model.notification.IosNotification;
+import cn.jpush.api.push.model.notification.Notification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +17,7 @@ import java.util.Map;
 
 /**
  * 极光推送服务
- * 发透传消息（不弹系统通知），由 App 决定如何展示
+ * 发系统通知（分平台 android/ios），App 后台也能收到
  */
 @Slf4j
 @Service
@@ -28,16 +31,32 @@ public class FcmService {
             return;
         }
         try {
-            Message.Builder msgBuilder = Message.newBuilder()
-                    .setMsgContent(type)
+            AndroidNotification.Builder androidBuilder = AndroidNotification.newBuilder()
+                    .setTitle("N3 Lite")
+                    .setAlert(type)
+                    .addExtra("type", type);
+            IosNotification.Builder iosBuilder = IosNotification.newBuilder()
+                    .setAlert(type)
+                    .setSound("default")
                     .addExtra("type", type);
             if (data != null) {
-                data.forEach(msgBuilder::addExtra);
+                data.forEach((k, v) -> {
+                    androidBuilder.addExtra(k, v);
+                    iosBuilder.addExtra(k, v);
+                });
             }
+
             PushPayload payload = PushPayload.newBuilder()
-                    .setPlatform(Platform.all())
+                    .setPlatform(Platform.android_ios())
                     .setAudience(Audience.registrationId(registrationId))
-                    .setMessage(msgBuilder.build())
+                    .setNotification(Notification.newBuilder()
+                            .addPlatformNotification(androidBuilder.build())
+                            .addPlatformNotification(iosBuilder.build())
+                            .build())
+                    .setOptions(Options.newBuilder()
+                            .setApnsProduction(false)
+                            .setTimeToLive(600)
+                            .build())
                     .build();
             PushResult result = jpushClient.sendPush(payload);
             log.info("[JPush] 发送成功 type={}, msgId={}", type, result.msg_id);
