@@ -3,6 +3,8 @@ package com.echarge.modules.app.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.echarge.common.constant.BizConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.echarge.modules.app.i18n.AppI18n;
+import com.echarge.modules.app.i18n.LangContext;
 import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
@@ -163,8 +165,10 @@ public class AppDeviceController {
                 Map<String, String> fcmData = new HashMap<>();
                 fcmData.put("requestId", requestId);
                 fcmData.put("requesterName", user.getName());
-                String title = user.getName() + " 申请绑定您的 N3 Lite";
-                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", title, "点击查看请求详情", fcmData);
+                String lang = LangContext.get();
+                String title = user.getName() + AppI18n.get(" 申请绑定您的 N3 Lite", lang);
+                String alert = AppI18n.get("点击查看请求详情", lang);
+                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", title, alert, fcmData);
             } else {
                 log.warn("[BindAuth] 用户 userId={} 无 registrationId，跳过极光推送", boundUser.getId());
             }

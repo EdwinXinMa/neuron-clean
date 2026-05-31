@@ -94,6 +94,18 @@ public class AppI18n {
                 "授權請求已發送，請等待設備主人同意",
                 "Solicitud enviada, esperando aprobación del propietario",
                 "Solicitação enviada, aguardando aprovação do proprietário");
+        // ── 极光推送通知 ──────────────────────────────────────────
+        put(" 申请绑定您的 N3 Lite",
+                " wants to bind your N3 Lite",
+                " 申請綁定您的 N3 Lite",
+                " solicita vincular su N3 Lite",
+                " solicita vincular seu N3 Lite");
+        put("点击查看请求详情",
+                "Tap to view request details",
+                "點擊查看請求詳情",
+                "Toque para ver detalles",
+                "Toque para ver detalhes");
+
         put("请求过于频繁，请 1 分钟后再试",
                 "Too many requests, please try again in 1 minute",
                 "請求過於頻繁，請 1 分鐘後再試",
