@@ -59,7 +59,7 @@ public class FcmService {
                             .addPlatformNotification(iosBuilder.build())
                             .build())
                     .setOptions(Options.newBuilder()
-                            .setApnsProduction(false)
+                            .setApnsProduction(true)
                             .setTimeToLive(600)
                             .build())
                     .build();
