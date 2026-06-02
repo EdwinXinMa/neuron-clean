@@ -165,6 +165,8 @@ public class AppDeviceController {
                 Map<String, String> fcmData = new HashMap<>();
                 fcmData.put("requestId", requestId);
                 fcmData.put("requesterName", user.getName());
+                fcmData.put("deviceSn", deviceSn);
+                fcmData.put("expireSeconds", "600");
                 String lang = LangContext.get();
                 String title = user.getName() + AppI18n.get(" 申请绑定您的 N3 Lite", lang);
                 String alert = AppI18n.get("点击查看请求详情", lang);
