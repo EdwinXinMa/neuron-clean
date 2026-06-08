@@ -17,6 +17,7 @@
         <module>neuron-device</module>
         <module>neuron-protocol</module>
         <module>neuron-app</module>
+        <module>neuron-platform</module>
     </modules>
 
 

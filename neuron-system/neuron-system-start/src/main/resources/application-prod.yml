@@ -125,6 +125,9 @@ mybatis-plus:
     # 返回类型为Map,显示null对应的字段
     call-setters-on-nulls: true
 neuron:
+  # 平台间对接（H 平台调用 N 平台内部接口）
+  platform:
+    api-key: ${NEURON_PLATFORM_API_KEY:}
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:
     enabled: true

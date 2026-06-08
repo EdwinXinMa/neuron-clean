@@ -137,6 +137,9 @@ jpush:
   master-secret: 765696b510915e60b2196724
 
 neuron:
+  # 平台间对接（H 平台调用 N 平台内部接口）
+  platform:
+    api-key: npk_a3f8c2e1d4b7091e6f5a2c8d3e4b1f70
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:
     enabled: true

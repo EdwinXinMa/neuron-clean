@@ -144,6 +144,12 @@
 				<artifactId>neuron-protocol</artifactId>
 				<version>${neuron.version}</version>
 			</dependency>
+			<!-- 平台间对接模块 -->
+			<dependency>
+				<groupId>com.echarge</groupId>
+				<artifactId>neuron-platform</artifactId>
+				<version>${neuron.version}</version>
+			</dependency>
 				
 			<!-- fileupload -->
 			<dependency>

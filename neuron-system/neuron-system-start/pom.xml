@@ -42,6 +42,12 @@
             <artifactId>neuron-app</artifactId>
             <version>${neuron.version}</version>
         </dependency>
+        <!-- 平台间对接模块（H 平台 × N 平台） -->
+        <dependency>
+            <groupId>com.echarge</groupId>
+            <artifactId>neuron-platform</artifactId>
+            <version>${neuron.version}</version>
+        </dependency>
         
         <dependency>
             <groupId>jakarta.servlet</groupId>
