@@ -140,6 +140,11 @@ neuron:
   # 平台间对接（H 平台调用 N 平台内部接口）
   platform:
     api-key: npk_a3f8c2e1d4b7091e6f5a2c8d3e4b1f70
+  # N 平台主动回调 H 平台（设备上/下线事件）
+  hems-callback:
+    enabled: true
+    callback-url: http://47.120.29.191:8280
+    callback-key: hik_9d2a4f1b8e3c07d5a6b2e9f4c1d8a307
   # Kafka 开关（false=直连模式，true=走Kafka投递）
   kafka:
     enabled: true
