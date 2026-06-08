@@ -152,7 +152,7 @@ neuron:
     minio_pass: neuron123
     bucketName: neuron-firmware
   shiro:
-    excludeUrls:
+    excludeUrls: /platform/**
 #Mybatis输出sql日志
 logging:
   level:
