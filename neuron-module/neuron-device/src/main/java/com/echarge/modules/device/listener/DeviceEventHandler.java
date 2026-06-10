@@ -379,6 +379,11 @@ public class DeviceEventHandler implements DeviceEventListener {
         String phaseType = getJsonString(payload, "phaseType");
         if (phaseType != null) {
             parent.setPhaseType(phaseType);
+            if ("three".equals(phaseType)) {
+                parent.setDeviceModel("N3 Lite 3P");
+            } else {
+                parent.setDeviceModel("N3 Lite");
+            }
             ncDeviceService.updateById(parent);
             log.info("[DeviceEvent] TopologyReport: 设备 {} 相型为 {}", chargePointId, "three".equals(phaseType) ? "三相" : "单相");
         } else {
