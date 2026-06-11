@@ -8,8 +8,9 @@ import com.echarge.modules.app.i18n.LangContext;
 import com.echarge.modules.app.vo.AppResult;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
-import com.echarge.modules.app.mapper.AppUserMapper;
+import com.echarge.modules.app.entity.AppUserRegistration;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
+import com.echarge.modules.app.mapper.AppUserRegistrationMapper;
 import com.echarge.modules.app.service.FcmService;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.service.INcDeviceService;
@@ -49,7 +50,7 @@ public class AppDeviceController {
     private AppUserDeviceMapper userDeviceMapper;
 
     @Autowired
-    private AppUserMapper userMapper;
+    private AppUserRegistrationMapper userRegistrationMapper;
 
     @Autowired
     private INcDeviceService deviceService;
@@ -154,26 +155,25 @@ public class AppDeviceController {
         List<AppUserDevice> boundList = userDeviceMapper.selectList(
                 new LambdaQueryWrapper<AppUserDevice>().eq(AppUserDevice::getDeviceSn, deviceSn));
         log.info("[BindAuth] 已绑用户数={}, deviceSn={}", boundList.size(), deviceSn);
+        Map<String, String> fcmData = new HashMap<>();
+        fcmData.put("requestId", requestId);
+        fcmData.put("requesterName", user.getName());
+        fcmData.put("deviceSn", deviceSn);
+        fcmData.put("expireSeconds", "600");
+        String lang = LangContext.get();
+        String title = user.getName() + AppI18n.get(" 申请绑定您的 N3 Lite", lang);
+        String alert = AppI18n.get("点击查看请求详情", lang);
         for (AppUserDevice bound : boundList) {
-            AppUser boundUser = userMapper.selectById(bound.getUserId());
-            if (boundUser == null) {
-                log.warn("[BindAuth] 用户不存在, userId={}", bound.getUserId());
+            List<AppUserRegistration> regs = userRegistrationMapper.selectList(
+                    new LambdaQueryWrapper<AppUserRegistration>()
+                            .eq(AppUserRegistration::getUserId, bound.getUserId()));
+            if (regs.isEmpty()) {
+                log.warn("[BindAuth] 用户 userId={} 无 registrationId，跳过极光推送", bound.getUserId());
                 continue;
             }
-            log.info("[BindAuth] 已绑用户 userId={}, registrationId={}", boundUser.getId(), boundUser.getRegistrationId());
-            if (boundUser.getRegistrationId() != null) {
-                Map<String, String> fcmData = new HashMap<>();
-                fcmData.put("requestId", requestId);
-                fcmData.put("requesterName", user.getName());
-                fcmData.put("deviceSn", deviceSn);
-                fcmData.put("expireSeconds", "600");
-                String lang = LangContext.get();
-                String title = user.getName() + AppI18n.get(" 申请绑定您的 N3 Lite", lang);
-                String alert = AppI18n.get("点击查看请求详情", lang);
-                fcmService.sendSilent(boundUser.getRegistrationId(), "DEVICE_BIND_REQUEST", title, alert, fcmData);
-            } else {
-                log.warn("[BindAuth] 用户 userId={} 无 registrationId，跳过极光推送", boundUser.getId());
-            }
+            List<String> regIds = regs.stream().map(AppUserRegistration::getRegId).toList();
+            log.info("[BindAuth] userId={}, regId数量={}", bound.getUserId(), regIds.size());
+            fcmService.sendSilent(regIds, "DEVICE_BIND_REQUEST", title, alert, fcmData);
         }
 
         log.info("[BindAuth] 授权请求处理完成, deviceSn={}, requesterId={}, requestId={}", deviceSn, user.getId(), requestId);

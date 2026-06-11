@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,8 +28,8 @@ public class FcmService {
     @Autowired
     private JPushClient jpushClient;
 
-    public void sendSilent(String registrationId, String type, String title, String alert, Map<String, String> data) {
-        if (registrationId == null || registrationId.isBlank()) {
+    public void sendSilent(List<String> registrationIds, String type, String title, String alert, Map<String, String> data) {
+        if (registrationIds == null || registrationIds.isEmpty()) {
             return;
         }
         try {
@@ -53,7 +54,7 @@ public class FcmService {
 
             PushPayload payload = PushPayload.newBuilder()
                     .setPlatform(Platform.android_ios())
-                    .setAudience(Audience.registrationId(registrationId))
+                    .setAudience(Audience.registrationId(registrationIds))
                     .setNotification(Notification.newBuilder()
                             .addPlatformNotification(androidBuilder.build())
                             .addPlatformNotification(iosBuilder.build())
@@ -65,12 +66,9 @@ public class FcmService {
                     .build();
             log.info("[JPush] payload={}", payload.toJSON());
             PushResult result = jpushClient.sendPush(payload);
-            log.info("[JPush] 发送成功 type={}, msgId={}", type, result.msg_id);
+            log.info("[JPush] 发送成功 type={}, msgId={}, targets={}", type, result.msg_id, registrationIds.size());
         } catch (Exception e) {
-            log.warn("[JPush] 发送失败 type={}, registrationId前8位={}: {}",
-                    type,
-                    registrationId.length() > 8 ? registrationId.substring(0, 8) : registrationId,
-                    e.getMessage());
+            log.warn("[JPush] 发送失败 type={}, targets={}: {}", type, registrationIds.size(), e.getMessage());
         }
     }
 }
