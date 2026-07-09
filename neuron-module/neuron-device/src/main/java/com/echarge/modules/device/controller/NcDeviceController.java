@@ -142,16 +142,19 @@ public class NcDeviceController {
                 ctData.put("totalChargingCurrentC", dlm.getDoubleValue("totalChargingCurrentC"));
                 ctData.put("wifiRssi", dlm.getIntValue("wifiRssi"));
                 ctData.put("breakerRating", dlm.getIntValue("breakerRating"));
+                ctData.put("safetyMargin", dlm.containsKey("safetyMargin") ? dlm.getIntValue("safetyMargin") : 0);
                 ctData.put("dataFresh", true);
             } catch (Exception e) {
                 log.warn("Failed to parse DLM Redis data for {}: {}", sn, e.getMessage());
                 dlm = null;
                 ctData.put("dataFresh", false);
                 ctData.put("breakerRating", device.getBreakerRating());
+                ctData.put("safetyMargin", device.getSafetyMargin() != null ? device.getSafetyMargin() : 0);
             }
         } else {
             ctData.put("dataFresh", false);
             ctData.put("breakerRating", device.getBreakerRating());
+            ctData.put("safetyMargin", device.getSafetyMargin() != null ? device.getSafetyMargin() : 0);
             ctData.put("totalCurrentA", null);
             ctData.put("totalCurrentB", null);
             ctData.put("totalCurrentC", null);
@@ -458,6 +461,7 @@ public class NcDeviceController {
         if (breakerRating == null) {
             return Result.error(WebI18n.get("breakerRating 不能为空", lang));
         }
+        int safetyMargin = params.getIntValue("safetyMargin");
 
         String opUser = "system";
         try {
@@ -468,7 +472,7 @@ public class NcDeviceController {
         } catch (Exception ignored) {}
 
         try {
-            ncDeviceService.sendDlmConfig(sn, breakerRating, opUser);
+            ncDeviceService.sendDlmConfig(sn, breakerRating, safetyMargin, opUser);
         } catch (NeuronBootException e) {
             return Result.error(WebI18n.get(e.getMessage(), lang));
         }

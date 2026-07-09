@@ -159,6 +159,21 @@ public class WebI18n {
                 "breakerRating 為必填項",
                 "breakerRating es obligatorio",
                 "breakerRating é obrigatório");
+        put("breakerRating 无效",
+                "Invalid breakerRating value",
+                "breakerRating 值無效",
+                "Valor de breakerRating no válido",
+                "Valor de breakerRating inválido");
+        put("safetyMargin 不能为负数",
+                "safetyMargin cannot be negative",
+                "safetyMargin 不能為負數",
+                "safetyMargin no puede ser negativo",
+                "safetyMargin não pode ser negativo");
+        put("safetyMargin 超出允许范围",
+                "safetyMargin exceeds allowed range",
+                "safetyMargin 超出允許範圍",
+                "safetyMargin excede el rango permitido",
+                "safetyMargin excede o intervalo permitido");
         put("DLM 配置已更新",
                 "DLM configuration updated",
                 "DLM 配置已更新",

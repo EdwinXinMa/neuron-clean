@@ -103,19 +103,28 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
 
     /** {@inheritDoc} */
     @Override
-    public void sendDlmConfig(String sn, int breakerRating, String opUser) {
+    public void sendDlmConfig(String sn, int breakerRating, int safetyMargin, String opUser) {
         NcDevice device = this.getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
         if (device == null) {
             throw new NeuronBootException("设备不存在: " + sn);
         }
         if (!BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
-            throw new NeuronBootException("breakerRating 必须是 16/20/25/32/40/50/63 之一");
+            throw new NeuronBootException("breakerRating 无效");
+        }
+        if (safetyMargin < 0) {
+            throw new NeuronBootException("safetyMargin 不能为负数");
+        }
+        Integer maxMargin = BizConstant.MAX_SAFETY_MARGIN.get(breakerRating);
+        if (maxMargin != null && safetyMargin > maxMargin) {
+            throw new NeuronBootException("safetyMargin 超出允许范围");
         }
 
         Integer oldRating = device.getBreakerRating();
+        Integer oldMargin = device.getSafetyMargin();
 
         // 更新数据库
         device.setBreakerRating(breakerRating);
+        device.setSafetyMargin(safetyMargin);
         this.updateById(device);
 
         // 同步更新 Redis
@@ -125,6 +134,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             try {
                 JSONObject dlm = JSONObject.parseObject(dlmRaw.toString());
                 dlm.put("breakerRating", breakerRating);
+                dlm.put("safetyMargin", safetyMargin);
                 redisClient.set(redisKey, dlm.toJSONString(), 300);
             } catch (Exception e) {
                 log.warn("更新 Redis DLM 数据失败: {}", e.getMessage());
@@ -136,6 +146,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             String messageId = "dlm-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             JsonObject payload = new JsonObject();
             payload.addProperty("breakerRating", breakerRating);
+            payload.addProperty("safetyMargin", safetyMargin);
 
             JsonArray call = new JsonArray();
             call.add(2);
@@ -149,7 +160,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             call.add(dtPayload);
 
             ocppCommandSender.sendCall(sn, call.toString());
-            log.info("[DLM] Config sent to {}: breakerRating={}A", sn, breakerRating);
+            log.info("[DLM] Config sent to {}: breakerRating={}A, safetyMargin={}A", sn, breakerRating, safetyMargin);
         }
 
         // 操作日志
@@ -157,7 +168,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         opLog.setDeviceSn(sn);
         opLog.setOpUser(opUser);
         opLog.setOpType(NcOpLog.DLM_CONFIG);
-        opLog.setOpContent((oldRating != null ? oldRating : "?") + "A → " + breakerRating + "A");
+        opLog.setOpContent((oldRating != null ? oldRating : "?") + "A/" + (oldMargin != null ? oldMargin : 0) + "A → " + breakerRating + "A/" + safetyMargin + "A");
         opLog.setOpResult(NcOpLog.SUCCESS);
         opLog.setOpTime(new Date());
         opLog.setCreateTime(new Date());

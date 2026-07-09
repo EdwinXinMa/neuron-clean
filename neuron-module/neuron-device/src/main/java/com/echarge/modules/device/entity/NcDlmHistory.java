@@ -65,4 +65,7 @@ public class NcDlmHistory implements Serializable {
 
     @Schema(description = "断路器额定值 (A)")
     private Short breakerRating;
+
+    @Schema(description = "安全余量 (A)")
+    private Short safetyMargin;
 }

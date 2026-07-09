@@ -109,8 +109,11 @@ public class NcDevice extends NeuronEntity implements Serializable {
 
     // ==================== DLM 配置字段（持久化，变化少） ====================
 
-    @Schema(description = "断路器档位（A）: 20/25/32/40/50/63，DLM 设置持久化")
+    @Schema(description = "断路器档位（A）: 32/40/50/63/80/100，DLM 设置持久化")
     private Integer breakerRating;
+
+    @Schema(description = "安全余量（A），向下调整值，默认 0")
+    private Integer safetyMargin;
 
     @Schema(description = "供电相型：single（单相）/ three（三相），由 TopologyReport 上报写入")
     private String phaseType;

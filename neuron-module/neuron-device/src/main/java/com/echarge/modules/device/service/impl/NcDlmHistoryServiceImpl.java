@@ -53,7 +53,8 @@ public class NcDlmHistoryServiceImpl extends ServiceImpl<NcDlmHistoryMapper, NcD
                     .setTotalChargingCurrentB(getFloat(data, "totalChargingCurrentB"))
                     .setTotalChargingCurrentC(getFloat(data, "totalChargingCurrentC"))
                     .setWifiRssi(getShort(data, "wifiRssi"))
-                    .setBreakerRating(getShort(data, "breakerRating"));
+                    .setBreakerRating(getShort(data, "breakerRating"))
+                    .setSafetyMargin(getShort(data, "safetyMargin"));
             baseMapper.insert(history);
 
             // 写分配表

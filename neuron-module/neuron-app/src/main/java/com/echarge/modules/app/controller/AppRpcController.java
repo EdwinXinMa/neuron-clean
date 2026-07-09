@@ -450,16 +450,26 @@ public class AppRpcController {
         if ("InflowMaxCurrent".equals(configname)) {
             JSONObject dlm = getDlmData(deviceSn);
             String value = "32";
+            String marginValue = "0";
             if (dlm != null && dlm.containsKey("breakerRating")) {
                 value = dlm.getString("breakerRating");
+                marginValue = dlm.containsKey("safetyMargin") ? dlm.getString("safetyMargin") : "0";
             } else {
                 NcDevice device = deviceService.getOne(
                         new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
-                if (device != null && device.getBreakerRating() != null) {
-                    value = String.valueOf(device.getBreakerRating());
+                if (device != null) {
+                    if (device.getBreakerRating() != null) {
+                        value = String.valueOf(device.getBreakerRating());
+                    }
+                    if (device.getSafetyMargin() != null) {
+                        marginValue = String.valueOf(device.getSafetyMargin());
+                    }
                 }
             }
-            return rpcSuccess(method, deviceSn, Map.of("configname", configname, "InflowMaxCurrent", value));
+            return rpcSuccess(method, deviceSn, Map.of(
+                    "configname", configname,
+                    "InflowMaxCurrent", value,
+                    "InflowSafetyMargin", marginValue));
         }
 
         if ("version".equals(configname)) {
@@ -487,11 +497,13 @@ public class AppRpcController {
             return rpcError(method, 400, "InflowMaxCurrent 不能为空");
         }
         int breakerRating = ((Number) val).intValue();
+        Object marginVal = data.get("InflowSafetyMargin");
+        int safetyMargin = marginVal != null ? ((Number) marginVal).intValue() : 0;
 
         try {
             AppUser user = (AppUser) request.getAttribute("appUser");
             String opUser = user != null ? user.getEmail() : "app_user";
-            deviceService.sendDlmConfig(deviceSn, breakerRating, opUser);
+            deviceService.sendDlmConfig(deviceSn, breakerRating, safetyMargin, opUser);
         } catch (Exception e) {
             return rpcError(method, 500, e.getMessage());
         }

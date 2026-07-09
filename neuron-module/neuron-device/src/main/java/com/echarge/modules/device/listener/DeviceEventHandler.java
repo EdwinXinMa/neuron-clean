@@ -559,6 +559,14 @@ public class DeviceEventHandler implements DeviceEventListener {
                         log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
                     }
                 }
+                if (data.has("safetyMargin")) {
+                    int safetyMargin = data.get("safetyMargin").getAsInt();
+                    if (device.getSafetyMargin() == null || device.getSafetyMargin() != safetyMargin) {
+                        device.setSafetyMargin(safetyMargin);
+                        needUpdate = true;
+                        log.info("[DeviceEvent] SafetyMargin updated: sn={}, margin={}A", chargePointId, safetyMargin);
+                    }
+                }
 
                 if (data.has("macAddress") && !data.get("macAddress").isJsonNull()) {
                     String macAddress = data.get("macAddress").getAsString();
