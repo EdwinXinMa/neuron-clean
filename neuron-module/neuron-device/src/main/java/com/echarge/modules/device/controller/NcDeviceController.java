@@ -461,7 +461,7 @@ public class NcDeviceController {
         if (breakerRating == null) {
             return Result.error(WebI18n.get("breakerRating 不能为空", lang));
         }
-        int safetyMargin = params.getIntValue("safetyMargin");
+        Integer safetyMargin = params.containsKey("safetyMargin") ? params.getInteger("safetyMargin") : null;
 
         String opUser = "system";
         try {

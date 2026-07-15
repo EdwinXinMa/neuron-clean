@@ -37,14 +37,14 @@ public interface INcDeviceService extends IService<NcDevice> {
     boolean existsBySn(String sn);
 
     /**
-     * 下发 DLM 配置（breakerRating + safetyMargin）
+     * 下发 DLM 配置（breakerRating + 可选 safetyMargin）
      * 更新数据库 + Redis + OCPP 下发 + 操作日志
      * @param sn 设备序列号
      * @param breakerRating 断路器额定值
-     * @param safetyMargin 安全余量
+     * @param safetyMargin 安全余量；为空时按旧协议不下发该字段
      * @param opUser 操作人
      */
-    void sendDlmConfig(String sn, int breakerRating, int safetyMargin, String opUser);
+    void sendDlmConfig(String sn, int breakerRating, Integer safetyMargin, String opUser);
 
     /**
      * 下发充电桩工作模式切换

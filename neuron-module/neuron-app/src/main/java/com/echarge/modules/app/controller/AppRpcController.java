@@ -498,7 +498,7 @@ public class AppRpcController {
         }
         int breakerRating = ((Number) val).intValue();
         Object marginVal = data.get("InflowSafetyMargin");
-        int safetyMargin = marginVal != null ? ((Number) marginVal).intValue() : 0;
+        Integer safetyMargin = marginVal != null ? ((Number) marginVal).intValue() : null;
 
         try {
             AppUser user = (AppUser) request.getAttribute("appUser");

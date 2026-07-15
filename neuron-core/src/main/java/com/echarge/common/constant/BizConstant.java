@@ -78,7 +78,7 @@ public final class BizConstant {
     /** 搜索周边充电桩（云端→设备） */
     public static final String DT_SEARCH_DEVICE_LIST = "SearchDeviceList";
     /** breakerRating 合法值（协议 §6.2） */
-    public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(32, 40, 50, 63, 80, 100);
+    public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(20, 25, 32, 40, 50, 63, 80, 100);
 
     /** 各档位 breakerRating 对应的最大安全余量（breakerRating - safetyMargin > 下一档位） */
     public static final Map<Integer, Integer> MAX_SAFETY_MARGIN = Map.of(
