@@ -551,7 +551,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                     broadcastDeviceStatus(chargePointId, BizConstant.DEVICE_ONLINE, "DLMStatus 自动恢复上线");
                 }
 
-                if (data.has("breakerRating")) {
+                if (data.has("breakerRating") && !data.get("breakerRating").isJsonNull()) {
                     int breakerRating = data.get("breakerRating").getAsInt();
                     if (device.getBreakerRating() == null || device.getBreakerRating() != breakerRating) {
                         device.setBreakerRating(breakerRating);
@@ -559,7 +559,7 @@ public class DeviceEventHandler implements DeviceEventListener {
                         log.info("[DeviceEvent] BreakerRating updated: sn={}, rating={}A", chargePointId, breakerRating);
                     }
                 }
-                if (data.has("safetyMargin")) {
+                if (data.has("safetyMargin") && !data.get("safetyMargin").isJsonNull()) {
                     int safetyMargin = data.get("safetyMargin").getAsInt();
                     if (device.getSafetyMargin() == null || device.getSafetyMargin() != safetyMargin) {
                         device.setSafetyMargin(safetyMargin);
