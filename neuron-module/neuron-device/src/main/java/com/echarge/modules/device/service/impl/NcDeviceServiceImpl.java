@@ -108,15 +108,29 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         if (device == null) {
             throw new NeuronBootException("设备不存在: " + sn);
         }
-        if (!BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
-            throw new NeuronBootException("breakerRating 无效");
-        }
         if (safetyMargin != null && safetyMargin < 0) {
             throw new NeuronBootException("safetyMargin 不能为负数");
         }
-        Integer maxMargin = BizConstant.MAX_SAFETY_MARGIN.get(breakerRating);
-        if (safetyMargin != null && maxMargin != null && safetyMargin > maxMargin) {
-            throw new NeuronBootException("safetyMargin 超出允许范围");
+        if (safetyMargin == null) {
+            if (!BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
+                throw new NeuronBootException("breakerRating 无效");
+            }
+        } else {
+            boolean isMinRange = breakerRating >= BizConstant.DLM_MIN_BREAKER_RATING_MIN
+                    && breakerRating <= BizConstant.DLM_MIN_BREAKER_RATING_MAX;
+            if (isMinRange) {
+                if (breakerRating + safetyMargin > BizConstant.DLM_MIN_BREAKER_RATING_MAX) {
+                    throw new NeuronBootException("safetyMargin 超出允许范围");
+                }
+            } else {
+                if (!BizConstant.VALID_BREAKER_RATINGS.contains(breakerRating)) {
+                    throw new NeuronBootException("breakerRating 无效");
+                }
+                Integer maxMargin = BizConstant.MAX_SAFETY_MARGIN.get(breakerRating);
+                if (maxMargin != null && safetyMargin > maxMargin) {
+                    throw new NeuronBootException("safetyMargin 超出允许范围");
+                }
+            }
         }
 
         Integer oldRating = device.getBreakerRating();

@@ -80,6 +80,10 @@ public final class BizConstant {
     /** breakerRating 合法值（协议 §6.2） */
     public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(20, 25, 32, 40, 50, 63, 80, 100);
 
+    /** DLM Min 档 breakerRating 范围：与 safetyMargin 合计不能超过 31A */
+    public static final int DLM_MIN_BREAKER_RATING_MIN = 0;
+    public static final int DLM_MIN_BREAKER_RATING_MAX = 31;
+
     /** 各档位 breakerRating 对应的最大安全余量（breakerRating - safetyMargin > 下一档位） */
     public static final Map<Integer, Integer> MAX_SAFETY_MARGIN = Map.of(
             32, 31,
