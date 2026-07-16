@@ -119,7 +119,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             boolean isMinRange = breakerRating >= BizConstant.DLM_MIN_BREAKER_RATING_MIN
                     && breakerRating <= BizConstant.DLM_MIN_BREAKER_RATING_MAX;
             if (isMinRange) {
-                if (breakerRating + safetyMargin > BizConstant.DLM_MIN_BREAKER_RATING_MAX) {
+                if (safetyMargin != 0) {
                     throw new NeuronBootException("safetyMargin 超出允许范围");
                 }
             } else {
