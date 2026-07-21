@@ -35,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -867,6 +869,8 @@ public class DeviceEventHandler implements DeviceEventListener {
         int connectorId = payload.has("connectorId") ? payload.get("connectorId").getAsInt() : 1;
         String idTag = getJsonString(payload, "idTag");
         int meterStart = payload.has("meterStart") ? payload.get("meterStart").getAsInt() : 0;
+        String timestamp = getJsonString(payload, "timestamp");
+        Date startTime = parseOcppTimestampOrNow(timestamp, "StartTransaction", chargePointId, transactionId);
 
         log.info("[充电] 处理StartTransaction — 设备={}, txId={}, 枪={}, idTag={}, meterStart={}",
                 chargePointId, transactionId, connectorId, idTag, meterStart);
@@ -897,7 +901,7 @@ public class DeviceEventHandler implements DeviceEventListener {
             session.setPileSn(pileSn);
             session.setConnectorId(connectorId);
             session.setTransactionId(transactionId);
-            session.setStartTime(new Date());
+            session.setStartTime(startTime);
             session.setEnergy(0);
             session.setMeterStart(meterStart > 0 ? meterStart : null);
             session.setDuration(0);
@@ -918,6 +922,7 @@ public class DeviceEventHandler implements DeviceEventListener {
         int transactionId = payload.get("transactionId").getAsInt();
         int meterStop = payload.has("meterStop") ? payload.get("meterStop").getAsInt() : 0;
         String reason = getJsonString(payload, "reason");
+        String timestamp = getJsonString(payload, "timestamp");
 
         log.info("[充电] 处理StopTransaction — 设备={}, txId={}, meterStop={}, reason={}",
                 chargePointId, transactionId, meterStop, reason);
@@ -937,13 +942,19 @@ public class DeviceEventHandler implements DeviceEventListener {
             return;
         }
 
-        Date now = new Date();
+        Date stopTime = parseOcppTimestampOrNow(timestamp, "StopTransaction", chargePointId, transactionId);
         if (session.getEndTime() == null) {
-            session.setEndTime(now);
+            session.setEndTime(stopTime);
         }
         session.setStatus(NcChargingSession.FINISHED);
         if (session.getStartTime() != null) {
-            session.setDuration((int) ((now.getTime() - session.getStartTime().getTime()) / 1000));
+            long durationSeconds = (session.getEndTime().getTime() - session.getStartTime().getTime()) / 1000;
+            if (durationSeconds < 0) {
+                log.warn("[充电] StopTransaction 时间早于 StartTransaction，订单时长按0兜底 — 设备={}, txId={}, start={}, end={}",
+                        chargePointId, transactionId, session.getStartTime(), session.getEndTime());
+                durationSeconds = 0;
+            }
+            session.setDuration((int) Math.min(durationSeconds, Integer.MAX_VALUE));
         }
         // 电量计算：优先用 meterStop - meterStart 差值，算不出则保留 DLMStatus 的 energy
         if (meterStop > 0 && session.getMeterStart() != null && session.getMeterStart() > 0) {
@@ -992,5 +1003,20 @@ public class DeviceEventHandler implements DeviceEventListener {
     private String getJsonString(JsonObject obj, String key) {
         return obj != null && obj.has(key) && !obj.get(key).isJsonNull()
                 ? obj.get(key).getAsString() : null;
+    }
+
+    private Date parseOcppTimestampOrNow(String timestamp, String action, String deviceSn, int transactionId) {
+        if (timestamp != null && !timestamp.isBlank()) {
+            try {
+                return Date.from(Instant.parse(timestamp));
+            } catch (DateTimeParseException e) {
+                log.warn("[充电] {} timestamp 解析失败，使用云端时间兜底 — 设备={}, txId={}, timestamp={}",
+                        action, deviceSn, transactionId, timestamp);
+            }
+        } else {
+            log.warn("[充电] {} 未携带 timestamp，使用云端时间兜底 — 设备={}, txId={}",
+                    action, deviceSn, transactionId);
+        }
+        return new Date();
     }
 }
