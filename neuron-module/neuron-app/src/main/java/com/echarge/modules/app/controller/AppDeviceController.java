@@ -38,9 +38,10 @@ import java.util.concurrent.TimeUnit;
 @Tag(name = "App 设备管理")
 public class AppDeviceController {
 
-    private static final String BIND_LIMIT_KEY = "device:bind:limit:";
-    private static final String BIND_REQ_KEY   = "device:bind:req:";
-    private static final String BIND_CODE_KEY  = "device:bind:code:";
+    private static final String BIND_LIMIT_KEY   = "device:bind:limit:";
+    private static final String BIND_REQ_KEY     = "device:bind:req:";
+    private static final String BIND_CODE_KEY    = "device:bind:code:";
+    private static final String BIND_PENDING_KEY = "device:bind:pending:";
 
     private static final long LIMIT_TTL   = 60L;
     private static final long REQ_TTL     = 600L;
@@ -141,6 +142,9 @@ public class AppDeviceController {
         req.put("requesterName", user.getName());
         req.put("status", "PENDING");
         stringRedisTemplate.opsForValue().set(BIND_REQ_KEY + requestId, req.toJSONString(), REQ_TTL, TimeUnit.SECONDS);
+
+        // 写 pending 索引，供授权人主动拉取
+        stringRedisTemplate.opsForValue().set(BIND_PENDING_KEY + deviceSn, requestId, REQ_TTL, TimeUnit.SECONDS);
 
         // WS 推送给已绑该设备的所有账号
         JSONObject push = new JSONObject();
@@ -243,6 +247,7 @@ public class AppDeviceController {
         // 更新状态
         req.put("status", "APPROVED");
         stringRedisTemplate.opsForValue().set(BIND_REQ_KEY + requestId, req.toJSONString(), REQ_TTL, TimeUnit.SECONDS);
+        stringRedisTemplate.delete(BIND_PENDING_KEY + req.getString("deviceSn"));
 
         // WS 推送授权码给申请人
         JSONObject push = new JSONObject();
@@ -260,6 +265,7 @@ public class AppDeviceController {
         // 更新状态
         req.put("status", "REJECTED");
         stringRedisTemplate.opsForValue().set(BIND_REQ_KEY + requestId, req.toJSONString(), REQ_TTL, TimeUnit.SECONDS);
+        stringRedisTemplate.delete(BIND_PENDING_KEY + req.getString("deviceSn"));
 
         // WS 推送拒绝通知给申请人
         JSONObject push = new JSONObject();
@@ -358,6 +364,43 @@ public class AppDeviceController {
         }
 
         return AppResult.ok(data);
+    }
+
+    /**
+     * 查询当前用户所有设备的 pending 绑定请求
+     */
+    @GetMapping("/bind/pending")
+    @Operation(summary = "查询待授权的绑定请求")
+    public AppResult<?> bindPending(HttpServletRequest request) {
+        AppUser user = (AppUser) request.getAttribute("appUser");
+
+        List<AppUserDevice> bindings = userDeviceMapper.selectList(
+                new LambdaQueryWrapper<AppUserDevice>().eq(AppUserDevice::getUserId, user.getId()));
+
+        List<Map<String, Object>> pending = new ArrayList<>();
+        for (AppUserDevice binding : bindings) {
+            String requestId = stringRedisTemplate.opsForValue().get(BIND_PENDING_KEY + binding.getDeviceSn());
+            if (requestId == null) {
+                continue;
+            }
+            String reqJson = stringRedisTemplate.opsForValue().get(BIND_REQ_KEY + requestId);
+            if (reqJson == null) {
+                continue;
+            }
+            JSONObject req = JSONObject.parseObject(reqJson);
+            if (!"PENDING".equals(req.getString("status"))) {
+                continue;
+            }
+            Long ttl = stringRedisTemplate.getExpire(BIND_REQ_KEY + requestId, TimeUnit.SECONDS);
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("requestId", requestId);
+            item.put("deviceSn", binding.getDeviceSn());
+            item.put("requesterName", req.getString("requesterName"));
+            item.put("remainSeconds", ttl != null && ttl > 0 ? ttl : 0);
+            pending.add(item);
+        }
+
+        return AppResult.ok(Map.of("requests", pending));
     }
 
     /**
