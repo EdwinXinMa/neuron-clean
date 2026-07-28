@@ -47,11 +47,16 @@ public class AppI18n {
                 "密碼錯誤",
                 "Contraseña incorrecta",
                 "Senha incorreta");
-        put("邮箱、密码、姓名不能为空",
-                "Email, password and name are required",
-                "電郵、密碼及姓名為必填項",
-                "Email, contraseña y nombre son obligatorios",
-                "Email, senha e nome são obrigatórios");
+        put("邮箱不能为空",
+                "Email is required",
+                "電郵為必填項",
+                "El email es obligatorio",
+                "O email é obrigatório");
+        put("邮箱、密码、姓名、验证码不能为空",
+                "Email, password, name and verification code are required",
+                "電郵、密碼、姓名及驗證碼為必填項",
+                "Email, contraseña, nombre y código de verificación son obligatorios",
+                "Email, senha, nome e código de verificação são obrigatórios");
         put("该邮箱已注册",
                 "Email already registered",
                 "此電郵已被註冊",
@@ -67,6 +72,41 @@ public class AppI18n {
                 "電郵及密碼為必填項",
                 "Email y contraseña son obligatorios",
                 "Email e senha são obrigatórios");
+        put("无效的验证码用途",
+                "Invalid verification code purpose",
+                "無效的驗證碼用途",
+                "Propósito de código de verificación no válido",
+                "Finalidade do código de verificação inválida");
+        put("验证码已发送",
+                "Verification code sent",
+                "驗證碼已發送",
+                "Código de verificación enviado",
+                "Código de verificação enviado");
+        put("验证码错误或已过期",
+                "Invalid or expired verification code",
+                "驗證碼錯誤或已過期",
+                "Código de verificación incorrecto o expirado",
+                "Código de verificação incorreto ou expirado");
+        put("发送过于频繁，请稍后再试",
+                "Too many requests, please try again later",
+                "發送過於頻繁，請稍後再試",
+                "Demasiadas solicitudes, intente más tarde",
+                "Muitas solicitações, tente novamente mais tarde");
+        put("邮件服务未启用",
+                "Email service is not enabled",
+                "郵件服務未啟用",
+                "El servicio de correo no está habilitado",
+                "O serviço de e-mail não está ativado");
+        put("邮箱、验证码、新密码不能为空",
+                "Email, verification code and new password are required",
+                "電郵、驗證碼及新密碼為必填項",
+                "Email, código de verificación y nueva contraseña son obligatorios",
+                "Email, código de verificação e nova senha são obrigatórios");
+        put("密码重置成功",
+                "Password reset successful",
+                "密碼重置成功",
+                "Contraseña restablecida exitosamente",
+                "Senha redefinida com sucesso");
 
         // ── 设备绑定 ───────────────────────────────────────────────
         put("设备序列号不能为空",

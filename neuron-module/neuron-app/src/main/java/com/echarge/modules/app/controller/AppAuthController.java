@@ -8,6 +8,7 @@ import com.echarge.common.util.PasswordUtil;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
+import com.echarge.modules.app.service.EmailCodeService;
 import com.echarge.modules.app.service.IAppUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 /**
- * App 用户认证（注册/登录）
+ * App 用户认证（注册/登录/忘记密码）
  * @author Edwin
  */
 @Slf4j
@@ -34,8 +35,52 @@ public class AppAuthController {
     @Autowired
     private AppUserDeviceMapper userDeviceMapper;
 
+    @Autowired
+    private EmailCodeService emailCodeService;
+
     /**
-     * 注册
+     * 发送验证码（注册 / 忘记密码共用）
+     */
+    @PostMapping("/send-code")
+    @Operation(summary = "发送邮箱验证码")
+    public AppResult<?> sendCode(@RequestBody Map<String, String> params) {
+        String email = params.get("email");
+        String purpose = params.get("purpose"); // register / forgotPassword
+
+        if (StringUtils.isBlank(email)) {
+            return AppResult.error("邮箱不能为空");
+        }
+        if (!"register".equals(purpose) && !"forgotPassword".equals(purpose)) {
+            return AppResult.error("无效的验证码用途");
+        }
+
+        // 注册时检查邮箱是否已存在
+        if ("register".equals(purpose)) {
+            long count = appUserService.count(
+                    new LambdaQueryWrapper<AppUser>().eq(AppUser::getEmail, email));
+            if (count > 0) {
+                return AppResult.error("该邮箱已注册");
+            }
+        }
+
+        // 忘记密码时检查邮箱是否存在
+        if ("forgotPassword".equals(purpose)) {
+            long count = appUserService.count(
+                    new LambdaQueryWrapper<AppUser>().eq(AppUser::getEmail, email));
+            if (count == 0) {
+                return AppResult.error("用户不存在");
+            }
+        }
+
+        String error = emailCodeService.sendCode(email, purpose);
+        if (error != null) {
+            return AppResult.error(error);
+        }
+        return AppResult.ok("验证码已发送");
+    }
+
+    /**
+     * 注册（需先发送验证码）
      */
     @PostMapping("/register")
     @Operation(summary = "App 用户注册")
@@ -43,9 +88,15 @@ public class AppAuthController {
         String email = params.get("email");
         String password = params.get("password");
         String name = params.get("name");
+        String code = params.get("code");
 
-        if (StringUtils.isAnyBlank(email, password, name)) {
-            return AppResult.error("邮箱、密码、姓名不能为空");
+        if (StringUtils.isAnyBlank(email, password, name, code)) {
+            return AppResult.error("邮箱、密码、姓名、验证码不能为空");
+        }
+
+        // 校验验证码
+        if (!emailCodeService.verifyCode(email, "register", code)) {
+            return AppResult.error("验证码错误或已过期");
         }
 
         // 检查邮箱是否已注册
@@ -131,5 +182,42 @@ public class AppAuthController {
         data.put("devices", devices);
 
         return AppResult.ok(data);
+    }
+
+    /**
+     * 忘记密码（需先发送验证码）
+     */
+    @PostMapping("/forgot-password")
+    @Operation(summary = "忘记密码-重置")
+    public AppResult<?> forgotPassword(@RequestBody Map<String, String> params) {
+        String email = params.get("email");
+        String code = params.get("code");
+        String newPassword = params.get("newPassword");
+
+        if (StringUtils.isAnyBlank(email, code, newPassword)) {
+            return AppResult.error("邮箱、验证码、新密码不能为空");
+        }
+
+        // 校验验证码
+        if (!emailCodeService.verifyCode(email, "forgotPassword", code)) {
+            return AppResult.error("验证码错误或已过期");
+        }
+
+        // 查用户
+        AppUser user = appUserService.getOne(
+                new LambdaQueryWrapper<AppUser>().eq(AppUser::getEmail, email));
+        if (user == null) {
+            return AppResult.error("用户不存在");
+        }
+
+        // 重置密码
+        String salt = OConvertUtils.randomGen(8);
+        String encryptedPassword = PasswordUtil.encrypt(email, newPassword, salt);
+        user.setSalt(salt);
+        user.setPassword(encryptedPassword);
+        user.setUpdateTime(new Date());
+        appUserService.updateById(user);
+
+        return AppResult.ok("密码重置成功");
     }
 }

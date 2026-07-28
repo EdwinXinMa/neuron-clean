@@ -137,6 +137,18 @@ jpush:
   master-secret: 765696b510915e60b2196724
 
 neuron:
+  # 邮件服务
+  mail:
+    enabled: ${NEURON_MAIL_ENABLED:false}
+    host: ${NEURON_MAIL_HOST:smtp.example.com}
+    port: ${NEURON_MAIL_PORT:587}
+    from: ${NEURON_MAIL_FROM:noreply@alwayscontrol.net}
+    user: ${NEURON_MAIL_USER:}
+    pass: ${NEURON_MAIL_PASS:}
+    starttls-enable: true
+    ssl-enable: false
+    timeout: 5000
+    connection-timeout: 5000
   # 平台间对接（H 平台调用 N 平台内部接口）
   platform:
     api-key: npk_a3f8c2e1d4b7091e6f5a2c8d3e4b1f70
