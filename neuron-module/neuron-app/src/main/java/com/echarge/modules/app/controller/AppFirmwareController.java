@@ -103,10 +103,16 @@ public class AppFirmwareController {
      */
     @GetMapping("/download/latest")
     @Operation(summary = "下载最新固件（免登录）")
-    public AppResult<?> downloadLatest() {
+    public AppResult<?> downloadLatest(@RequestParam(required = false) Boolean newDlmSupported) {
         FirmwareLatest latest = firmwareVersionService.getLatest(BizConstant.TYPE_N3_LITE);
         if (latest == null || latest.getLatestFirmwareId() == null) {
             return AppResult.error(404, "暂无已发布的固件版本");
+        }
+
+        // 最新固件 >= 2.0.36 且 App 未传 newDlmSupported → 拒绝，提示更新 App
+        if (!Boolean.TRUE.equals(newDlmSupported) && FirmwareVersionServiceImpl.compareVersion(
+                latest.getLatestVersion(), BizConstant.DLM_NEW_PARAM_MIN_FIRMWARE) >= 0) {
+            return AppResult.error(400, "App 版本过低，请更新至最新版本");
         }
 
         FirmwareVersion fw = firmwareVersionService.getById(latest.getLatestFirmwareId());
