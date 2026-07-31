@@ -110,7 +110,7 @@ public class AppRpcController {
             case "ConfigManager.SetConfig" -> handleSetConfig(method, deviceSn, data, request);
             case "SubDeviceManager.StartChargingRequest" -> handleStartCharging(method, deviceSn, data);
             case "SubDeviceManager.StopChargingRequest" -> handleStopCharging(method, deviceSn, data);
-            case "SubDeviceManager.RequestFirmwareUpdate" -> handleRequestFirmwareUpdate(method, deviceSn);
+            case "SubDeviceManager.RequestFirmwareUpdate" -> handleRequestFirmwareUpdate(method, deviceSn, data);
             case "SubDeviceManager.GetChargingWorkMode" -> handleGetWorkMode(method, deviceSn);
             case "SubDeviceManager.SetChargingStationWorkMode",
                  "SubDeviceManager.SetChargingWorkMode" -> handleSetWorkMode(method, deviceSn, data);
@@ -724,11 +724,18 @@ public class AppRpcController {
     /**
      * 请求固件更新 — OCPP UpdateFirmware
      */
-    private Map<String, Object> handleRequestFirmwareUpdate(String method, String deviceSn) {
+    private Map<String, Object> handleRequestFirmwareUpdate(String method, String deviceSn, Map<String, Object> data) {
         // 查最新已发布固件
         FirmwareLatest latest = firmwareVersionService.getLatest(BizConstant.TYPE_N3_LITE);
         if (latest == null || latest.getLatestFirmwareId() == null) {
             return rpcError(method, 400, "暂无已发布的固件版本");
+        }
+
+        // 目标固件 >= 2.0.36 且 App 1.6-（未传 newDlmSupported）→ 拒绝升级
+        boolean newDlmSupported = Boolean.TRUE.equals(data.get("newDlmSupported"));
+        if (!newDlmSupported && FirmwareVersionServiceImpl.compareVersion(
+                latest.getLatestVersion(), BizConstant.DLM_NEW_PARAM_MIN_FIRMWARE) >= 0) {
+            return rpcError(method, 400, "App 版本过低，请更新至最新版本");
         }
 
         // 检查设备当前版本
