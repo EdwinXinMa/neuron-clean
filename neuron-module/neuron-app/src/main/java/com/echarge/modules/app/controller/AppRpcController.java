@@ -500,6 +500,19 @@ public class AppRpcController {
         Object marginVal = data.get("InflowSafetyMargin");
         Integer safetyMargin = marginVal != null ? ((Number) marginVal).intValue() : null;
 
+        // App 1.6 未传 newDlmSupported，若固件已升至 2.0.36+ 则拒绝，提示用户更新 App
+        boolean newDlmSupported = Boolean.TRUE.equals(data.get("newDlmSupported"));
+        if (!newDlmSupported) {
+            NcDevice deviceForCheck = deviceService.getOne(
+                    new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, deviceSn));
+            if (deviceForCheck != null) {
+                String fw = deviceForCheck.getFirmwareVersion();
+                if (fw != null && FirmwareVersionServiceImpl.compareVersion(fw, BizConstant.DLM_NEW_PARAM_MIN_FIRMWARE) >= 0) {
+                    return rpcError(method, 400, "App 版本过低，请更新至最新版本");
+                }
+            }
+        }
+
         try {
             AppUser user = (AppUser) request.getAttribute("appUser");
             String opUser = user != null ? user.getEmail() : "app_user";

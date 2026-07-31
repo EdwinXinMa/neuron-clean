@@ -79,6 +79,8 @@ public final class BizConstant {
     public static final String DT_SEARCH_DEVICE_LIST = "SearchDeviceList";
     /** breakerRating 合法值（协议 §6.2） */
     public static final Set<Integer> VALID_BREAKER_RATINGS = Set.of(20, 25, 32, 40, 50, 63, 80, 100);
+    /** 新版 DLM 参数（safetyMargin/Min 档）起始固件版本，App 1.7+ 才支持 */
+    public static final String DLM_NEW_PARAM_MIN_FIRMWARE = "2.0.36";
 
     /** DLM Min 档 breakerRating 范围：Min 模式 safetyMargin 固定为 0A */
     public static final int DLM_MIN_BREAKER_RATING_MIN = 6;

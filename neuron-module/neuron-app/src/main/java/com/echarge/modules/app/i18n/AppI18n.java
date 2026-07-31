@@ -397,6 +397,11 @@ public class AppI18n {
                 "充電樁",
                 "Cargador",
                 "Carregador");
+        put("App 版本过低，请更新至最新版本",
+                "App version is too old, please update to the latest version",
+                "App 版本過低，請更新至最新版本",
+                "Versión de App desactualizada, actualice a la última versión",
+                "Versão do App desatualizada, atualize para a versão mais recente");
 
         // ── 动态前缀 ────────────────────────────────────────────────
         put("不支持的 method: ",
