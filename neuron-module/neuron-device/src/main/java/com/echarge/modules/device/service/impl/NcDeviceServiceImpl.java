@@ -275,11 +275,12 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         }
 
         String messageId = "fr-" + java.util.UUID.randomUUID().toString().substring(0, 8);
-//        JsonObject payload = new JsonObject();
-//        payload.addProperty("confirm", true);
-//        payload.addProperty("scope", "AllUserConfig");
-//        payload.addProperty("reboot", true);
-//        payload.addProperty("requestedBy", requestedBy);
+        // 设备不强制要求包含以下字段，可以为空，当前下发 data 字段为空字符串。
+        // JsonObject payload = new JsonObject();
+        // payload.addProperty("confirm", true);
+        // payload.addProperty("scope", "AllUserConfig");
+        // payload.addProperty("reboot", true);
+        // payload.addProperty("requestedBy", requestedBy);
 
         JsonArray call = new JsonArray();
         call.add(2);
@@ -289,7 +290,7 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         JsonObject dtPayload = new JsonObject();
         dtPayload.addProperty("vendorId", "AlwaysControl");
         dtPayload.addProperty("messageId", BizConstant.DT_FACTORY_RESET);
-        dtPayload.addProperty("data","");
+        dtPayload.addProperty("data", "");
         call.add(dtPayload);
 
         log.info("[FactoryReset] Command sending to {}: requestedBy={}, messageId={}", sn, requestedBy, messageId);
