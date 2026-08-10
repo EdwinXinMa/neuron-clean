@@ -199,6 +199,31 @@ public class WebI18n {
                 "重啟命令已下發",
                 "Comando de reinicio enviado",
                 "Comando de reinicialização enviado");
+        put("请确认恢复出厂设置",
+                "Please confirm factory reset",
+                "請確認恢復出廠設定",
+                "Confirme el restablecimiento de fábrica",
+                "Confirme a redefinição de fábrica");
+        put("设备离线，无法恢复出厂设置",
+                "Device is offline, cannot factory reset",
+                "設備離線，無法恢復出廠設定",
+                "Dispositivo offline, no se puede restablecer de fábrica",
+                "Dispositivo offline, não é possível redefinir de fábrica");
+        put("恢复出厂设置指令已下发",
+                "Factory reset command sent",
+                "恢復出廠設定指令已下發",
+                "Comando de restablecimiento de fábrica enviado",
+                "Comando de redefinição de fábrica enviado");
+        put("设备响应超时",
+                "Device response timed out",
+                "設備回應逾時",
+                "Tiempo de respuesta del dispositivo agotado",
+                "Tempo de resposta do dispositivo esgotado");
+        put("设备拒绝恢复出厂设置（",
+                "Device rejected factory reset (",
+                "設備拒絕恢復出廠設定（",
+                "Dispositivo rechazó el restablecimiento de fábrica (",
+                "Dispositivo recusou a redefinição de fábrica (");
 
         // ── 服务层（NcDeviceServiceImpl）─────────────────────────────────
         put("设备SN不能为空",

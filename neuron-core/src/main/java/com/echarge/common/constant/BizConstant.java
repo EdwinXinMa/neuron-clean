@@ -75,6 +75,8 @@ public final class BizConstant {
     public static final String DT_SET_DLM_CONFIG = "SetDLMConfig";
     /** 工作模式切换 */
     public static final String DT_SET_WORK_MODE = "SetWorkMode";
+    /** 恢复出厂设置 */
+    public static final String DT_FACTORY_RESET = "FactoryReset";
     /** 搜索周边充电桩（云端→设备） */
     public static final String DT_SEARCH_DEVICE_LIST = "SearchDeviceList";
     /** breakerRating 合法值（协议 §6.2） */

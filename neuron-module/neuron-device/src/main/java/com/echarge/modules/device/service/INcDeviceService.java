@@ -54,4 +54,13 @@ public interface INcDeviceService extends IService<NcDevice> {
      * @param opUser 操作人
      */
     void sendWorkMode(String sn, List<Map<String, String>> deviceList, String opUser);
+
+    /**
+     * 下发恢复出厂设置指令。
+     * OCPP DataTransfer(FactoryReset) 下发 + 等待设备回执 + 操作日志
+     * @param sn N3 Lite 设备序列号
+     * @param requestedBy 发起来源：web / app
+     * @param opUser 操作人
+     */
+    void sendFactoryReset(String sn, String requestedBy, String opUser);
 }

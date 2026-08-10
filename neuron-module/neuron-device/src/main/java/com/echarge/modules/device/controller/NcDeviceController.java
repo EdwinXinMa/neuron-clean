@@ -601,6 +601,36 @@ public class NcDeviceController {
         return Result.ok(WebI18n.get("重启命令已下发", lang));
     }
 
+    /**
+     * 恢复出厂设置
+     * 通过 OCPP DataTransfer(FactoryReset) 下发到设备，并等待设备回执
+     */
+    @Operation(summary = "恢复出厂设置")
+    @PostMapping("/{sn}/factory-reset")
+    public Result<?> factoryReset(@PathVariable String sn,
+                                  @RequestParam(defaultValue = "false") Boolean confirm) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+        if (!Boolean.TRUE.equals(confirm)) {
+            return Result.error(WebI18n.get("请确认恢复出厂设置", lang));
+        }
+
+        String opUser = "system";
+        try {
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser != null) {
+                opUser = loginUser.getUsername();
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            ncDeviceService.sendFactoryReset(sn, "web", opUser);
+        } catch (NeuronBootException e) {
+            return Result.error(WebI18n.get(e.getMessage(), lang));
+        }
+
+        return Result.ok(WebI18n.get("恢复出厂设置指令已下发", lang));
+    }
+
     private Map<String, String> buildError(int row, String sn, String reason) {
         Map<String, String> err = new LinkedHashMap<>();
         err.put("row", String.valueOf(row));

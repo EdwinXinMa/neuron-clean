@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.echarge.common.util.CommonUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.echarge.common.exception.NeuronBootException;
 import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
@@ -114,6 +115,7 @@ public class AppRpcController {
             case "SubDeviceManager.GetChargingWorkMode" -> handleGetWorkMode(method, deviceSn);
             case "SubDeviceManager.SetChargingStationWorkMode",
                  "SubDeviceManager.SetChargingWorkMode" -> handleSetWorkMode(method, deviceSn, data);
+            case "SubDeviceManager.FactoryReset" -> handleFactoryReset(method, deviceSn, data);
             // 云模式不需要的接口
             case "SubDeviceManager.SearchChargeStationRequest",
                  "SubDeviceManager.UpdateMajorSubDeviceByPortName" ->
@@ -715,6 +717,28 @@ public class AppRpcController {
         }
 
         return rpcSuccess(method, deviceSn, Map.of());
+    }
+
+    /**
+     * 恢复出厂设置 — OCPP DataTransfer(FactoryReset)
+     */
+    private Map<String, Object> handleFactoryReset(String method, String deviceSn, Map<String, Object> data) {
+        if (!Boolean.TRUE.equals(data.get("confirm"))) {
+            return rpcError(method, 400, "请确认恢复出厂设置");
+        }
+
+        try {
+            deviceService.sendFactoryReset(deviceSn, "app", "app");
+        } catch (NeuronBootException e) {
+            return rpcError(method, "设备响应超时".equals(e.getMessage()) ? 504 : 400, e.getMessage());
+        } catch (Exception e) {
+            return rpcError(method, 500, e.getMessage());
+        }
+
+        Map<String, Object> result = rpcSuccess(method, deviceSn, Map.of("accepted", true));
+        result.put("message", com.echarge.modules.app.i18n.AppI18n.get("恢复出厂设置指令已下发",
+                com.echarge.modules.app.i18n.LangContext.get()));
+        return result;
     }
 
     // ═══════════════════════════════════════════════

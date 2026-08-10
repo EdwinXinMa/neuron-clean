@@ -13,6 +13,7 @@ import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -257,6 +258,67 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         opLog.setOpType(NcOpLog.WORK_MODE);
         opLog.setOpContent("工作模式切换: " + desc);
         opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void sendFactoryReset(String sn, String requestedBy, String opUser) {
+        NcDevice device = this.getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
+        if (device == null) {
+            throw new NeuronBootException("设备不存在: " + sn);
+        }
+        if (!ocppCommandSender.isDeviceConnected(sn)) {
+            throw new NeuronBootException("设备离线，无法恢复出厂设置");
+        }
+
+        String messageId = "fr-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("confirm", true);
+        payload.addProperty("scope", "AllUserConfig");
+        payload.addProperty("reboot", true);
+        payload.addProperty("requestedBy", requestedBy);
+
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("DataTransfer");
+
+        JsonObject dtPayload = new JsonObject();
+        dtPayload.addProperty("vendorId", "AlwaysControl");
+        dtPayload.addProperty("messageId", BizConstant.DT_FACTORY_RESET);
+        dtPayload.addProperty("data", payload.toString());
+        call.add(dtPayload);
+
+        log.info("[FactoryReset] Command sending to {}: requestedBy={}, messageId={}", sn, requestedBy, messageId);
+        String response = ocppCommandSender.sendCallAndWait(sn, call.toString(), messageId, 10);
+        if (response == null) {
+            saveFactoryResetLog(sn, opUser, NcOpLog.FAIL, "设备响应超时");
+            throw new NeuronBootException("设备响应超时");
+        }
+
+        JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
+        String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
+        if (!"Accepted".equals(status)) {
+            String reason = respObj.has("message") ? respObj.get("message").getAsString() : status;
+            saveFactoryResetLog(sn, opUser, NcOpLog.FAIL, reason);
+            throw new NeuronBootException("设备拒绝恢复出厂设置（" + reason + "）");
+        }
+
+        saveFactoryResetLog(sn, opUser, NcOpLog.SUCCESS, null);
+        log.info("[FactoryReset] Command accepted by {}: requestedBy={}, messageId={}", sn, requestedBy, messageId);
+    }
+
+    private void saveFactoryResetLog(String sn, String opUser, String result, String failReason) {
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.REMOTE_RESET);
+        opLog.setOpContent("恢复出厂设置");
+        opLog.setOpResult(result);
+        opLog.setFailReason(failReason);
         opLog.setOpTime(new Date());
         opLog.setCreateTime(new Date());
         opLogService.save(opLog);
