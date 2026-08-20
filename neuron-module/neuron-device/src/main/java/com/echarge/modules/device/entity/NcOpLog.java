@@ -63,6 +63,7 @@ public class NcOpLog implements Serializable {
     public static final String REMOTE_REBOOT  = "REMOTE_REBOOT";
     public static final String REMOTE_RESET   = "REMOTE_RESET";
     public static final String WORK_MODE     = "WORK_MODE";
+    public static final String SCHEDULED_CHARGING = "SCHEDULED_CHARGING";
 
     public static final String SUCCESS = "SUCCESS";
     public static final String FAIL    = "FAIL";

@@ -10,6 +10,7 @@ import com.echarge.modules.app.entity.AppUserDevice;
 import com.echarge.modules.app.mapper.AppUserDeviceMapper;
 import com.echarge.modules.app.service.EmailCodeService;
 import com.echarge.modules.app.service.IAppUserService;
+import com.echarge.modules.app.util.AppScheduleTimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +90,7 @@ public class AppAuthController {
         String password = params.get("password");
         String name = params.get("name");
         String code = params.get("code");
+        String timezone = AppScheduleTimeUtil.normalizeZoneId(params.get("timezone"));
 
         if (StringUtils.isAnyBlank(email, password, name, code)) {
             return AppResult.error("邮箱、密码、姓名、验证码不能为空");
@@ -115,6 +117,7 @@ public class AppAuthController {
                 .setPassword(encryptedPassword)
                 .setSalt(salt)
                 .setName(name)
+                .setTimezone(timezone)
                 .setStatus(1)
                 .setCreateTime(new Date());
         appUserService.save(user);
@@ -126,6 +129,7 @@ public class AppAuthController {
         data.put("userId", user.getId());
         data.put("email", user.getEmail());
         data.put("name", user.getName());
+        data.put("timezone", user.getTimezone());
         data.put("token", token);
 
         return AppResult.ok("注册成功", data);
@@ -178,6 +182,7 @@ public class AppAuthController {
         data.put("userId", user.getId());
         data.put("email", user.getEmail());
         data.put("name", user.getName());
+        data.put("timezone", AppScheduleTimeUtil.userZoneId(user));
         data.put("token", token);
         data.put("devices", devices);
 

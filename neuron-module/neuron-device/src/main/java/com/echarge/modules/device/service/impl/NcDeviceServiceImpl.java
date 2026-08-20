@@ -12,6 +12,7 @@ import com.echarge.modules.device.mapper.NcDeviceMapper;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.INcOpLogService;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -210,13 +212,13 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             throw new NeuronBootException("设备离线，无法下发工作模式切换");
         }
 
-        Set<String> validModes = Set.of("Plc", "App", "Ocpp");
+        Set<String> validModes = Set.of("Manual", "Auto", "Scheduled");
         for (Map<String, String> item : deviceList) {
             if (item.get("sn") == null || item.get("sn").isBlank()) {
                 throw new NeuronBootException("桩 SN 不能为空");
             }
             if (!validModes.contains(item.get("workMode"))) {
-                throw new NeuronBootException("workMode 必须是 Plc/App/Ocpp 之一");
+                throw new NeuronBootException("workMode 必须是 Manual/Auto/Scheduled 之一");
             }
         }
 
@@ -258,6 +260,150 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         opLog.setOpType(NcOpLog.WORK_MODE);
         opLog.setOpContent("工作模式切换: " + desc);
         opLog.setOpResult(NcOpLog.SUCCESS);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        opLogService.save(opLog);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void sendScheduledCharging(String sn, String pileSn, List<List<String>> timePeriods, String opUser) {
+        validateScheduleRequest(sn, pileSn);
+        if (timePeriods == null) {
+            throw new NeuronBootException("timePeriods 不能为 null");
+        }
+        if (timePeriods.size() > 11) {
+            throw new NeuronBootException("timePeriods 不能超过 11 段");
+        }
+
+        String messageId = "sch-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("sn", pileSn);
+        payload.add("timePeriods", toTimePeriodsJson(timePeriods));
+
+        JsonArray call = buildDataTransferCall(messageId, BizConstant.DT_SET_SCHEDULED_CHARGING, payload.toString());
+        log.info("[ScheduledCharging] Command sending to {}: pileSn={}, timePeriods={}", sn, pileSn, timePeriods);
+        JsonObject respObj = parseAcceptedResponse(
+                ocppCommandSender.sendCallAndWait(sn, call.toString(), messageId, 10),
+                "设备响应超时",
+                "设备拒绝设置预约充电时间段");
+
+        saveScheduledChargingLog(sn, opUser, pileSn, timePeriods, NcOpLog.SUCCESS, null);
+        log.info("[ScheduledCharging] Command accepted by {}: pileSn={}, response={}", sn, pileSn, respObj);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<List<String>> getScheduledCharging(String sn, String pileSn) {
+        validateScheduleRequest(sn, pileSn);
+
+        String messageId = "gsch-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("sn", pileSn);
+
+        JsonArray call = buildDataTransferCall(messageId, BizConstant.DT_GET_SCHEDULED_CHARGING, payload.toString());
+        log.info("[ScheduledCharging] Query sending to {}: pileSn={}", sn, pileSn);
+        JsonObject respObj = parseAcceptedResponse(
+                ocppCommandSender.sendCallAndWait(sn, call.toString(), messageId, 10),
+                "设备响应超时",
+                "设备拒绝查询预约充电时间段");
+        JsonObject dataObj = parseDataObject(respObj);
+        if (dataObj == null || !dataObj.has("timePeriods") || !dataObj.get("timePeriods").isJsonArray()) {
+            return List.of();
+        }
+
+        List<List<String>> result = new ArrayList<>();
+        for (JsonElement element : dataObj.getAsJsonArray("timePeriods")) {
+            if (!element.isJsonArray() || element.getAsJsonArray().size() != 2) {
+                throw new NeuronBootException("设备返回的 timePeriods 格式无效");
+            }
+            JsonArray pair = element.getAsJsonArray();
+            result.add(List.of(pair.get(0).getAsString(), pair.get(1).getAsString()));
+        }
+        return result;
+    }
+
+    private void validateScheduleRequest(String sn, String pileSn) {
+        NcDevice device = this.getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
+        if (device == null) {
+            throw new NeuronBootException("设备不存在: " + sn);
+        }
+        if (StringUtils.isBlank(pileSn)) {
+            throw new NeuronBootException("桩 SN 不能为空");
+        }
+        if (!ocppCommandSender.isDeviceConnected(sn)) {
+            throw new NeuronBootException("设备离线，无法下发预约充电指令");
+        }
+    }
+
+    private JsonArray buildDataTransferCall(String messageId, String dataTransferMessageId, String data) {
+        JsonArray call = new JsonArray();
+        call.add(2);
+        call.add(messageId);
+        call.add("DataTransfer");
+
+        JsonObject dtPayload = new JsonObject();
+        dtPayload.addProperty("vendorId", "AlwaysControl");
+        dtPayload.addProperty("messageId", dataTransferMessageId);
+        dtPayload.addProperty("data", data);
+        call.add(dtPayload);
+        return call;
+    }
+
+    private JsonArray toTimePeriodsJson(List<List<String>> timePeriods) {
+        JsonArray array = new JsonArray();
+        for (List<String> period : timePeriods) {
+            if (period == null || period.size() != 2) {
+                throw new NeuronBootException("timePeriods 格式必须是 [[\"HH:mm\",\"HH:mm\"]]");
+            }
+            JsonArray pair = new JsonArray();
+            pair.add(period.get(0));
+            pair.add(period.get(1));
+            array.add(pair);
+        }
+        return array;
+    }
+
+    private JsonObject parseAcceptedResponse(String response, String timeoutMessage, String rejectMessage) {
+        if (response == null) {
+            throw new NeuronBootException(timeoutMessage);
+        }
+        JsonObject respObj = JsonParser.parseString(response).getAsJsonObject();
+        String status = respObj.has("status") ? respObj.get("status").getAsString() : "Rejected";
+        if (!"Accepted".equals(status)) {
+            String reason = respObj.has("message") ? respObj.get("message").getAsString() : status;
+            throw new NeuronBootException(rejectMessage + "（" + reason + "）");
+        }
+        return respObj;
+    }
+
+    private JsonObject parseDataObject(JsonObject respObj) {
+        if (respObj == null || !respObj.has("data") || respObj.get("data").isJsonNull()) {
+            return null;
+        }
+        JsonElement data = respObj.get("data");
+        if (data.isJsonObject()) {
+            return data.getAsJsonObject();
+        }
+        if (data.isJsonPrimitive()) {
+            String text = data.getAsString();
+            if (StringUtils.isBlank(text)) {
+                return null;
+            }
+            return JsonParser.parseString(text).getAsJsonObject();
+        }
+        return null;
+    }
+
+    private void saveScheduledChargingLog(String sn, String opUser, String pileSn, List<List<String>> timePeriods,
+                                          String result, String failReason) {
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.SCHEDULED_CHARGING);
+        opLog.setOpContent("预约充电时间段: " + pileSn + " -> " + timePeriods);
+        opLog.setOpResult(result);
+        opLog.setFailReason(failReason);
         opLog.setOpTime(new Date());
         opLog.setCreateTime(new Date());
         opLogService.save(opLog);

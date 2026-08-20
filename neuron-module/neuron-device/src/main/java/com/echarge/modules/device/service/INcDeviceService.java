@@ -50,10 +50,29 @@ public interface INcDeviceService extends IService<NcDevice> {
      * 下发充电桩工作模式切换
      * OCPP DataTransfer(SetWorkMode) 下发 + 操作日志
      * @param sn N3 Lite 设备序列号
-     * @param deviceList 桩列表 [{"sn":"xxx","workMode":"Plc"}]
+     * @param deviceList 桩列表 [{"sn":"xxx","workMode":"Manual"}]
      * @param opUser 操作人
      */
     void sendWorkMode(String sn, List<Map<String, String>> deviceList, String opUser);
+
+    /**
+     * 下发预约充电时间段。
+     * OCPP DataTransfer(SetScheduledCharging) 下发 + 等待设备回执 + 操作日志
+     * @param sn N3 Lite 设备序列号
+     * @param pileSn 充电桩 SN
+     * @param timePeriods UTC 时间段，格式 [["22:00","07:00"]]
+     * @param opUser 操作人
+     */
+    void sendScheduledCharging(String sn, String pileSn, List<List<String>> timePeriods, String opUser);
+
+    /**
+     * 查询预约充电时间段。
+     * OCPP DataTransfer(GetScheduledCharging) 下发 + 等待设备回执
+     * @param sn N3 Lite 设备序列号
+     * @param pileSn 充电桩 SN
+     * @return UTC 时间段
+     */
+    List<List<String>> getScheduledCharging(String sn, String pileSn);
 
     /**
      * 下发恢复出厂设置指令。

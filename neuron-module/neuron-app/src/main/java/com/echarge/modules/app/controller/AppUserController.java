@@ -5,6 +5,7 @@ import com.echarge.modules.app.entity.AppUser;
 import com.echarge.modules.app.entity.AppUserRegistration;
 import com.echarge.modules.app.mapper.AppUserRegistrationMapper;
 import com.echarge.modules.app.service.IAppUserService;
+import com.echarge.modules.app.util.AppScheduleTimeUtil;
 import com.echarge.modules.app.vo.AppResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,5 +57,15 @@ public class AppUserController {
                     .setCreateTime(new Date()));
         }
         return AppResult.ok("上报成功");
+    }
+    @PostMapping("/timezone")
+    @Operation(summary = "更新 App 用户时区")
+    public AppResult<?> updateTimezone(@RequestBody Map<String, String> params, HttpServletRequest request) {
+        AppUser user = (AppUser) request.getAttribute("appUser");
+        String timezone = AppScheduleTimeUtil.normalizeZoneId(params.get("timezone"));
+        user.setTimezone(timezone);
+        user.setUpdateTime(new Date());
+        appUserService.updateById(user);
+        return AppResult.ok(Map.of("timezone", timezone));
     }
 }

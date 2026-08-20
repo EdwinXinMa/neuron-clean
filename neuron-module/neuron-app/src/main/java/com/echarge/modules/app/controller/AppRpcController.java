@@ -22,6 +22,7 @@ import com.echarge.modules.device.service.INcConnectorService;
 import com.echarge.modules.device.service.INcDeviceService;
 import com.echarge.modules.device.service.impl.FirmwareVersionServiceImpl;
 import com.echarge.modules.device.websocket.AppWebSocket;
+import com.echarge.modules.app.util.AppScheduleTimeUtil;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.util.MinioUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -106,7 +109,7 @@ public class AppRpcController {
             case "SubDeviceManager.SelectChargingDetails" -> handleSelectChargingDetails(method, deviceSn, data);
             case "SubDeviceManager.SelectChargingLoadCurrent" -> handleSelectChargingLoadCurrent(method, deviceSn, data);
             case "SubDeviceManager.SelectChargingLoadCurrentList" -> handleSelectChargingLoadCurrentList(method, deviceSn);
-            case "SubDeviceManager.SelectChargingHistory" -> handleSelectChargingHistory(method, deviceSn, data);
+            case "SubDeviceManager.SelectChargingHistory" -> handleSelectChargingHistory(method, deviceSn, data, user);
             case "ConfigManager.GetConfig" -> handleGetConfig(method, deviceSn, data);
             case "ConfigManager.SetConfig" -> handleSetConfig(method, deviceSn, data, request);
             case "SubDeviceManager.StartChargingRequest" -> handleStartCharging(method, deviceSn, data);
@@ -115,6 +118,8 @@ public class AppRpcController {
             case "SubDeviceManager.GetChargingWorkMode" -> handleGetWorkMode(method, deviceSn);
             case "SubDeviceManager.SetChargingStationWorkMode",
                  "SubDeviceManager.SetChargingWorkMode" -> handleSetWorkMode(method, deviceSn, data);
+            case "SubDeviceManager.SetScheduledChargingTime" -> handleSetScheduledChargingTime(method, deviceSn, data, user);
+            case "SubDeviceManager.GetChargingSchedule" -> handleGetChargingSchedule(method, deviceSn, data, user);
             case "SubDeviceManager.FactoryReset" -> handleFactoryReset(method, deviceSn, data);
             // 云模式不需要的接口
             case "SubDeviceManager.SearchChargeStationRequest",
@@ -391,27 +396,23 @@ public class AppRpcController {
     /**
      * 查询充电历史（对应本地接口 #16）
      */
-    private Map<String, Object> handleSelectChargingHistory(String method, String deviceSn, Map<String, Object> data) {
+    private Map<String, Object> handleSelectChargingHistory(String method, String deviceSn, Map<String, Object> data, AppUser user) {
         int page = data.get("page") != null ? ((Number) data.get("page")).intValue() : 0;
         int pageSize = 10;
         Integer year = data.get("year") != null ? ((Number) data.get("year")).intValue() : null;
         Integer month = data.get("month") != null ? ((Number) data.get("month")).intValue() : null;
 
-        java.util.Calendar cal = java.util.Calendar.getInstance();
         java.util.Date startOfRange = null;
         java.util.Date endOfRange = null;
+        ZoneId userZone = ZoneId.of(AppScheduleTimeUtil.userZoneId(user));
         if (year != null && month != null) {
-            cal.set(year, month - 1, 1, 0, 0, 0);
-            cal.set(java.util.Calendar.MILLISECOND, 0);
-            startOfRange = cal.getTime();
-            cal.add(java.util.Calendar.MONTH, 1);
-            endOfRange = cal.getTime();
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            startOfRange = Date.from(startDate.atStartOfDay(userZone).toInstant());
+            endOfRange = Date.from(startDate.plusMonths(1).atStartOfDay(userZone).toInstant());
         } else if (year != null) {
-            cal.set(year, 0, 1, 0, 0, 0);
-            cal.set(java.util.Calendar.MILLISECOND, 0);
-            startOfRange = cal.getTime();
-            cal.add(java.util.Calendar.YEAR, 1);
-            endOfRange = cal.getTime();
+            LocalDate startDate = LocalDate.of(year, 1, 1);
+            startOfRange = Date.from(startDate.atStartOfDay(userZone).toInstant());
+            endOfRange = Date.from(startDate.plusYears(1).atStartOfDay(userZone).toInstant());
         }
 
         Page<NcChargingSession> result = chargingSessionMapper.selectPage(
@@ -722,6 +723,52 @@ public class AppRpcController {
     /**
      * 恢复出厂设置 — OCPP DataTransfer(FactoryReset)
      */
+    private Map<String, Object> handleSetScheduledChargingTime(String method, String deviceSn, Map<String, Object> data, AppUser user) {
+        String mac = getMac(data);
+        if (mac == null || mac.isBlank()) {
+            return rpcError(method, 400, "mac 不能为空");
+        }
+
+        List<List<String>> utcPeriods;
+        try {
+            utcPeriods = AppScheduleTimeUtil.toUtcTimePeriods(data.get("timePeriods"), AppScheduleTimeUtil.userZoneId(user));
+        } catch (IllegalArgumentException e) {
+            return rpcError(method, 400, e.getMessage());
+        }
+
+        try {
+            String opUser = user != null ? user.getEmail() : "app";
+            deviceService.sendScheduledCharging(deviceSn, mac, utcPeriods, opUser);
+        } catch (NeuronBootException e) {
+            return rpcError(method, "设备响应超时".equals(e.getMessage()) ? 504 : 400, e.getMessage());
+        } catch (Exception e) {
+            return rpcError(method, 500, e.getMessage());
+        }
+
+        return rpcSuccess(method, deviceSn, Map.of(
+                "mac", mac,
+                "timePeriods", AppScheduleTimeUtil.normalizeTimePeriods(data.get("timePeriods"), 10)));
+    }
+
+    private Map<String, Object> handleGetChargingSchedule(String method, String deviceSn, Map<String, Object> data, AppUser user) {
+        String mac = getMac(data);
+        if (mac == null || mac.isBlank()) {
+            return rpcError(method, 400, "mac 不能为空");
+        }
+
+        try {
+            List<List<String>> utcPeriods = deviceService.getScheduledCharging(deviceSn, mac);
+            List<List<String>> localPeriods = AppScheduleTimeUtil.fromUtcTimePeriods(utcPeriods, AppScheduleTimeUtil.userZoneId(user));
+            return rpcSuccess(method, deviceSn, Map.of(
+                    "mac", mac,
+                    "timePeriods", localPeriods));
+        } catch (NeuronBootException e) {
+            return rpcError(method, "设备响应超时".equals(e.getMessage()) ? 504 : 400, e.getMessage());
+        } catch (Exception e) {
+            return rpcError(method, 500, e.getMessage());
+        }
+    }
+
     private Map<String, Object> handleFactoryReset(String method, String deviceSn, Map<String, Object> data) {
         if (!Boolean.TRUE.equals(data.get("confirm"))) {
             return rpcError(method, 400, "请确认恢复出厂设置");
@@ -878,6 +925,9 @@ public class AppRpcController {
     }
 
     private String getMac(Map<String, Object> data) {
+        if (data.containsKey("mac")) {
+            return (String) data.get("mac");
+        }
         if (data.containsKey("deviceInfo")) {
             Map<String, Object> deviceInfo = (Map<String, Object>) data.get("deviceInfo");
             return (String) deviceInfo.get("mac");

@@ -75,6 +75,10 @@ public final class BizConstant {
     public static final String DT_SET_DLM_CONFIG = "SetDLMConfig";
     /** 工作模式切换 */
     public static final String DT_SET_WORK_MODE = "SetWorkMode";
+    /** 设置预约充电时间段 */
+    public static final String DT_SET_SCHEDULED_CHARGING = "SetScheduledCharging";
+    /** 查询预约充电时间段 */
+    public static final String DT_GET_SCHEDULED_CHARGING = "GetScheduledCharging";
     /** 恢复出厂设置 */
     public static final String DT_FACTORY_RESET = "FactoryReset";
     /** 搜索周边充电桩（云端→设备） */

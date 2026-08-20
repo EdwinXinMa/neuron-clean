@@ -38,6 +38,9 @@ public class AppUser implements Serializable {
     @Schema(description = "姓名")
     private String name;
 
+    @Schema(description = "IANA 时区，例如 Asia/Shanghai")
+    private String timezone;
+
     @Schema(description = "状态：1=正常 0=禁用")
     private Integer status;
 
