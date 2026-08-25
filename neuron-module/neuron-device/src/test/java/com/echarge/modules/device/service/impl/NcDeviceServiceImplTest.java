@@ -1,5 +1,6 @@
 package com.echarge.modules.device.service.impl;
 
+import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.ocpp.OcppCommandSender;
 import com.echarge.modules.device.entity.NcDevice;
 import com.echarge.modules.device.service.INcOpLogService;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -76,5 +78,50 @@ class NcDeviceServiceImplTest {
         JsonArray period = item.getAsJsonArray("timePeriods").get(0).getAsJsonArray();
         assertEquals("17:39", period.get(0).getAsString());
         assertEquals("17:40", period.get(1).getAsString());
+    }
+
+    /**
+     * GetScheduledCharging must read timePeriods from the CALLRESULT root object.
+     */
+    @Test
+    void getScheduledChargingReadsRootTimePeriods() {
+        NcDeviceServiceImpl service = spy(new NcDeviceServiceImpl());
+        OcppCommandSender commandSender = mock(OcppCommandSender.class);
+        ReflectionTestUtils.setField(service, "ocppCommandSender", commandSender);
+
+        NcDevice device = new NcDevice();
+        device.setSn("9EN03L260528Y0035");
+        doReturn(device).when(service).getOne(any());
+        when(commandSender.isDeviceConnected(device.getSn())).thenReturn(true);
+        when(commandSender.sendCallAndWait(anyString(), anyString(), anyString(), anyLong()))
+                .thenReturn("{\"sn\":\"9307260450002\",\"timePeriods\":[[\"05:38\",\"05:40\"]],\"status\":\"Accepted\"}");
+
+        List<List<String>> result = service.getScheduledCharging(device.getSn(), "9307260450002");
+
+        assertEquals(List.of(List.of("05:38", "05:40")), result);
+    }
+
+    /**
+     * An Accepted response without the protocol-required timePeriods field is invalid,
+     * not an empty schedule.
+     */
+    @Test
+    void getScheduledChargingRejectsMissingTimePeriods() {
+        NcDeviceServiceImpl service = spy(new NcDeviceServiceImpl());
+        OcppCommandSender commandSender = mock(OcppCommandSender.class);
+        ReflectionTestUtils.setField(service, "ocppCommandSender", commandSender);
+
+        NcDevice device = new NcDevice();
+        device.setSn("9EN03L260528Y0035");
+        doReturn(device).when(service).getOne(any());
+        when(commandSender.isDeviceConnected(device.getSn())).thenReturn(true);
+        when(commandSender.sendCallAndWait(anyString(), anyString(), anyString(), anyLong()))
+                .thenReturn("{\"sn\":\"9307260450002\",\"status\":\"Accepted\"}");
+
+        NeuronBootException exception = assertThrows(
+                NeuronBootException.class,
+                () -> service.getScheduledCharging(device.getSn(), "9307260450002"));
+
+        assertEquals("设备返回的 timePeriods 格式无效", exception.getMessage());
     }
 }

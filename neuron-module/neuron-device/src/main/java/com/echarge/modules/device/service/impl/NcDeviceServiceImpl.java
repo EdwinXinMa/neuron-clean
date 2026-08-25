@@ -313,13 +313,12 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
                 ocppCommandSender.sendCallAndWait(sn, call.toString(), messageId, 10),
                 "设备响应超时",
                 "设备拒绝查询预约充电时间段");
-        JsonObject dataObj = parseDataObject(respObj);
-        if (dataObj == null || !dataObj.has("timePeriods") || !dataObj.get("timePeriods").isJsonArray()) {
-            return List.of();
+        if (!respObj.has("timePeriods") || !respObj.get("timePeriods").isJsonArray()) {
+            throw new NeuronBootException("设备返回的 timePeriods 格式无效");
         }
 
         List<List<String>> result = new ArrayList<>();
-        for (JsonElement element : dataObj.getAsJsonArray("timePeriods")) {
+        for (JsonElement element : respObj.getAsJsonArray("timePeriods")) {
             if (!element.isJsonArray() || element.getAsJsonArray().size() != 2) {
                 throw new NeuronBootException("设备返回的 timePeriods 格式无效");
             }
@@ -381,24 +380,6 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             throw new NeuronBootException(rejectMessage + "（" + reason + "）");
         }
         return respObj;
-    }
-
-    private JsonObject parseDataObject(JsonObject respObj) {
-        if (respObj == null || !respObj.has("data") || respObj.get("data").isJsonNull()) {
-            return null;
-        }
-        JsonElement data = respObj.get("data");
-        if (data.isJsonObject()) {
-            return data.getAsJsonObject();
-        }
-        if (data.isJsonPrimitive()) {
-            String text = data.getAsString();
-            if (StringUtils.isBlank(text)) {
-                return null;
-            }
-            return JsonParser.parseString(text).getAsJsonObject();
-        }
-        return null;
     }
 
     private void saveScheduledChargingLog(String sn, String opUser, String pileSn, List<List<String>> timePeriods,
