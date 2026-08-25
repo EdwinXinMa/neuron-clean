@@ -41,7 +41,12 @@ public final class AppScheduleTimeUtil {
     }
 
     public static List<List<String>> toUtcTimePeriods(Object rawPeriods, String userZoneId) {
-        return convertTimePeriods(rawPeriods, normalizeZoneId(userZoneId), ZoneOffset.UTC.getId(), 10);
+        List<List<String>> periods = convertTimePeriods(
+                rawPeriods,
+                normalizeZoneId(userZoneId),
+                ZoneOffset.UTC.getId(),
+                10);
+        return toFirmwareTimePeriods(periods);
     }
 
     public static List<List<String>> fromUtcTimePeriods(Object rawPeriods, String userZoneId) {
@@ -168,6 +173,33 @@ public final class AppScheduleTimeUtil {
         List<List<String>> result = new ArrayList<>();
         for (int[] interval : intervals) {
             result.add(List.of(formatMinute(interval[0]), formatMinute(interval[1])));
+        }
+        return result;
+    }
+
+    /**
+     * The device protocol represents a period crossing midnight with endTime less
+     * than or equal to startTime and does not accept 24:00.
+     */
+    private static List<List<String>> toFirmwareTimePeriods(List<List<String>> periods) {
+        if (periods.isEmpty()) {
+            return periods;
+        }
+
+        List<List<String>> result = new ArrayList<>();
+        List<String> first = periods.get(0);
+        List<String> last = periods.get(periods.size() - 1);
+        if (periods.size() > 1
+                && "00:00".equals(first.get(0))
+                && "24:00".equals(last.get(1))) {
+            result.addAll(periods.subList(1, periods.size() - 1));
+            result.add(List.of(last.get(0), first.get(1)));
+            return result;
+        }
+
+        for (List<String> period : periods) {
+            String endTime = "24:00".equals(period.get(1)) ? "00:00" : period.get(1);
+            result.add(List.of(period.get(0), endTime));
         }
         return result;
     }
