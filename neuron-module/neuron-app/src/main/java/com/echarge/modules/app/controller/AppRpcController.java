@@ -118,7 +118,7 @@ public class AppRpcController {
             case "SubDeviceManager.GetChargingWorkMode" -> handleGetWorkMode(method, deviceSn);
             case "SubDeviceManager.SetChargingStationWorkMode",
                  "SubDeviceManager.SetChargingWorkMode" -> handleSetWorkMode(method, deviceSn, data);
-            case "SubDeviceManager.SetScheduledChargingTime" -> handleSetScheduledChargingTime(method, deviceSn, data, user);
+            case "SubDeviceManager.SetChargingSchedule" -> handleSetChargingSchedule(method, deviceSn, data, user);
             case "SubDeviceManager.GetChargingSchedule" -> handleGetChargingSchedule(method, deviceSn, data, user);
             case "SubDeviceManager.FactoryReset" -> handleFactoryReset(method, deviceSn, data);
             // 云模式不需要的接口
@@ -723,7 +723,7 @@ public class AppRpcController {
     /**
      * 恢复出厂设置 — OCPP DataTransfer(FactoryReset)
      */
-    private Map<String, Object> handleSetScheduledChargingTime(String method, String deviceSn, Map<String, Object> data, AppUser user) {
+    private Map<String, Object> handleSetChargingSchedule(String method, String deviceSn, Map<String, Object> data, AppUser user) {
         String mac = getMac(data);
         if (mac == null || mac.isBlank()) {
             return rpcError(method, 400, "mac 不能为空");
