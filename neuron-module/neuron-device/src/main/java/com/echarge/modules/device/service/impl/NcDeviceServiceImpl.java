@@ -277,9 +277,15 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
         }
 
         String messageId = "sch-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        JsonObject devicePayload = new JsonObject();
+        devicePayload.addProperty("sn", pileSn);
+        devicePayload.add("timePeriods", toTimePeriodsJson(timePeriods));
+
+        JsonArray deviceList = new JsonArray();
+        deviceList.add(devicePayload);
+
         JsonObject payload = new JsonObject();
-        payload.addProperty("sn", pileSn);
-        payload.add("timePeriods", toTimePeriodsJson(timePeriods));
+        payload.add("deviceList", deviceList);
 
         JsonArray call = buildDataTransferCall(messageId, BizConstant.DT_SET_SCHEDULED_CHARGING, payload.toString());
         log.info("[ScheduledCharging] Command sending to {}: pileSn={}, timePeriods={}", sn, pileSn, timePeriods);
