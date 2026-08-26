@@ -41,16 +41,11 @@ public final class AppScheduleTimeUtil {
     }
 
     public static List<List<String>> toUtcTimePeriods(Object rawPeriods, String userZoneId) {
-        List<List<String>> periods = convertTimePeriods(
-                rawPeriods,
-                normalizeZoneId(userZoneId),
-                ZoneOffset.UTC.getId(),
-                10);
-        return toFirmwareTimePeriods(periods);
+        return convertTimePeriodsPreservingPairs(rawPeriods, normalizeZoneId(userZoneId), ZoneOffset.UTC.getId(), 10);
     }
 
     public static List<List<String>> fromUtcTimePeriods(Object rawPeriods, String userZoneId) {
-        return convertTimePeriods(rawPeriods, ZoneOffset.UTC.getId(), normalizeZoneId(userZoneId), 24);
+        return convertTimePeriodsPreservingPairs(rawPeriods, ZoneOffset.UTC.getId(), normalizeZoneId(userZoneId), 24);
     }
 
     public static List<List<String>> normalizeTimePeriods(Object rawPeriods, int maxInputPeriods) {
@@ -62,32 +57,25 @@ public final class AppScheduleTimeUtil {
         return formatIntervals(mergeIntervals(intervals));
     }
 
-    private static List<List<String>> convertTimePeriods(Object rawPeriods, String fromZoneId, String toZoneId, int maxInputPeriods) {
+    private static List<List<String>> convertTimePeriodsPreservingPairs(
+            Object rawPeriods, String fromZoneId, String toZoneId, int maxInputPeriods) {
         List<Period> periods = parsePeriods(rawPeriods, maxInputPeriods);
         ZoneId fromZone = ZoneId.of(fromZoneId);
         ZoneId toZone = ZoneId.of(toZoneId);
         LocalDate baseDate = LocalDate.now(fromZone);
-        List<int[]> intervals = new ArrayList<>();
+        List<List<String>> result = new ArrayList<>();
 
         for (Period period : periods) {
             ZonedDateTime fromStart = atMinute(fromZone, baseDate, period.startMinute(), 0);
             int endDayOffset = period.endMinute() <= period.startMinute() ? 1 : 0;
             ZonedDateTime fromEnd = atMinute(fromZone, baseDate, period.endMinute(), endDayOffset);
 
-            ZonedDateTime toStart = fromStart.withZoneSameInstant(toZone);
-            ZonedDateTime toEnd = fromEnd.withZoneSameInstant(toZone);
-            int startMinute = toMinute(toStart.toLocalTime());
-            int endMinute = toMinute(toEnd.toLocalTime());
-
-            if (toEnd.toLocalDate().isAfter(toStart.toLocalDate()) || endMinute <= startMinute) {
-                intervals.add(new int[] {startMinute, 1440});
-                intervals.add(new int[] {0, endMinute});
-            } else {
-                intervals.add(new int[] {startMinute, endMinute});
-            }
+            String startTime = formatMinute(toMinute(fromStart.withZoneSameInstant(toZone).toLocalTime()));
+            String endTime = formatMinute(toMinute(fromEnd.withZoneSameInstant(toZone).toLocalTime()));
+            result.add(List.of(startTime, endTime));
         }
 
-        return formatIntervals(mergeIntervals(intervals));
+        return result;
     }
 
     private static ZonedDateTime atMinute(ZoneId zone, LocalDate baseDate, int minute, int dayOffset) {
@@ -173,33 +161,6 @@ public final class AppScheduleTimeUtil {
         List<List<String>> result = new ArrayList<>();
         for (int[] interval : intervals) {
             result.add(List.of(formatMinute(interval[0]), formatMinute(interval[1])));
-        }
-        return result;
-    }
-
-    /**
-     * The device protocol represents a period crossing midnight with endTime less
-     * than or equal to startTime and does not accept 24:00.
-     */
-    private static List<List<String>> toFirmwareTimePeriods(List<List<String>> periods) {
-        if (periods.isEmpty()) {
-            return periods;
-        }
-
-        List<List<String>> result = new ArrayList<>();
-        List<String> first = periods.get(0);
-        List<String> last = periods.get(periods.size() - 1);
-        if (periods.size() > 1
-                && "00:00".equals(first.get(0))
-                && "24:00".equals(last.get(1))) {
-            result.addAll(periods.subList(1, periods.size() - 1));
-            result.add(List.of(last.get(0), first.get(1)));
-            return result;
-        }
-
-        for (List<String> period : periods) {
-            String endTime = "24:00".equals(period.get(1)) ? "00:00" : period.get(1);
-            result.add(List.of(period.get(0), endTime));
         }
         return result;
     }
