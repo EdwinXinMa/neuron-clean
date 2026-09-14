@@ -82,12 +82,27 @@ public class AppRpcController {
     @PostMapping("/rpccall")
     @Operation(summary = "App RPC 统一入口（兼容本地 RPC 格式）")
     public Map<String, Object> rpccall(@RequestBody Map<String, Object> body, HttpServletRequest request) {
-        String method = (String) body.get("method");
+        String method = body.get("method") instanceof String value ? value : null;
+        if (method == null || method.isBlank()) {
+            return rpcError(null, 400, "method 必须为非空字符串");
+        }
+        if (body.get("deviceSn") != null && !(body.get("deviceSn") instanceof String)) {
+            return rpcError(method, 400, "deviceSn 必须为非空字符串");
+        }
+        if (body.get("data") != null && !(body.get("data") instanceof Map)) {
+            return rpcError(method, 400, "data 必须为对象");
+        }
         String deviceSn = (String) body.get("deviceSn");
+        if (deviceSn != null && deviceSn.isBlank()) {
+            return rpcError(method, 400, "deviceSn 必须为非空字符串");
+        }
         Map<String, Object> data = body.get("data") != null ? (Map<String, Object>) body.get("data") : new HashMap<>();
 
         // 校验设备归属
         AppUser user = (AppUser) request.getAttribute("appUser");
+        if (user == null) {
+            return rpcError(method, 401, "Token 无效");
+        }
         if (deviceSn != null) {
             long bound = userDeviceMapper.selectCount(
                     new LambdaQueryWrapper<AppUserDevice>()
@@ -99,10 +114,6 @@ public class AppRpcController {
         }
 
         // 按 method 路由
-        if (method == null) {
-            return rpcError(null, 400, "method 不能为空");
-        }
-
         return switch (method) {
             case "SubDeviceManager.SelectSubDeviceByPortName" -> handleSelectSubDevices(method, deviceSn);
             case "SubDeviceManager.GetChargingStationsInfo" -> handleGetChargingStationsInfo(method, deviceSn);
@@ -445,10 +456,14 @@ public class AppRpcController {
     }
 
     /**
-     * 获取配置（对应本地接口 #8、#11）
+     * 获取配置（家庭最大电流、固件版本、电流分配模式）
      */
     private Map<String, Object> handleGetConfig(String method, String deviceSn, Map<String, Object> data) {
-        String configname = (String) data.get("configname");
+        Object configname = data.get("configname");
+
+        if (BizConstant.ALLOCATION_MODE.equals(configname)) {
+            return handleAllocationMode(method, deviceSn, data, null);
+        }
 
         if ("InflowMaxCurrent".equals(configname)) {
             JSONObject dlm = getDlmData(deviceSn);
@@ -486,13 +501,17 @@ public class AppRpcController {
     }
 
     /**
-     * 设置配置 — InflowMaxCurrent（对应本地接口 #9）
+     * 设置配置 — InflowMaxCurrent / AllocationMode
      */
     private Map<String, Object> handleSetConfig(String method, String deviceSn, Map<String, Object> data, HttpServletRequest request) {
-        String configname = (String) data.get("configname");
+        Object configname = data.get("configname");
+
+        if (BizConstant.ALLOCATION_MODE.equals(configname)) {
+            return handleAllocationMode(method, deviceSn, data, (AppUser) request.getAttribute("appUser"));
+        }
 
         if (!"InflowMaxCurrent".equals(configname)) {
-            return rpcError(method, 400, "云模式仅支持设置 InflowMaxCurrent");
+            return rpcError(method, 400, "不支持的 configname: " + configname);
         }
 
         Object val = data.get("InflowMaxCurrent");
@@ -525,6 +544,37 @@ public class AppRpcController {
         }
 
         return rpcSuccess(method, deviceSn, Map.of("configname", configname));
+    }
+
+    private Map<String, Object> handleAllocationMode(String method, String deviceSn,
+                                                     Map<String, Object> data, AppUser user) {
+        log.info("[AllocationMode] App request: method={}, sn={}", method, deviceSn);
+        try {
+            if (deviceSn == null || deviceSn.isBlank()) {
+                throw new NeuronBootException("deviceSn 必须为非空字符串", 400);
+            }
+            Map<String, Object> responseData;
+            if ("ConfigManager.SetConfig".equals(method)) {
+                Object mode = data.get(BizConstant.ALLOCATION_MODE);
+                if (!(mode instanceof String value) || !BizConstant.VALID_ALLOCATION_MODES.contains(value)) {
+                    throw new NeuronBootException("AllocationMode 必须为 Average 或 FIFO", 400);
+                }
+                deviceService.setAllocationMode(deviceSn, value, user.getEmail());
+                responseData = Map.of("configname", BizConstant.ALLOCATION_MODE);
+            } else {
+                String mode = deviceService.getAllocationMode(deviceSn);
+                responseData = Map.of("configname", BizConstant.ALLOCATION_MODE, BizConstant.ALLOCATION_MODE, mode);
+            }
+            log.info("[AllocationMode] App success: method={}, sn={}", method, deviceSn);
+            return rpcSuccess(method, deviceSn, responseData);
+        } catch (NeuronBootException e) {
+            log.info("[AllocationMode] App failure: method={}, sn={}, code={}, reason={}",
+                    method, deviceSn, e.getErrCode(), e.getMessage());
+            return rpcError(method, e.getErrCode(), e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("[AllocationMode] App error: method={}, sn={}", method, deviceSn, e);
+            return rpcError(method, 500, "电流分配模式操作失败");
+        }
     }
 
     // ═══════════════════════════════════════════════

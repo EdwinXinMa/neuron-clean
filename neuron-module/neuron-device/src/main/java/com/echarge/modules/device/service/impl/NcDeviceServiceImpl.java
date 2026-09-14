@@ -37,6 +37,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> implements INcDeviceService {
 
+    private static final long ALLOCATION_RESPONSE_TIMEOUT_SECONDS = 10L;
+
     @Autowired
     private OcppCommandSender ocppCommandSender;
 
@@ -367,6 +369,116 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
             array.add(pair);
         }
         return array;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setAllocationMode(String sn, String allocationMode, String opUser) {
+        log.info("[AllocationMode] Setting requested: sn={}, mode={}", sn, allocationMode);
+        if (allocationMode == null || !BizConstant.VALID_ALLOCATION_MODES.contains(allocationMode)) {
+            throw new NeuronBootException("AllocationMode 必须为 Average 或 FIFO", 400);
+        }
+        String result = NcOpLog.FAIL;
+        String failReason = null;
+        try {
+            validateAllocationDevice(sn);
+            JsonObject payload = new JsonObject();
+            payload.addProperty(BizConstant.ALLOCATION_MODE, allocationMode);
+            sendAllocationCommand(sn, BizConstant.DT_SET_ALLOCATION_MODE, payload.toString());
+            result = NcOpLog.SUCCESS;
+            log.info("[AllocationMode] Setting confirmed: sn={}, mode={}", sn, allocationMode);
+        } catch (RuntimeException e) {
+            failReason = e instanceof NeuronBootException ? e.getMessage() : "电流分配模式操作失败";
+            log.info("[AllocationMode] Setting failed: sn={}, mode={}, reason={}", sn, allocationMode, failReason);
+            throw e;
+        } finally {
+            saveAllocationModeLog(sn, allocationMode, opUser, result, failReason);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getAllocationMode(String sn) {
+        log.info("[AllocationMode] Query requested: sn={}", sn);
+        validateAllocationDevice(sn);
+        JsonObject response = sendAllocationCommand(sn, BizConstant.DT_GET_ALLOCATION_MODE, "");
+        JsonElement mode = response.get(BizConstant.ALLOCATION_MODE);
+        if (!isJsonString(mode) || !BizConstant.VALID_ALLOCATION_MODES.contains(mode.getAsString())) {
+            log.info("[AllocationMode] Query failed: sn={}, invalid AllocationMode", sn);
+            throw new NeuronBootException("设备返回的电流分配模式格式无效");
+        }
+        log.info("[AllocationMode] Query confirmed: sn={}, mode={}", sn, mode.getAsString());
+        return mode.getAsString();
+    }
+
+    private void validateAllocationDevice(String sn) {
+        if (StringUtils.isBlank(sn)) {
+            throw new NeuronBootException("deviceSn 必须为非空字符串", 400);
+        }
+        NcDevice device = getOne(new LambdaQueryWrapper<NcDevice>().eq(NcDevice::getSn, sn));
+        if (device == null) {
+            throw new NeuronBootException("设备不存在", 404);
+        }
+        if (!BizConstant.TYPE_N3_LITE.equals(device.getDeviceType())
+                || StringUtils.isNotBlank(device.getParentDeviceId())) {
+            throw new NeuronBootException("电流分配模式仅支持 N3lite 网关", 400);
+        }
+        if (!ocppCommandSender.isDeviceConnected(sn)) {
+            throw new NeuronBootException("设备离线，无法操作电流分配模式");
+        }
+    }
+
+    private JsonObject sendAllocationCommand(String sn, String command, String data) {
+        String messageId = "am-" + java.util.UUID.randomUUID().toString().replace("-", "");
+        JsonArray call = buildDataTransferCall(messageId, command, data);
+        log.info("[AllocationMode] Sending: sn={}, command={}, messageId={}, data={}", sn, command, messageId, data);
+        String response = ocppCommandSender.sendCallAndWait(sn, call.toString(), messageId,
+                ALLOCATION_RESPONSE_TIMEOUT_SECONDS);
+        if (response == null) {
+            log.info("[AllocationMode] No confirmation: sn={}, command={}, messageId={}", sn, command, messageId);
+            throw new NeuronBootException("设备未返回有效响应");
+        }
+        JsonObject payload;
+        try {
+            payload = JsonParser.parseString(response).getAsJsonObject();
+        } catch (RuntimeException e) {
+            throw new NeuronBootException("设备返回的电流分配模式格式无效");
+        }
+        JsonElement status = payload.get("status");
+        if (!isJsonString(status)) {
+            throw new NeuronBootException("设备返回的电流分配模式格式无效");
+        }
+        log.info("[AllocationMode] Response: sn={}, command={}, messageId={}, status={}",
+                sn, command, messageId, status.getAsString());
+        if (!"Accepted".equals(status.getAsString())) {
+            throw new NeuronBootException(BizConstant.DT_SET_ALLOCATION_MODE.equals(command)
+                    ? "设备拒绝设置电流分配模式" : "设备拒绝查询电流分配模式");
+        }
+        return payload;
+    }
+
+    private boolean isJsonString(JsonElement value) {
+        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString();
+    }
+
+    private void saveAllocationModeLog(String sn, String mode, String opUser, String result, String failReason) {
+        NcOpLog opLog = new NcOpLog();
+        opLog.setDeviceSn(sn);
+        opLog.setOpUser(opUser);
+        opLog.setOpType(NcOpLog.DLM_CONFIG);
+        opLog.setOpContent(BizConstant.ALLOCATION_MODE + " -> " + mode);
+        opLog.setOpResult(result);
+        opLog.setFailReason(failReason);
+        opLog.setOpTime(new Date());
+        opLog.setCreateTime(new Date());
+        // 日志写入失败不改变固件已确认的配置结果，也不覆盖原始下发异常。
+        try {
+            if (!opLogService.save(opLog)) {
+                log.error("[AllocationMode] Operation log not saved: sn={}, result={}", sn, result);
+            }
+        } catch (RuntimeException e) {
+            log.error("[AllocationMode] Operation log failed: sn={}, result={}", sn, result, e);
+        }
     }
 
     private JsonObject parseAcceptedResponse(String response, String timeoutMessage, String rejectMessage) {
