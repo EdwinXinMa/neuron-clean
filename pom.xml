@@ -22,6 +22,8 @@
 
 	<properties>
 		<neuron.version>1.0.0</neuron.version>
+        <!-- 默认保持跳过测试，允许 -DskipTests=false 显式执行验证。 -->
+        <skipTests>true</skipTests>
 		<!-- JDK版本支持17、21、24 -->
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -251,7 +253,7 @@
 		        <groupId>org.apache.maven.plugins</groupId>
 		        <artifactId>maven-surefire-plugin</artifactId>
 		        <configuration>
-		          <skipTests>true</skipTests>
+		          <skipTests>${skipTests}</skipTests>
 		        </configuration>
 	        </plugin>
 	         <!-- 避免font文件的二进制文件格式压缩破坏 -->

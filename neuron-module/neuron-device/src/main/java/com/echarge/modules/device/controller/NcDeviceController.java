@@ -481,6 +481,61 @@ public class NcDeviceController {
     }
 
     /**
+     * 查询 N3lite 当前电流分配模式，实时读取固件配置。
+     * @param sn N3lite 序列号
+     * @return 当前模式或明确的查询失败
+     */
+    @Operation(summary = "查询电流分配模式")
+    @GetMapping("/{sn}/allocation-mode")
+    public Result<?> getAllocationMode(@PathVariable String sn) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+        log.info("[AllocationMode] Web query: sn={}", sn);
+        try {
+            String mode = ncDeviceService.getAllocationMode(sn);
+            log.info("[AllocationMode] Web query success: sn={}, mode={}", sn, mode);
+            return Result.ok(Map.of(BizConstant.ALLOCATION_MODE, mode));
+        } catch (NeuronBootException e) {
+            log.info("[AllocationMode] Web query failed: sn={}, reason={}", sn, e.getMessage());
+            return Result.error(e.getErrCode(), WebI18n.get(e.getMessage(), lang));
+        } catch (RuntimeException e) {
+            log.error("[AllocationMode] Web query error: sn={}", sn, e);
+            return Result.error(WebI18n.get("电流分配模式操作失败", lang));
+        }
+    }
+
+    /**
+     * 设置 N3lite 电流分配模式，等待固件保存确认。
+     * @param sn N3lite 序列号
+     * @param params AllocationMode 配置
+     * @return 设置结果
+     */
+    @Operation(summary = "设置电流分配模式")
+    @PostMapping("/{sn}/allocation-mode")
+    public Result<?> setAllocationMode(@PathVariable String sn, @RequestBody JSONObject params) {
+        String lang = WebI18n.parseLang(request.getHeader("Accept-Language"));
+        Object mode = params.get(BizConstant.ALLOCATION_MODE);
+        log.info("[AllocationMode] Web setting requested: sn={}", sn);
+        if (!(mode instanceof String value) || !BizConstant.VALID_ALLOCATION_MODES.contains(value)) {
+            return Result.error(400, WebI18n.get("AllocationMode 必须为 Average 或 FIFO", lang));
+        }
+        try {
+            LoginUser user = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (user == null) {
+                return Result.error(401, WebI18n.get("登录已过期，请重新登录", lang));
+            }
+            ncDeviceService.setAllocationMode(sn, value, user.getUsername());
+            log.info("[AllocationMode] Web setting success: sn={}, mode={}", sn, value);
+            return Result.ok(Map.of(BizConstant.ALLOCATION_MODE, value));
+        } catch (NeuronBootException e) {
+            log.info("[AllocationMode] Web setting failed: sn={}, reason={}", sn, e.getMessage());
+            return Result.error(e.getErrCode(), WebI18n.get(e.getMessage(), lang));
+        } catch (RuntimeException e) {
+            log.error("[AllocationMode] Web setting error: sn={}", sn, e);
+            return Result.error(WebI18n.get("电流分配模式操作失败", lang));
+        }
+    }
+
+    /**
      * 设置充电桩工作模式
      * 通过 OCPP DataTransfer(SetWorkMode) 下发到设备
      */

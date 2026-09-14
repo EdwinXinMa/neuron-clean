@@ -47,6 +47,21 @@ public interface INcDeviceService extends IService<NcDevice> {
     void sendDlmConfig(String sn, int breakerRating, Integer safetyMargin, String opUser);
 
     /**
+     * 设置 N3lite 电流分配模式，等待固件保存确认并记录操作结果。
+     * @param sn N3lite 序列号
+     * @param allocationMode Average 或 FIFO
+     * @param opUser 操作人
+     */
+    void setAllocationMode(String sn, String allocationMode, String opUser);
+
+    /**
+     * 实时查询 N3lite 当前保存的电流分配模式。
+     * @param sn N3lite 序列号
+     * @return 固件确认的 Average 或 FIFO
+     */
+    String getAllocationMode(String sn);
+
+    /**
      * 下发充电桩工作模式切换
      * OCPP DataTransfer(SetWorkMode) 下发 + 操作日志
      * @param sn N3 Lite 设备序列号
