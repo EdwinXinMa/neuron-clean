@@ -14,6 +14,39 @@ public class AppI18n {
     private static final Map<String, String[]> MESSAGES = new HashMap<>();
 
     static {
+        // ── RPC 参数与电流分配模式 ────────────────────────────────
+        put("method 必须为非空字符串", "method must be a non-empty string",
+                "method 必須為非空字串", "method debe ser una cadena no vacía",
+                "method deve ser uma string não vazia");
+        put("deviceSn 必须为非空字符串", "deviceSn must be a non-empty string",
+                "deviceSn 必須為非空字串", "deviceSn debe ser una cadena no vacía",
+                "deviceSn deve ser uma string não vazia");
+        put("data 必须为对象", "data must be an object",
+                "data 必須為物件", "data debe ser un objeto", "data deve ser um objeto");
+        put("AllocationMode 必须为 Average 或 FIFO", "AllocationMode must be Average or FIFO",
+                "AllocationMode 必須為 Average 或 FIFO", "AllocationMode debe ser Average o FIFO",
+                "AllocationMode deve ser Average ou FIFO");
+        put("电流分配模式仅支持 N3lite 网关", "Allocation mode is only supported for N3lite gateways",
+                "電流分配模式僅支援 N3lite 閘道器", "El modo de asignación solo admite gateways N3lite",
+                "O modo de distribuição só é compatível com gateways N3lite");
+        put("设备离线，无法操作电流分配模式", "Device is offline; allocation mode is unavailable",
+                "設備離線，無法操作電流分配模式", "Dispositivo desconectado; modo de asignación no disponible",
+                "Dispositivo offline; modo de distribuição indisponível");
+        put("设备未返回有效响应", "Device did not return a valid response",
+                "設備未回傳有效回應", "El dispositivo no devolvió una respuesta válida",
+                "O dispositivo não retornou uma resposta válida");
+        put("设备返回的电流分配模式格式无效", "Invalid allocation mode response from device",
+                "設備回傳的電流分配模式格式無效", "Respuesta de modo de asignación no válida del dispositivo",
+                "Resposta de modo de distribuição inválida do dispositivo");
+        put("设备拒绝设置电流分配模式", "Device rejected the allocation mode setting",
+                "設備拒絕設定電流分配模式", "El dispositivo rechazó configurar el modo de asignación",
+                "O dispositivo recusou a configuração do modo de distribuição");
+        put("设备拒绝查询电流分配模式", "Device rejected the allocation mode query",
+                "設備拒絕查詢電流分配模式", "El dispositivo rechazó consultar el modo de asignación",
+                "O dispositivo recusou a consulta do modo de distribuição");
+        put("电流分配模式操作失败", "Allocation mode operation failed",
+                "電流分配模式操作失敗", "Falló la operación del modo de asignación",
+                "Falha na operação do modo de distribuição");
         // ── Token / 认证 ──────────────────────────────────────────
         put("未提供 Token",
                 "Token not provided",

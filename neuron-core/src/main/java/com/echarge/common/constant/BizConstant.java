@@ -79,6 +79,14 @@ public final class BizConstant {
     public static final String DT_SET_SCHEDULED_CHARGING = "SetScheduledCharging";
     /** 查询预约充电时间段 */
     public static final String DT_GET_SCHEDULED_CHARGING = "GetScheduledCharging";
+    /** N3lite 电流分配模式设置消息。 */
+    public static final String DT_SET_ALLOCATION_MODE = "SetAllocationMode";
+    /** N3lite 电流分配模式查询消息。 */
+    public static final String DT_GET_ALLOCATION_MODE = "GetAllocationMode";
+    /** App 配置项与固件字段共用名称。 */
+    public static final String ALLOCATION_MODE = "AllocationMode";
+    /** 电流分配模式严格区分大小写。 */
+    public static final Set<String> VALID_ALLOCATION_MODES = Set.of("Average", "FIFO");
     /** 恢复出厂设置 */
     public static final String DT_FACTORY_RESET = "FactoryReset";
     /** 搜索周边充电桩（云端→设备） */

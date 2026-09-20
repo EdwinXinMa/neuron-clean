@@ -1,6 +1,7 @@
 package com.echarge.modules.device.listener;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.echarge.common.event.DeviceEvent;
 import com.echarge.common.event.DeviceEventListener;
 import com.echarge.common.constant.BizConstant;
@@ -31,6 +32,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -582,6 +584,11 @@ public class DeviceEventHandler implements DeviceEventListener {
                 if (needUpdate) {
                     ncDeviceService.updateById(device);
                 }
+                try {
+                    syncPileFirmwareVersions(device, data);
+                } catch (Exception e) {
+                    log.warn("[DeviceEvent] Failed to save pile firmware for {}: {}", chargePointId, e.getMessage());
+                }
             }
 
             // 充电会话检测（遍历桩 → 枪）
@@ -607,6 +614,51 @@ public class DeviceEventHandler implements DeviceEventListener {
             }
         } catch (Exception e) {
             log.warn("[DeviceEvent] Failed to process DLM for {}: {}", chargePointId, e.getMessage());
+        }
+    }
+
+    /**
+     * 保存当前网关下子桩的最后有效版本；空值不清空，重复上报不重复写库。
+     */
+    private void syncPileFirmwareVersions(NcDevice parent, JsonObject data) {
+        if (!data.has("pileAllocations") || !data.get("pileAllocations").isJsonArray()) {
+            return;
+        }
+        JsonArray piles = data.getAsJsonArray("pileAllocations");
+        Map<String, String> versions = new HashMap<>(piles.size());
+        for (JsonElement element : piles) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject pile = element.getAsJsonObject();
+            JsonElement version = pile.get("charge_version");
+            String sn = getJsonString(pile, "sn");
+            if (StringUtils.isNotBlank(sn) && version != null && version.isJsonPrimitive()
+                    && version.getAsJsonPrimitive().isString()
+                    && StringUtils.isNotBlank(version.getAsString())) {
+                versions.put(sn, version.getAsString().trim());
+            }
+        }
+        if (versions.isEmpty()) {
+            return;
+        }
+        List<NcDevice> children = ncDeviceService.list(new LambdaQueryWrapper<NcDevice>()
+                .eq(NcDevice::getParentDeviceId, parent.getId())
+                .in(NcDevice::getSn, versions.keySet()));
+        for (NcDevice child : children) {
+            String version = versions.get(child.getSn());
+            if (version.equals(child.getFirmwareVersion())) {
+                continue;
+            }
+            boolean updated = ncDeviceService.update(new LambdaUpdateWrapper<NcDevice>()
+                    .eq(NcDevice::getId, child.getId())
+                    .eq(NcDevice::getParentDeviceId, parent.getId())
+                    .set(NcDevice::getFirmwareVersion, version)
+                    .set(NcDevice::getUpdateTime, new Date()));
+            if (updated) {
+                log.info("[DeviceEvent] Pile firmware updated: parent={}, sn={}, version={}",
+                        parent.getSn(), child.getSn(), version);
+            }
         }
     }
 
