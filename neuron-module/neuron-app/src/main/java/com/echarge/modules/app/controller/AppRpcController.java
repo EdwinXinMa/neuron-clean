@@ -369,6 +369,7 @@ public class AppRpcController {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", pile.getString("sn"));
                 item.put("mac", pile.getString("sn"));
+                item.put("mdcFwVersion", pile.getString("charge_version"));
                 if (threePhase) {
                     item.put("ChargingCurrent", List.of(
                             pile.getDoubleValue("allocatedCurrentA"),
@@ -392,6 +393,7 @@ public class AppRpcController {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("subDevId", child.getSn());
                 item.put("mac", child.getSn());
+                item.put("mdcFwVersion", child.getFirmwareVersion());
                 item.put("ChargingCurrent", "0");
                 item.put("energy", "0.0");
                 item.put("EVStatus", "Unavailable");
