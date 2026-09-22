@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.ocpp.OcppCommandSender;
+import com.echarge.common.util.FirmwareFilenameUtil;
 import com.echarge.common.util.MinioUtil;
 import com.echarge.modules.app.entity.AppFirmware;
 import com.echarge.modules.app.entity.AppUser;
@@ -32,8 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.MessageDigest;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -197,9 +196,8 @@ public class AppFirmwareController {
             }
             checksum = sb.toString();
 
-            // 自动重命名为 N3Lite-{version}_{yyyyMMdd}.bin
-            String dateStr = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-            String standardName = "N3Lite-" + fwVersion + "_" + dateStr + ".bin";
+            // 统一使用固件要求的 N3Lite-x.y.z.bin
+            String standardName = FirmwareFilenameUtil.buildN3LiteFilename(fwVersion);
             String objectName = "firmware/app/" + user.getId() + "/" + standardName;
             fileUrl = MinioUtil.uploadWithName(file, objectName);
         } catch (Exception e) {

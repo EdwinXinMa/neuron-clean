@@ -7,6 +7,7 @@ import com.echarge.common.api.vo.Result;
 import com.echarge.common.constant.BizConstant;
 import com.echarge.common.exception.NeuronBootException;
 import com.echarge.common.i18n.WebI18n;
+import com.echarge.common.util.FirmwareFilenameUtil;
 import com.echarge.common.util.MinioUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import com.echarge.modules.device.entity.FirmwareVersion;
@@ -21,8 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -105,9 +104,8 @@ public class FirmwareVersionController {
             }
             String checksum = sb.toString();
 
-            // upload to MinIO（自动重命名为 N3Lite-{version}_{yyyyMMdd}.bin）
-            String dateStr = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-            String standardName = "N3Lite-" + version + "_" + dateStr + ".bin";
+            // upload to MinIO（统一使用固件要求的 N3Lite-x.y.z.bin）
+            String standardName = FirmwareFilenameUtil.buildN3LiteFilename(version);
             String objectName = "firmware/" + deviceType + "/" + version + "/" + standardName;
             String fileUrl = MinioUtil.uploadWithName(file, objectName);
 
