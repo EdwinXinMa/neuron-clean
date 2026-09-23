@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +34,68 @@ import static org.mockito.Mockito.when;
  * @author Edwin
  */
 class NcDeviceServiceImplTest {
+
+    @Test
+    void factoryResetClosesOcppConnectionAfterAcceptedResponse() {
+        NcDeviceServiceImpl service = spy(new NcDeviceServiceImpl());
+        OcppCommandSender commandSender = mock(OcppCommandSender.class);
+        INcOpLogService opLogService = mock(INcOpLogService.class);
+        ReflectionTestUtils.setField(service, "ocppCommandSender", commandSender);
+        ReflectionTestUtils.setField(service, "opLogService", opLogService);
+
+        NcDevice device = new NcDevice();
+        device.setSn("9EN03L260528Y0035");
+        doReturn(device).when(service).getOne(any());
+        when(commandSender.isDeviceConnected(device.getSn())).thenReturn(true);
+        when(commandSender.sendCallAndWait(anyString(), anyString(), anyString(), eq(10L)))
+                .thenReturn("{\"status\":\"Accepted\"}");
+
+        service.sendFactoryReset(device.getSn(), "web", "admin");
+
+        verify(commandSender).closeDeviceConnection(device.getSn());
+    }
+
+    @Test
+    void factoryResetKeepsConnectionWhenDeviceRejectsCommand() {
+        NcDeviceServiceImpl service = spy(new NcDeviceServiceImpl());
+        OcppCommandSender commandSender = mock(OcppCommandSender.class);
+        INcOpLogService opLogService = mock(INcOpLogService.class);
+        ReflectionTestUtils.setField(service, "ocppCommandSender", commandSender);
+        ReflectionTestUtils.setField(service, "opLogService", opLogService);
+
+        NcDevice device = new NcDevice();
+        device.setSn("9EN03L260528Y0035");
+        doReturn(device).when(service).getOne(any());
+        when(commandSender.isDeviceConnected(device.getSn())).thenReturn(true);
+        when(commandSender.sendCallAndWait(anyString(), anyString(), anyString(), eq(10L)))
+                .thenReturn("{\"status\":\"Rejected\",\"message\":\"Busy\"}");
+
+        assertThrows(NeuronBootException.class,
+                () -> service.sendFactoryReset(device.getSn(), "app", "app"));
+
+        verify(commandSender, never()).closeDeviceConnection(anyString());
+    }
+
+    @Test
+    void factoryResetKeepsConnectionWhenDeviceResponseTimesOut() {
+        NcDeviceServiceImpl service = spy(new NcDeviceServiceImpl());
+        OcppCommandSender commandSender = mock(OcppCommandSender.class);
+        INcOpLogService opLogService = mock(INcOpLogService.class);
+        ReflectionTestUtils.setField(service, "ocppCommandSender", commandSender);
+        ReflectionTestUtils.setField(service, "opLogService", opLogService);
+
+        NcDevice device = new NcDevice();
+        device.setSn("9EN03L260528Y0035");
+        doReturn(device).when(service).getOne(any());
+        when(commandSender.isDeviceConnected(device.getSn())).thenReturn(true);
+        when(commandSender.sendCallAndWait(anyString(), anyString(), anyString(), eq(10L)))
+                .thenReturn(null);
+
+        assertThrows(NeuronBootException.class,
+                () -> service.sendFactoryReset(device.getSn(), "web", "admin"));
+
+        verify(commandSender, never()).closeDeviceConnection(anyString());
+    }
 
     /**
      * SetScheduledCharging must follow the firmware protocol's deviceList payload shape.

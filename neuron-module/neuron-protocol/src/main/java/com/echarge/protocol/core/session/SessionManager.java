@@ -82,6 +82,25 @@ public class SessionManager {
     }
 
     /**
+     * 主动关闭指定设备的 OCPP 连接。
+     * 不在此处提前注销会话，确保 Channel 关闭时 ProtocolRouter 仍能取得会话并发布离线事件。
+     *
+     * @param chargePointId 充电点标识（设备SN）
+     * @return 找到并关闭了活跃会话时返回 true；会话已不存在时返回 false
+     */
+    public boolean closeConnection(String chargePointId) {
+        Session session = sessionsByChargePointId.get(chargePointId);
+        if (session == null || !session.isActive()) {
+            log.info("OCPP session already inactive: chargePointId={}", chargePointId);
+            return false;
+        }
+        log.info("Closing OCPP session: chargePointId={}, sessionId={}",
+                chargePointId, session.getId());
+        session.getChannel().close();
+        return true;
+    }
+
+    /**
      * 向指定充电点发送WebSocket消息
      * @param chargePointId 充电点标识（设备SN）
      * @param message       消息内容

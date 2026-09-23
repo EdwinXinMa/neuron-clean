@@ -555,6 +555,13 @@ public class NcDeviceServiceImpl extends ServiceImpl<NcDeviceMapper, NcDevice> i
 
         saveFactoryResetLog(sn, opUser, NcOpLog.SUCCESS, null);
         log.info("[FactoryReset] Command accepted by {}: requestedBy={}, messageId={}", sn, requestedBy, messageId);
+        // 恢复出厂会直接清除网络配置，设备可能不会发送 TCP close；主动关闭旧会话，避免半开连接保持在线 180 秒。
+        boolean connectionClosed = ocppCommandSender.closeDeviceConnection(sn);
+        if (connectionClosed) {
+            log.info("[FactoryReset] OCPP connection closed after device acceptance: sn={}", sn);
+        } else {
+            log.info("[FactoryReset] OCPP connection was already inactive after device acceptance: sn={}", sn);
+        }
     }
 
     private void saveFactoryResetLog(String sn, String opUser, String result, String failReason) {
