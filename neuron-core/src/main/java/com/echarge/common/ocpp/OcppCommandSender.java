@@ -14,6 +14,15 @@ public interface OcppCommandSender {
     boolean isDeviceConnected(String chargePointId);
 
     /**
+     * 主动关闭设备当前的 OCPP 会话。
+     * 关闭 Channel 后沿用现有连接断开事件，将设备标记离线并推送前端。
+     *
+     * @param chargePointId 充电点标识（设备SN）
+     * @return 找到并关闭了活跃会话时返回 true；会话已不存在时返回 false
+     */
+    boolean closeDeviceConnection(String chargePointId);
+
+    /**
      * 向设备发送 OCPP CALL 消息（JSON 字符串）
      * @param chargePointId 充电点标识（设备SN）
      * @param message       OCPP消息JSON字符串

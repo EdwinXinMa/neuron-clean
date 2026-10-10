@@ -30,6 +30,12 @@ public class OcppCommandSenderImpl implements OcppCommandSender {
 
     /** {@inheritDoc} */
     @Override
+    public boolean closeDeviceConnection(String chargePointId) {
+        return sessionManager.closeConnection(chargePointId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void sendCall(String chargePointId, String message) {
         sessionManager.sendMessage(chargePointId, message);
     }
